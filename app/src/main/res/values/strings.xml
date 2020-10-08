@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Lockband</string>
+    <string name="app_list_element_desc">Installed app\'s icon</string>
+    <string name="app_list_element_name">Installed app\'s name</string>
+</resources>
