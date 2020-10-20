@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lockband.R
 import kotlinx.android.synthetic.main.app_list_element.view.*
 
-class AppListAdapter(private val data: List<ApplicationInfo>, private val context: Context) :
+class AppListAdapter(private val data: MutableList<ApplicationInfo>, private val context: Context) :
     RecyclerView.Adapter<AppListAdapter.AppListViewHolder>() {
 
     inner class AppListViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
@@ -31,7 +31,7 @@ class AppListAdapter(private val data: List<ApplicationInfo>, private val contex
         val icon: Drawable = item.loadIcon(context.packageManager)
 
         holder.icon.setImageDrawable(icon)
-        holder.name.text = item.packageName
+        holder.name.text = item.loadLabel(context.packageManager)
 
     }
 
