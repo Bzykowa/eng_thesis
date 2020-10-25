@@ -2,4 +2,7 @@
     <string name="app_name">Lockband</string>
     <string name="app_list_element_desc">Installed app\'s icon</string>
     <string name="app_list_element_name">Installed app\'s name</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_band">Band</string>
+    <string name="menu_stats">Statistics</string>
 </resources>

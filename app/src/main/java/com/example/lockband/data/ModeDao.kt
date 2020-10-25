@@ -1,5 +1,6 @@
 package com.example.lockband.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Dao
@@ -17,8 +18,8 @@ interface ModeDao {
     fun update(mode: Mode)
 
     @Query("SELECT * FROM modes")
-    fun getModes()
+    fun getModes() : LiveData<List<Mode>>
 
     @Query("SELECT * FROM modes WHERE name = :name")
-    fun getMode(name : String)
+    fun getMode(name : String) : LiveData<Mode>
 }
