@@ -1,22 +1,18 @@
 package com.example.lockband
 
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.lockband.adapters.AppListAdapter
-import com.example.lockband.viewmodels.AppListViewModel
+import com.example.lockband.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.databinding.DataBindingUtil.setContentView
 
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView<ActivityMainBinding>(this, R.layout.activity_main)
     }
 }
 
