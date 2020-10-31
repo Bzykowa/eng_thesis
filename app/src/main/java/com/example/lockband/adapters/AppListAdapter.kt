@@ -1,6 +1,7 @@
 package com.example.lockband.adapters
 
 import android.content.pm.ApplicationInfo
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -9,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lockband.data.AppState
 import com.example.lockband.databinding.AppListElementBinding
 
-class AppListAdapter : ListAdapter<AppState, RecyclerView.ViewHolder>(AppStateDiffCallback()) {
+class AppListAdapter(val listener: (Any) -> Unit, val icons : MutableList<Drawable>) : ListAdapter<AppState, RecyclerView.ViewHolder>(AppStateDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return AppListViewHolder(
@@ -22,17 +23,20 @@ class AppListAdapter : ListAdapter<AppState, RecyclerView.ViewHolder>(AppStateDi
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val app = getItem(position)
-        (holder as AppListViewHolder).bind(app)
+        (holder as AppListViewHolder).bind(getItem(position), icons[position])
     }
 
 
     inner class AppListViewHolder(private val binding: AppListElementBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: AppState) {
+        fun bind(item: AppState, icon : Drawable) {
             binding.apply {
                 app = item
+                lockSwitch.setOnCheckedChangeListener { _, isChecked ->
+                    listener(AppState(item.packageName,item.label,isChecked))
+                }
+                appListElementIcon.setImageDrawable(icon)
                 executePendingBindings()
             }
         }

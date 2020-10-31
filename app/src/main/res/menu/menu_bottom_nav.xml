@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/band_state_page_fragment"
+        android:id="@+id/bandStateFragment"
         android:icon="@drawable/outline_watch_black_18dp"
         android:title="@string/menu_band" />
     <item
-        android:id="@+id/statistics_page_fragment"
+        android:id="@+id/eventsStatsFragment"
         android:icon="@drawable/outline_insights_black_18dp"
         android:title="@string/menu_stats" />
     <item
-        android:id="@+id/settings_page_fragment"
+        android:id="@+id/settingsFragment"
         android:icon="@drawable/outline_build_black_18dp"
         android:title="@string/menu_settings" />
 

@@ -41,7 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
                             val appList: MutableList<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
                             val entities : MutableList<AppState> = mutableListOf()
                             appList.forEach{
-                                entities.add(AppState(it.packageName, it.loadLabel(pm).toString(), it.icon))
+                                entities.add(AppState(it.packageName, it.loadLabel(pm).toString()))
                             }
                             getInstance(context).appStateDao().insertAll(entities)
                             getInstance(context).modeDao().insertAll(MODES)

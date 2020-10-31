@@ -6,9 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.example.lockband.adapters.PagerAdapter
 import com.example.lockband.databinding.FragmentViewPagerBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_view_pager.view.*
+
 
 @AndroidEntryPoint
 class HomeViewPagerFragment : Fragment(){
@@ -20,6 +21,8 @@ class HomeViewPagerFragment : Fragment(){
     ): View? {
         val binding = FragmentViewPagerBinding.inflate(inflater,container,false)
         val viewPager = binding.viewPager
+
+        viewPager.adapter = PagerAdapter(this)
 
         return binding.root
     }

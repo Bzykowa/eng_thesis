@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockband.data.AppState
 import com.example.lockband.data.AppStateRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AppListViewModel @ViewModelInject internal constructor(
@@ -18,9 +19,21 @@ class AppListViewModel @ViewModelInject internal constructor(
 
     val appStates = appStateRepository.getAppStates()
 
-    fun upsertAppState(packageName: String, label: String, icon: Int, locked: Boolean) {
-        viewModelScope.launch {
-            appStateRepository.upsertAppState(AppState(packageName, label, icon, locked))
+    fun upsertAppState(packageName: String, label: String, locked: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            appStateRepository.upsertAppState(AppState(packageName, label, locked))
+        }
+    }
+
+    fun insertAppState(packageName: String, label: String, locked: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            appStateRepository.insertAppState(AppState(packageName, label, locked))
+        }
+    }
+
+    fun updateAppState(app : AppState) {
+        viewModelScope.launch(Dispatchers.IO) {
+            appStateRepository.updateAppState(app)
         }
     }
 

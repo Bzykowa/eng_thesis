@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="app"
             type="com.example.lockband.data.AppState" />
@@ -21,7 +22,6 @@
             android:layout_marginTop="15dp"
             android:layout_marginBottom="15dp"
             android:contentDescription="@string/app_list_element_desc"
-            android:src="@{app.icon}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.05"

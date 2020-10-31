@@ -1,10 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/nav_graph"
-    app:startDestination="@id/appListFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeViewPagerFragment">
 
+    <fragment
+        android:id="@+id/homeViewPagerFragment"
+        android:name="com.example.lockband.HomeViewPagerFragment"
+        android:label="HomeViewPagerFragment"
+        tools:layout="@layout/fragment_view_pager">
+        <action
+            android:id="@+id/action_homeViewPagerFragment_to_bandStateFragment"
+            app:destination="@id/bandStateFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"/>
+        <action
+            android:id="@+id/action_homeViewPagerFragment_to_eventsStatsFragment"
+            app:destination="@id/eventsStatsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"/>
+        <action
+            android:id="@+id/action_homeViewPagerFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"/>
+    </fragment>
+    <fragment
+        android:id="@+id/bandStateFragment"
+        android:name="com.example.lockband.BandStateFragment"
+        android:label="BandStateFragment" />
+    <fragment
+        android:id="@+id/eventsStatsFragment"
+        android:name="com.example.lockband.EventsStatsFragment"
+        android:label="EventsStatsFragment" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.lockband.SettingsFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_appListFragment"
+            app:destination="@id/appListFragment" />
+    </fragment>
     <fragment
         android:id="@+id/appListFragment"
         android:name="com.example.lockband.AppListFragment"
-        android:label="AppListFragment" />
+        android:label="AppListFragment"
+        tools:layout="@layout/fragment_app_list" />
 </navigation>

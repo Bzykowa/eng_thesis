@@ -2,6 +2,7 @@ package com.example.lockband
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -29,11 +30,18 @@ class AppListFragment : Fragment() {
         val binding = FragmentAppListBinding.inflate(inflater, container, false)
         context ?: return binding.root
 
-        val adapter = AppListAdapter()
+        val pm = requireContext().packageManager
+        val appList: List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA).sortedBy { it.loadLabel(pm).toString() }
+        val icons = mutableListOf<Drawable>()
+        appList.forEach{
+            icons.add(it.loadIcon(pm))
+            if(viewModel.appStates.value?.find { state -> state.packageName == it.packageName } == null)
+                viewModel.insertAppState(it.packageName, it.loadLabel(pm).toString(), false)
+        }
+
+        val adapter = AppListAdapter({item -> updateLockState(item as AppState)}, icons)
         binding.appList.adapter = adapter
-        val apps = updateAppList()
-        apps.sortBy { selectAppsByName(it) }
-        adapter.submitList(apps)
+
         subscribeUi(adapter)
 
         return binding.root
@@ -45,20 +53,8 @@ class AppListFragment : Fragment() {
         }
     }
 
-    //sort
-    private fun selectAppsByName(item: AppState): String {
-        val result = item.label
-        //locale to set?
-        return if (result.indexOf('.') != result.lastIndexOf('.')) result else result.capitalize()
+    private fun updateLockState(item : AppState){
+        viewModel.updateAppState(item)
     }
 
-    private fun updateAppList() : MutableList<AppState>{
-        val pm = requireContext().packageManager
-        val appList: MutableList<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        val entities : MutableList<AppState> = mutableListOf()
-        appList.forEach{
-            entities.add(AppState(it.packageName, it.loadLabel(pm).toString(), it.icon))
-        }
-        return entities
-    }
 }

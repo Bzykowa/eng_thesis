@@ -6,11 +6,7 @@ import com.example.lockband.AppListFragment
 import com.example.lockband.BandStateFragment
 import com.example.lockband.EventsStatsFragment
 import com.example.lockband.SettingsFragment
-
-const val BAND_PAGE_INDEX = 0
-const val STATS_PAGE_INDEX = 1
-const val SETTINGS_PAGE_INDEX = 2
-const val BLOCKED_APPS_LIST_PAGE_INDEX = 3
+import com.example.lockband.utils.*
 
 class PagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
@@ -18,7 +14,9 @@ class PagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
         BAND_PAGE_INDEX to { BandStateFragment() },
         STATS_PAGE_INDEX to { EventsStatsFragment() },
         SETTINGS_PAGE_INDEX to { SettingsFragment() },
-        BLOCKED_APPS_LIST_PAGE_INDEX to { AppListFragment() }
+        BLOCKED_APPS_LIST_PAGE_INDEX to { AppListFragment() },
+        CHANGE_PASS_PAGE_INDEX to { SettingsFragment() },
+        ABOUT_PAGE_INDEX to { SettingsFragment() }
     )
 
     override fun getItemCount(): Int = fragmentsCreators.size

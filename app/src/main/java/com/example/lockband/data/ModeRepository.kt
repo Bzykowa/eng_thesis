@@ -8,5 +8,5 @@ import javax.inject.Singleton
 class ModeRepository @Inject constructor(private val modeDao: ModeDao) {
     fun getModes() = modeDao.getModes()
     fun getMode(name: String) = modeDao.getMode(name)
-    fun updateMode(mode: Mode) = modeDao.update(mode)
+    suspend fun updateMode(mode: Mode) = modeDao.update(mode)
 }
