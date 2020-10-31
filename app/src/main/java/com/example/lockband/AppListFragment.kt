@@ -31,19 +31,20 @@ class AppListFragment : Fragment() {
         context ?: return binding.root
 
         val pm = requireContext().packageManager
-        val appList: List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA).sortedBy { it.loadLabel(pm).toString() }
+        val appList: List<ApplicationInfo> =
+            pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                .sortedBy { it.loadLabel(pm).toString() }
         val icons = mutableListOf<Drawable>()
-        appList.forEach{
+        
+        appList.forEach {
             icons.add(it.loadIcon(pm))
-            if(viewModel.appStates.value?.find { state -> state.packageName == it.packageName } == null)
+            if (viewModel.appStates.value?.find { state -> state.packageName == it.packageName } == null)
                 viewModel.insertAppState(it.packageName, it.loadLabel(pm).toString(), false)
         }
 
-        val adapter = AppListAdapter({item -> updateLockState(item as AppState)}, icons)
+        val adapter = AppListAdapter({ item -> updateLockState(item as AppState) }, icons)
         binding.appList.adapter = adapter
-
         subscribeUi(adapter)
-
         return binding.root
     }
 
@@ -53,7 +54,7 @@ class AppListFragment : Fragment() {
         }
     }
 
-    private fun updateLockState(item : AppState){
+    private fun updateLockState(item: AppState) {
         viewModel.updateAppState(item)
     }
 
