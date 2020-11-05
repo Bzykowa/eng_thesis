@@ -11,18 +11,30 @@ import android.util.Log
 import android.widget.Toast
 import com.example.lockband.MainActivity
 import com.example.lockband.R
-import com.example.lockband.utils.Actions
+import com.example.lockband.data.Actions
+import com.example.lockband.data.AppStateRepository
+import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.ServiceState
 import com.example.lockband.utils.setServiceState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LockingService : Service() {
+@AndroidEntryPoint
+class LockingService: Service() {
 
+    @Inject
+    lateinit var appStateRepository: AppStateRepository
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
+    private val appMonitor = buildAppMonitor()
+
+    init {
+
+    }
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -53,6 +65,7 @@ class LockingService : Service() {
         val notification = createNotification()
         startForeground(1, notification)
     }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.d(null, "The locking service has been destroyed")
@@ -90,15 +103,8 @@ class LockingService : Service() {
                 }
             }
 
-        // Check for foreground apps in a coroutine loop and end them if they should be blocked
-        GlobalScope.launch(Dispatchers.IO) {
-            while (isServiceStarted) {
-                launch(Dispatchers.IO) {
-                    TODO("Locking code here")
-                }
-                delay(200)
-            }
-        }
+        appMonitor.start(this)
+
     }
 
     private fun stopService() {
@@ -110,10 +116,11 @@ class LockingService : Service() {
                     it.release()
                 }
             }
+            appMonitor.stop()
             stopForeground(true)
             stopSelf()
         } catch (e: Exception) {
-            Log.d(null,"Service stopped without being started: ${e.message}")
+            Log.d(null, "Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
         setServiceState(this, ServiceState.STOPPED)
@@ -155,6 +162,31 @@ class LockingService : Service() {
             .setSmallIcon(R.drawable.outline_app_blocking_black_18dp)
             .setTicker("Ur acting kinda sus")
             .build()
+    }
+
+    private fun buildAppMonitor(): AppMonitor {
+        val lockedApps = appStateRepository.getLockedApps()
+        val appMonitor = AppMonitor()
+
+        lockedApps.forEach {
+            appMonitor.`when`(it, object : AppMonitor.Listener {
+                override fun onForeground(process: String?) {
+                    TODO("Close foreground app/start password activity")
+                }
+            })
+        }
+
+        appMonitor.apply {
+            whenOther(object : AppMonitor.Listener{
+                override fun onForeground(process: String?) {
+                    return
+                }
+
+            })
+            timeout(DEFAULT_TIMEOUT)
+        }
+
+        return appMonitor
     }
 
 }
