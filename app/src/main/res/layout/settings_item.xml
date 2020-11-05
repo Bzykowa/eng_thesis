@@ -32,7 +32,7 @@
             app:layout_constraintVertical_bias="0.0"
             tools:srcCompat="@tools:sample/avatars"
             app:imageResource="@{setting.iconId}"
-            />
+            android:contentDescription="@string/menu_settings" />
 
         <View
             android:id="@+id/divider"

@@ -81,7 +81,7 @@ class AppMonitor {
         }
     }
 
-    fun callListener(listener: Listener?, packageName: String?) {
+    private fun callListener(listener: Listener?, packageName: String?) {
         handler.post(Runnable { listener!!.onForeground(packageName) })
     }
 

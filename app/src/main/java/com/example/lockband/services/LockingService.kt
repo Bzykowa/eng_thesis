@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.Toast
 import com.example.lockband.MainActivity
 import com.example.lockband.R
+import com.example.lockband.UnlockActivity
 import com.example.lockband.data.Actions
 import com.example.lockband.data.AppStateRepository
 import com.example.lockband.utils.DEFAULT_TIMEOUT
@@ -31,10 +32,6 @@ class LockingService: Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
     private val appMonitor = buildAppMonitor()
-
-    init {
-
-    }
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -168,10 +165,13 @@ class LockingService: Service() {
         val lockedApps = appStateRepository.getLockedApps()
         val appMonitor = AppMonitor()
 
-        lockedApps.forEach {
-            appMonitor.`when`(it, object : AppMonitor.Listener {
+        lockedApps.forEach { s ->
+            appMonitor.`when`(s, object : AppMonitor.Listener {
                 override fun onForeground(process: String?) {
-                    TODO("Close foreground app/start password activity")
+                    Intent(this@LockingService, UnlockActivity::class.java).also {
+                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(it)
+                    }
                 }
             })
         }

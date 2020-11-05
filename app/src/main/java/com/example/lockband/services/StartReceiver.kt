@@ -16,9 +16,9 @@ class StartReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED && getServiceState(context) == ServiceState.STARTED) {
             Intent(context, LockingService::class.java).also {
                 it.action = Actions.START.name
-                    Log.d(null,"Starting the locking service from a BroadcastReceiver")
-                    context.startForegroundService(it)
-                    return
+                Log.d(null, "Starting the locking service from a BroadcastReceiver")
+                context.startForegroundService(it)
+                return
             }
         }
     }
