@@ -35,7 +35,7 @@ class AppListFragment : Fragment() {
             pm.getInstalledApplications(PackageManager.GET_META_DATA)
                 .sortedBy { it.loadLabel(pm).toString() }
         val icons = mutableListOf<Drawable>()
-        
+
         appList.forEach {
             icons.add(it.loadIcon(pm))
             if (viewModel.appStates.value?.find { state -> state.packageName == it.packageName } == null)

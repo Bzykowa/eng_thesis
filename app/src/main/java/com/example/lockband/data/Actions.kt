@@ -1,4 +1,4 @@
-package com.example.lockband.utils
+package com.example.lockband.data
 
 enum class Actions {
     START,

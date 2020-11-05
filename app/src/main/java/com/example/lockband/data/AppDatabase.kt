@@ -3,24 +3,19 @@ package com.example.lockband.data
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import androidx.core.graphics.drawable.toBitmap
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.lockband.utils.DATABASE_NAME
-import com.example.lockband.utils.MODES
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 
-@Database(entities = [AppState::class, Mode::class], version = 1, exportSchema = false)
+@Database(entities = [AppState::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appStateDao() : AppStateDao
-    abstract fun modeDao() : ModeDao
 
     companion object{
         @Volatile private var instance: AppDatabase? = null
@@ -44,7 +39,6 @@ abstract class AppDatabase : RoomDatabase() {
                                 entities.add(AppState(it.packageName, it.loadLabel(pm).toString()))
                             }
                             getInstance(context).appStateDao().insertAll(entities)
-                            getInstance(context).modeDao().insertAll(MODES)
                         }
                     }
                 }

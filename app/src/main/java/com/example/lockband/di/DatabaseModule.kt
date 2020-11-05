@@ -3,7 +3,6 @@ package com.example.lockband.di
 import android.content.Context
 import com.example.lockband.data.AppDatabase
 import com.example.lockband.data.AppStateDao
-import com.example.lockband.data.ModeDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,11 +22,6 @@ class DatabaseModule {
     @Provides
     fun provideAppStateDao(appDatabase: AppDatabase) : AppStateDao {
         return appDatabase.appStateDao()
-    }
-
-    @Provides
-    fun provideModeDao(appDatabase: AppDatabase) : ModeDao{
-        return appDatabase.modeDao()
     }
 
 }

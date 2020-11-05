@@ -1,7 +1,6 @@
 package com.example.lockband.utils
 
 import com.example.lockband.R
-import com.example.lockband.data.Mode
 import com.example.lockband.data.SettingsItem
 
 //navigation
@@ -15,8 +14,6 @@ const val ABOUT_PAGE_INDEX = 5
 
 const val DATABASE_NAME = "lockband_db"
 
-val MODES = listOf<Mode>(Mode("lockdown", false))
-
 val SETTINGS: List<SettingsItem> = listOf(
     SettingsItem(
         R.drawable.outline_playlist_add_check_black_18dp,
@@ -29,3 +26,5 @@ val SETTINGS: List<SettingsItem> = listOf(
         CHANGE_PASS_PAGE_INDEX
     )
 )
+//foreground scanning timeout
+const val DEFAULT_TIMEOUT = 200L
