@@ -5,14 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.fragment.app.Fragment
-import com.example.lockband.adapters.SettingsAdapter
 import com.example.lockband.data.Actions
 import com.example.lockband.databinding.FragmentBandStateBinding
-import com.example.lockband.databinding.FragmentSettingsBinding
 import com.example.lockband.services.LockingService
-import com.example.lockband.utils.SETTINGS
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

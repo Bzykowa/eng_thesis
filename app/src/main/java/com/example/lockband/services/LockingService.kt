@@ -9,13 +9,10 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
-import com.example.lockband.MainActivity
 import com.example.lockband.R
 import com.example.lockband.UnlockActivity
 import com.example.lockband.data.Actions
 import com.example.lockband.data.AppStateRepository
-import com.example.lockband.di.DatabaseModule
-import com.example.lockband.di.DatabaseModule_ProvideAppStateDaoFactory
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.ServiceState
 import com.example.lockband.utils.setServiceState

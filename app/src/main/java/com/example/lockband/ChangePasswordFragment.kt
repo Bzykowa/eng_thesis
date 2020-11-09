@@ -6,11 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.lockband.databinding.FragmentBandStateBinding
 import com.example.lockband.databinding.FragmentChangePasswordBinding
-import com.example.lockband.utils.*
+import com.example.lockband.utils.PASS_FILE
+import com.example.lockband.utils.hashPassword
+import com.example.lockband.utils.readEncryptedFile
+import com.example.lockband.utils.writeEncryptedFile
 import java.io.File
-import java.lang.Exception
 
 class ChangePasswordFragment : Fragment() {
     override fun onCreateView(

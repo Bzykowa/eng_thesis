@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.lockband.adapters.PagerAdapter
 import com.example.lockband.adapters.SettingsAdapter
 import com.example.lockband.databinding.FragmentSettingsBinding
 import com.example.lockband.utils.SETTINGS

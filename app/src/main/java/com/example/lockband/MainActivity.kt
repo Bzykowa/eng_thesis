@@ -2,12 +2,11 @@ package com.example.lockband
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.lockband.databinding.ActivityMainBinding
-import dagger.hilt.android.AndroidEntryPoint
 import androidx.databinding.DataBindingUtil.setContentView
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.lockband.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
 @AndroidEntryPoint

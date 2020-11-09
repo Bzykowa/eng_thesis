@@ -18,7 +18,6 @@ interface AppStateDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(app: AppState)
 
-    //Deal with setting up lock on new app
     @Transaction
     suspend fun upsert(app: AppState) {
         val id = insert(app)

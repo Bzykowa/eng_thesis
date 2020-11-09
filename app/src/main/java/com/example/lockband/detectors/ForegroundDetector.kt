@@ -2,11 +2,9 @@ package com.example.lockband.detectors
 
 import android.app.Service
 import android.app.usage.UsageEvents
-
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.hasUsageStatsPermission
 
