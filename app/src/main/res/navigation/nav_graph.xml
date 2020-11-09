@@ -16,26 +16,27 @@
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_homeViewPagerFragment_to_eventsStatsFragment"
             app:destination="@id/eventsStatsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_homeViewPagerFragment_to_settingsFragment"
             app:destination="@id/settingsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/bandStateFragment"
         android:name="com.example.lockband.BandStateFragment"
-        android:label="BandStateFragment" />
+        android:label="BandStateFragment"
+        tools:layout="@layout/fragment_band_state" />
     <fragment
         android:id="@+id/eventsStatsFragment"
         android:name="com.example.lockband.EventsStatsFragment"
@@ -48,10 +49,18 @@
         <action
             android:id="@+id/action_settingsFragment_to_appListFragment"
             app:destination="@id/appListFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
     </fragment>
     <fragment
         android:id="@+id/appListFragment"
         android:name="com.example.lockband.AppListFragment"
         android:label="AppListFragment"
         tools:layout="@layout/fragment_app_list" />
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.lockband.ChangePasswordFragment"
+        android:label="ChangePasswordFragment"
+        tools:layout="@layout/fragment_change_password"/>
 </navigation>

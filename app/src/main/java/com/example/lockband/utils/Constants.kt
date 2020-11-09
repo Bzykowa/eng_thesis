@@ -27,4 +27,7 @@ val SETTINGS: List<SettingsItem> = listOf(
     )
 )
 //foreground scanning timeout
-const val DEFAULT_TIMEOUT = 200L
+const val DEFAULT_TIMEOUT = 5000L
+
+//encrypted files
+const val PASS_FILE = "pass.txt"

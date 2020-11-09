@@ -37,7 +37,7 @@ interface AppStateDao {
     @Query("SELECT lock_check from app_states WHERE package_name = :appName")
     fun isLocked(appName: String) : Boolean
 
-    @Query("SELECT package_name from app_states WHERE lock_check == 0")
+    @Query("SELECT package_name from app_states WHERE lock_check == 1")
     fun getLockedApps() : List<String>
 
 }

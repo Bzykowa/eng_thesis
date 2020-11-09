@@ -17,9 +17,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
         android:theme="@style/AppTheme">
-        <activity android:name=".UnlockActivity">
-
+        <activity
+            android:name=".LauncherActivity"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
+
+        <activity
+            android:name=".UnlockActivity"
+            android:noHistory="true" />
+
+        <activity
+            android:name=".SetupPasswordActivity"
+            android:noHistory="true" />
 
         <service
             android:name=".services.LockingService"
@@ -27,13 +40,7 @@
             android:exported="false"
             android:stopWithTask="false" />
 
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".MainActivity" />
 
         <receiver
             android:name=".services.StartReceiver"

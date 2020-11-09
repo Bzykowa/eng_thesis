@@ -43,6 +43,7 @@ class SettingsAdapter : ListAdapter<SettingsItem, RecyclerView.ViewHolder>(Setti
         private fun navigateToSetting(setting : SettingsItem, view : View){
             val direction = when(setting.navId) {
                 3 -> SettingsFragmentDirections.actionSettingsFragmentToAppListFragment()
+                4 -> SettingsFragmentDirections.actionSettingsFragmentToChangePasswordFragment()
                 else -> HomeViewPagerFragmentDirections.actionHomeViewPagerFragmentToSettingsFragment()
             }
             view.findNavController().navigate(direction)

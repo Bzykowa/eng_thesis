@@ -15,7 +15,6 @@ class AppMonitor {
     private var service: ScheduledExecutorService? = null
     private var runnable: Runnable? = null
     private var unregisteredPackageListener: Listener? = null
-    private var anyPackageListener: Listener? = null
     private var listeners: MutableMap<String, Listener> = HashMap()
     private var detector: ForegroundDetector = ForegroundDetector()
     private var handler: Handler = Handler(Looper.getMainLooper())
@@ -35,10 +34,6 @@ class AppMonitor {
 
     fun whenOther(listener: Listener?) {
         unregisteredPackageListener = listener
-    }
-
-    fun whenAny(listener: Listener?) {
-        anyPackageListener = listener
     }
 
     fun start(context: Context) {
@@ -75,9 +70,6 @@ class AppMonitor {
             if (!foundRegisteredPackageListener && unregisteredPackageListener != null) {
                 callListener(unregisteredPackageListener, foregroundApp)
             }
-        }
-        if (anyPackageListener != null) {
-            callListener(anyPackageListener, foregroundApp)
         }
     }
 

@@ -14,6 +14,8 @@ import com.example.lockband.R
 import com.example.lockband.UnlockActivity
 import com.example.lockband.data.Actions
 import com.example.lockband.data.AppStateRepository
+import com.example.lockband.di.DatabaseModule
+import com.example.lockband.di.DatabaseModule_ProvideAppStateDaoFactory
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.ServiceState
 import com.example.lockband.utils.setServiceState
@@ -25,13 +27,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class LockingService: Service() {
+class LockingService : Service() {
 
     @Inject
     lateinit var appStateRepository: AppStateRepository
+
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
-    private val appMonitor = buildAppMonitor()
+    private val appMonitor = AppMonitor()
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -100,7 +103,16 @@ class LockingService: Service() {
                 }
             }
 
-        appMonitor.start(this)
+        buildAppMonitor()
+        GlobalScope.launch(Dispatchers.Default) {
+            while (isServiceStarted) {
+                launch(Dispatchers.Default){
+                    appMonitor.start(this@LockingService)
+                }
+                delay(DEFAULT_TIMEOUT)
+            }
+        }
+
 
     }
 
@@ -143,7 +155,7 @@ class LockingService: Service() {
         notificationManager.createNotificationChannel(channel)
 
         val pendingIntent: PendingIntent =
-            Intent(this, MainActivity::class.java).let { notificationIntent ->
+            Intent(this, UnlockActivity::class.java).let { notificationIntent ->
                 PendingIntent.getActivity(this, 0, notificationIntent, 0)
             }
 
@@ -162,24 +174,28 @@ class LockingService: Service() {
     }
 
     private fun buildAppMonitor(): AppMonitor {
-        val lockedApps = appStateRepository.getLockedApps()
-        val appMonitor = AppMonitor()
 
-        lockedApps.forEach { s ->
-            appMonitor.`when`(s, object : AppMonitor.Listener {
-                override fun onForeground(process: String?) {
-                    Intent(this@LockingService, UnlockActivity::class.java).also {
-                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(it)
+        GlobalScope.launch(Dispatchers.IO){
+            val lockedApps = appStateRepository.getLockedApps()
+
+            lockedApps.forEach { app ->
+                Log.d(null,app+" in locked apps")
+                appMonitor.`when`(app, object : AppMonitor.Listener {
+                    override fun onForeground(process: String?) {
+                        Log.d(null,app + "on FG")
+                        Intent(this@LockingService, UnlockActivity::class.java).also {
+                            it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(it)
+                        }
                     }
-                }
-            })
+                })
+            }
         }
 
         appMonitor.apply {
-            whenOther(object : AppMonitor.Listener{
+            whenOther(object : AppMonitor.Listener {
                 override fun onForeground(process: String?) {
-                    return
+                    Log.d(null, "allowed app")
                 }
 
             })
