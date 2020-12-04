@@ -7,6 +7,7 @@ import com.example.lockband.data.SettingsItem
 const val BAND_PAGE_INDEX = 0
 const val STATS_PAGE_INDEX = 1
 const val SETTINGS_PAGE_INDEX = 2
+
 //settings subpages
 const val BLOCKED_APPS_LIST_PAGE_INDEX = 3
 const val CHANGE_PASS_PAGE_INDEX = 4
@@ -26,8 +27,15 @@ val SETTINGS: List<SettingsItem> = listOf(
         CHANGE_PASS_PAGE_INDEX
     )
 )
+
 //foreground scanning timeout
 const val DEFAULT_TIMEOUT = 5000L
 
-//encrypted files
+//encrypted files names
 const val PASS_FILE = "pass.txt"
+
+//BLE GATT base UUID
+const val BASE_UUID: String = "0000%s-0000-1000-8000-00805f9b34fb"
+
+//Device scan duration
+const val SCAN_TIMEOUT: Long = 20000

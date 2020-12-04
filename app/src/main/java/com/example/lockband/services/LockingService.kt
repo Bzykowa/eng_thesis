@@ -11,8 +11,9 @@ import android.util.Log
 import android.widget.Toast
 import com.example.lockband.R
 import com.example.lockband.UnlockActivity
-import com.example.lockband.data.Actions
-import com.example.lockband.data.AppStateRepository
+import com.example.lockband.data.LockingServiceActions
+import com.example.lockband.data.MiBandServiceActions
+import com.example.lockband.data.room.AppStateRepository
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.ServiceState
 import com.example.lockband.utils.setServiceState
@@ -21,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,13 +44,18 @@ class LockingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
-                Actions.START.name -> startService()
-                Actions.STOP.name -> stopService()
-                else -> Log.e(null, "This should never happen. No action in the received intent")
+                LockingServiceActions.START.name -> {
+                    Intent(this, MiBandService::class.java).also {
+                        it.action = MiBandServiceActions.STOP.name
+                        startForegroundService(it)
+                    }
+                    startService()
+                }
+                LockingServiceActions.STOP.name -> stopService()
+                else -> Timber.e("This should never happen. No action in the received intent")
             }
         } else {
-            Log.d(
-                null,
+            Timber.d(
                 "with a null intent. It has been probably restarted by the system."
             )
         }
@@ -58,44 +65,44 @@ class LockingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(null, "The locking service has been created")
+        Timber.d("The locking service has been created")
         val notification = createNotification()
         startForeground(1, notification)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(null, "The locking service has been destroyed")
-        Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
+        Timber.d("The locking service has been destroyed")
+        Toast.makeText(this, "LockingService destroyed", Toast.LENGTH_SHORT).show()
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
         val restartServiceIntent = Intent(applicationContext, LockingService::class.java).also {
             it.setPackage(packageName)
-        };
+        }
         val restartServicePendingIntent: PendingIntent =
-            PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
-        applicationContext.getSystemService(Context.ALARM_SERVICE);
+            PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT)
+        applicationContext.getSystemService(Context.ALARM_SERVICE)
         val alarmService: AlarmManager =
-            applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager;
+            applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmService.set(
             AlarmManager.ELAPSED_REALTIME,
             SystemClock.elapsedRealtime() + 1000,
             restartServicePendingIntent
-        );
+        )
     }
 
     private fun startService() {
         if (isServiceStarted) return
-        Log.d(null, "Starting the foreground service task")
+        Timber.d("Starting the foreground service task")
         Toast.makeText(this, "Lockdown started", Toast.LENGTH_SHORT).show()
         isServiceStarted = true
         setServiceState(this, ServiceState.STARTED)
 
         // lock to avoid being affected by Doze Mode
         wakeLock =
-            (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
+            (getSystemService(POWER_SERVICE) as PowerManager).run {
+                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LockingService::lock").apply {
                     acquire()
                 }
             }
@@ -103,7 +110,7 @@ class LockingService : Service() {
         buildAppMonitor()
         GlobalScope.launch(Dispatchers.Default) {
             while (isServiceStarted) {
-                launch(Dispatchers.Default){
+                launch(Dispatchers.Default) {
                     appMonitor.start(this@LockingService)
                 }
                 delay(DEFAULT_TIMEOUT)
@@ -114,7 +121,7 @@ class LockingService : Service() {
     }
 
     private fun stopService() {
-        Log.d(null, "Stopping the foreground service")
+        Timber.d("Stopping the foreground service")
         Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
         try {
             wakeLock?.let {
@@ -126,7 +133,7 @@ class LockingService : Service() {
             stopForeground(true)
             stopSelf()
         } catch (e: Exception) {
-            Log.d(null, "Service stopped without being started: ${e.message}")
+            Timber.d("Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
         setServiceState(this, ServiceState.STOPPED)
@@ -139,10 +146,10 @@ class LockingService : Service() {
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(
             notificationChannelId,
-            "Endless Service notifications channel",
+            "Locking Service notifications channel",
             NotificationManager.IMPORTANCE_HIGH
         ).let {
-            it.description = "Endless Service channel"
+            it.description = "Locking Service channel"
             it.enableLights(true)
             it.lightColor = Color.RED
             it.enableVibration(true)
@@ -163,7 +170,7 @@ class LockingService : Service() {
 
         return builder
             .setContentTitle("Lockdown")
-            .setContentText("Some applications have been blocked. Enter Lockband app to unblock.")
+            .setContentText("Some applications have been blocked.")
             .setContentIntent(pendingIntent)
             .setSmallIcon(R.drawable.outline_app_blocking_black_18dp)
             .setTicker("Ur acting kinda sus")
@@ -172,14 +179,14 @@ class LockingService : Service() {
 
     private fun buildAppMonitor(): AppMonitor {
 
-        GlobalScope.launch(Dispatchers.IO){
+        GlobalScope.launch(Dispatchers.IO) {
             val lockedApps = appStateRepository.getLockedApps()
 
             lockedApps.forEach { app ->
-                Log.d(null,app+" in locked apps")
+                Timber.d("%s in locked apps", app)
                 appMonitor.`when`(app, object : AppMonitor.Listener {
                     override fun onForeground(process: String?) {
-                        Log.d(null,app + "on FG")
+                        Timber.d("%s on FG", app)
                         Intent(this@LockingService, UnlockActivity::class.java).also {
                             it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(it)
@@ -192,7 +199,7 @@ class LockingService : Service() {
         appMonitor.apply {
             whenOther(object : AppMonitor.Listener {
                 override fun onForeground(process: String?) {
-                    Log.d(null, "allowed app")
+                    Timber.d("allowed app")
                 }
 
             })

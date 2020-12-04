@@ -1,10 +1,11 @@
-package com.example.lockband.data
+package com.example.lockband.data.room
 
 import androidx.room.TypeConverter
 import java.util.*
 
 class Converters {
-    @TypeConverter fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
+    @TypeConverter
+    fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
 
     @TypeConverter
     fun datestampToCalendar(value: Long): Calendar =

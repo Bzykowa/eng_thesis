@@ -7,10 +7,8 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.lockband.HomeViewPagerFragment
 import com.example.lockband.HomeViewPagerFragmentDirections
 import com.example.lockband.SettingsFragmentDirections
-import com.example.lockband.data.AppState
 import com.example.lockband.data.SettingsItem
 import com.example.lockband.databinding.SettingsItemBinding
 

@@ -28,7 +28,7 @@ class ForegroundDetector {
                 foregroundApp = event.packageName
             }
         }
-        Log.d(null,foregroundApp+" on detector return")
+        Log.d(null, "$foregroundApp on detector return")
         return foregroundApp
     }
 }

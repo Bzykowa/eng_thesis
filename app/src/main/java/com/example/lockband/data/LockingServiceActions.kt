@@ -1,6 +1,6 @@
 package com.example.lockband.data
 
-enum class Actions {
+enum class LockingServiceActions {
     START,
     STOP
 }

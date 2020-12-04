@@ -1,15 +1,19 @@
 package com.example.lockband
 
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.example.lockband.data.Actions
+import com.example.lockband.data.LockingServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.databinding.ActivityUnlockBinding
 import com.example.lockband.services.LockingService
+import com.example.lockband.services.MiBandService
 import com.example.lockband.utils.PASS_FILE
+import com.example.lockband.utils.getMiBandAddress
 import com.example.lockband.utils.hashPassword
 import com.example.lockband.utils.readEncryptedFile
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,31 +25,47 @@ class UnlockActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityUnlockBinding>(this, R.layout.activity_unlock)
 
+        Intent(this, MiBandService::class.java).also {
+            it.action = MiBandServiceActions.START.name
+            it.putExtra(
+                "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
+                    getMiBandAddress(this)
+                )
+            )
+            startForegroundService(it)
+        }
+
         unlock_button.setOnClickListener {
 
             errorView.visibility = View.GONE
             val hashedPass = hashPassword(passwordTextView.text.toString())
             val storedPass = retrieveStoredPassword()
 
-            if(hashedPass == storedPass){
-                Toast.makeText(this,"Device unlocked",Toast.LENGTH_SHORT).show()
+            if (hashedPass == storedPass) {
+                Toast.makeText(this, "Device unlocked", Toast.LENGTH_SHORT).show()
 
                 Intent(this, LockingService::class.java).also {
-                    it.action = Actions.STOP.name
+                    it.action = LockingServiceActions.STOP.name
                     startForegroundService(it)
                 }
 
-                Intent(this, MainActivity::class.java).also {
-                    startActivity(it)
+                if (getMiBandAddress(this) == "err") {
+                    Intent(this, PairingActivity::class.java).also {
+                        startActivity(it)
+                    }
+                } else {
+                    Intent(this, MainActivity::class.java).also {
+                        startActivity(it)
+                    }
                 }
             } else {
-                Toast.makeText(this,"Operation failed",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Operation failed", Toast.LENGTH_SHORT).show()
                 errorView.visibility = View.VISIBLE
             }
         }
     }
 
-    private fun retrieveStoredPassword() : String {
+    private fun retrieveStoredPassword(): String {
         return readEncryptedFile(applicationContext, PASS_FILE)
     }
 }

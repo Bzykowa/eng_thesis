@@ -6,10 +6,7 @@ import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.databinding.ActivityLauncherBinding
-import com.example.lockband.utils.PASS_FILE
-import com.example.lockband.utils.ServiceState
-import com.example.lockband.utils.getServiceState
-import com.example.lockband.utils.hasUsageStatsPermission
+import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
@@ -29,6 +26,11 @@ class LauncherActivity : AppCompatActivity() {
             Intent(this, SetupPasswordActivity::class.java).also {
                 startActivity(it)
             }
+        } else if (getMiBandAddress(this) == "err"){
+            Intent(this, PairingActivity::class.java).also {
+                startActivity(it)
+            }
+
         } else if (getServiceState(this) == ServiceState.STOPPED) {
             Intent(this, MainActivity::class.java).also {
                 startActivity(it)

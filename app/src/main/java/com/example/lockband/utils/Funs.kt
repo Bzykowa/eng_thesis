@@ -2,6 +2,7 @@ package com.example.lockband.utils
 
 import android.app.AppOpsManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Process
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKey
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 
+//check for usage stats permission (needed to monitor apps)
 fun hasUsageStatsPermission(context: Context): Boolean {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     val mode = appOps.checkOpNoThrow(
@@ -63,4 +65,8 @@ fun hashPassword(pass : String) : String {
     val message: ByteArray = pass.toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-512")
     return String(md.digest(message), StandardCharsets.UTF_8)
+}
+
+fun getPreferences(context: Context, name: String): SharedPreferences {
+    return context.getSharedPreferences(name, 0)
 }

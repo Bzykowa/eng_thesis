@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.lockband.data.Actions
+import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.FragmentBandStateBinding
 import com.example.lockband.services.LockingService
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,12 +24,12 @@ class BandStateFragment : Fragment() {
         binding.switch1.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 Intent(requireContext(), LockingService::class.java).also {
-                    it.action = Actions.START.name
+                    it.action = LockingServiceActions.START.name
                     requireActivity().startForegroundService(it)
                 }
             } else {
                 Intent(requireContext(), LockingService::class.java).also {
-                    it.action = Actions.STOP.name
+                    it.action = LockingServiceActions.STOP.name
                     requireActivity().startForegroundService(it)
                 }
             }

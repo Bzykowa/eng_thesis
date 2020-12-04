@@ -7,7 +7,7 @@
 
         <variable
             name="app"
-            type="com.example.lockband.data.AppState" />
+            type="com.example.lockband.data.room.AppState" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
