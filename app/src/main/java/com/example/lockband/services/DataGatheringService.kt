@@ -64,14 +64,14 @@ class DataGatheringService : Service(), SensorEventListener {
         }
     }
 
-    val alertReceiver = object : BroadcastReceiver(){
+    val alertReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             handleAlert()
         }
     }
 
     val batteryIntentFilter = IntentFilter(DataGatheringServiceActions.BATTERY.name)
-    val alertIntentFilter =  IntentFilter(DataGatheringServiceActions.ALERT.name)
+    val alertIntentFilter = IntentFilter(DataGatheringServiceActions.ALERT.name)
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -161,8 +161,8 @@ class DataGatheringService : Service(), SensorEventListener {
 
 
         //Register BroadcastReceivers for battery update and vibrating alerts
-        registerReceiver(batteryReceiver,batteryIntentFilter)
-        registerReceiver(alertReceiver,alertIntentFilter)
+        registerReceiver(batteryReceiver, batteryIntentFilter)
+        registerReceiver(alertReceiver, alertIntentFilter)
 
         //Periodically scan heart rate
         GlobalScope.launch(Dispatchers.IO) {
@@ -341,11 +341,67 @@ class DataGatheringService : Service(), SensorEventListener {
     //Step counter sensor callbacks
 
     override fun onSensorChanged(event: SensorEvent?) {
-        TODO("Not yet implemented")
+        if (event != null) {
+            if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
+                var sensorSteps = event.values[0].toInt()
+                var currentOffset = getStepsOffset(this)
+
+                //Configure offset on first recording (step counter count steps from last reboot)
+                if (currentOffset == -1) {
+                    setStepsOffset(this, sensorSteps)
+                    currentOffset = sensorSteps
+                }
+
+                GlobalScope.launch(Dispatchers.IO) {
+                    val latest = stepRepository.getLatestPhoneStepSample()
+                    val newTimestamp = Calendar.getInstance()
+
+                    //Day changed -> start counting steps from zero
+                    if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
+                        //reboot on date change -> clear offset
+                        if (currentOffset > sensorSteps) {
+                            setStepsOffset(
+                                this@DataGatheringService,
+                                0
+                            )
+                        } else {
+                            //increase offset by yesterday stepCount
+                            setStepsOffset(
+                                this@DataGatheringService,
+                                latest.stepCount + currentOffset
+                            )
+                        }
+                    }
+
+                    TODO("set correct checks for proper offset")
+
+                    //reboot happened on the same day -> offset is 0
+                    if (currentOffset > sensorSteps) {
+                        setStepsOffset(
+                            this@DataGatheringService,
+                            0
+                        )
+                    }
+
+                    if(sensorSteps < latest.stepCount){
+                        sensorSteps += latest.stepCount
+                    }
+
+                    stepRepository.insertPhoneStepSample(
+                        PhoneStep(
+                            newTimestamp,
+                            sensorSteps - getStepsOffset(this@DataGatheringService)
+                        )
+                    )
+
+                }
+            }
+
+        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        TODO("Not yet implemented")
+        return
     }
 
     private fun createNotification(): Notification {
