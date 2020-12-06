@@ -17,4 +17,7 @@ interface SensorDataDao {
 
     @Query("SELECT * FROM raw_sensor_data WHERE timestamp BETWEEN :startDate AND :endDate")
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<SensorData>
+
+    @Query("SELECT * FROM raw_sensor_data WHERE timestamp = (SELECT MAX(timestamp) FROM raw_sensor_data)")
+    fun getLatestSample() : SensorData
 }

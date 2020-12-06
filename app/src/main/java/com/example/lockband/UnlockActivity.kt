@@ -8,10 +8,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.data.MiBandServiceActions
+import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityUnlockBinding
 import com.example.lockband.services.LockingService
-import com.example.lockband.services.MiBandService
+import com.example.lockband.services.DataGatheringService
 import com.example.lockband.utils.PASS_FILE
 import com.example.lockband.utils.getMiBandAddress
 import com.example.lockband.utils.hashPassword
@@ -25,8 +25,8 @@ class UnlockActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityUnlockBinding>(this, R.layout.activity_unlock)
 
-        Intent(this, MiBandService::class.java).also {
-            it.action = MiBandServiceActions.START.name
+        Intent(this, DataGatheringService::class.java).also {
+            it.action = DataGatheringServiceActions.START.name
             it.putExtra(
                 "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
                     getMiBandAddress(this)

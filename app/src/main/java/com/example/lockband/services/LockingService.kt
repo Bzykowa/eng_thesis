@@ -7,16 +7,13 @@ import android.graphics.Color
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
-import android.util.Log
 import android.widget.Toast
 import com.example.lockband.R
 import com.example.lockband.UnlockActivity
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.data.MiBandServiceActions
+import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.data.room.AppStateRepository
-import com.example.lockband.utils.DEFAULT_TIMEOUT
-import com.example.lockband.utils.ServiceState
-import com.example.lockband.utils.setServiceState
+import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -45,8 +42,8 @@ class LockingService : Service() {
         if (intent != null) {
             when (intent.action) {
                 LockingServiceActions.START.name -> {
-                    Intent(this, MiBandService::class.java).also {
-                        it.action = MiBandServiceActions.STOP.name
+                    Intent(this, DataGatheringService::class.java).also {
+                        it.action = DataGatheringServiceActions.STOP.name
                         startForegroundService(it)
                     }
                     startService()
@@ -121,8 +118,8 @@ class LockingService : Service() {
     }
 
     private fun stopService() {
-        Timber.d("Stopping the foreground service")
-        Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
+        Timber.d("Stopping the locking foreground service")
+        Toast.makeText(this, "Locking Service stopping", Toast.LENGTH_SHORT).show()
         try {
             wakeLock?.let {
                 if (it.isHeld) {
@@ -133,10 +130,10 @@ class LockingService : Service() {
             stopForeground(true)
             stopSelf()
         } catch (e: Exception) {
-            Timber.d("Service stopped without being started: ${e.message}")
+            Timber.d("Locking Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
-        setServiceState(this, ServiceState.STOPPED)
+        setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
     private fun createNotification(): Notification {

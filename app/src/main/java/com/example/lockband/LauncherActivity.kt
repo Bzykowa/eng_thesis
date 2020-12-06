@@ -1,9 +1,14 @@
 package com.example.lockband
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.databinding.ActivityLauncherBinding
 import com.example.lockband.utils.*
@@ -17,6 +22,42 @@ class LauncherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityLauncherBinding>(this, R.layout.activity_launcher)
 
+        val requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    finish()
+                }
+            }
+
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // You can use the API that requires the permission.
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+            -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Location permission")
+                    .setMessage("Communication with band requires location access.")
+                    .setPositiveButton("OK") { _, _ ->
+                        requestPermissionLauncher.launch(
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
+                    }
+                    .create()
+                    .show()
+            }
+            else -> {
+                requestPermissionLauncher.launch(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            }
+        }
+
         if (needsUsageStatsPermission()) {
             requestUsageStatsPermission()
         }
@@ -26,7 +67,7 @@ class LauncherActivity : AppCompatActivity() {
             Intent(this, SetupPasswordActivity::class.java).also {
                 startActivity(it)
             }
-        } else if (getMiBandAddress(this) == "err"){
+        } else if (getMiBandAddress(this) == "err") {
             Intent(this, PairingActivity::class.java).also {
                 startActivity(it)
             }
@@ -50,7 +91,14 @@ class LauncherActivity : AppCompatActivity() {
 
     private fun requestUsageStatsPermission() {
         if (!hasUsageStatsPermission(this)) {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+            AlertDialog.Builder(this)
+                .setTitle("Usage stats permission")
+                .setMessage("Monitoring apps while restricting access to some requires this permission.")
+                .setPositiveButton("OK") { _, _ ->
+                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                }
+                .create()
+                .show()
         }
     }
 }

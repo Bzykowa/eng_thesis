@@ -16,4 +16,6 @@ class HeartRateRepository @Inject constructor(private val heartRateDao: HeartRat
 
     fun getHeartRateSamplesBetween(startDate: Calendar, endDate: Calendar) =
         heartRateDao.getSamplesBetween(startDate, endDate)
+
+    fun getLatestHeartRateSample() = heartRateDao.getLatestSample()
 }

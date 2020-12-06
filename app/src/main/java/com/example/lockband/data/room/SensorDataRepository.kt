@@ -19,4 +19,6 @@ class SensorDataRepository @Inject constructor(private val sensorDataDao: Sensor
 
     fun getSensorDataSamplesBetween(startDate: Calendar, endDate: Calendar) =
         sensorDataDao.getSamplesBetween(startDate, endDate)
+
+    fun getLatestSensorDataSample() = sensorDataDao.getLatestSample()
 }

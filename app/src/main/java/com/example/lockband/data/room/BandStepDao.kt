@@ -19,4 +19,6 @@ interface BandStepDao {
     @Query("SELECT * FROM steps_band WHERE timestamp BETWEEN :startDate AND :endDate")
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<BandStep>
 
+    @Query("SELECT * FROM steps_band WHERE timestamp = (SELECT MAX(timestamp) FROM steps_band)")
+    fun getLatestSample() : BandStep
 }

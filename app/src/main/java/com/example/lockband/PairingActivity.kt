@@ -9,9 +9,9 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.example.lockband.data.MiBandServiceActions
+import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityPairingBinding
-import com.example.lockband.services.MiBandService
+import com.example.lockband.services.DataGatheringService
 import com.example.lockband.utils.setMiBandAddress
 import com.khmelenko.lab.miband.MiBand
 import dagger.hilt.android.AndroidEntryPoint
@@ -65,9 +65,9 @@ class PairingActivity : AppCompatActivity() {
 
                 setMiBandAddress(this, devices[item]!!.address)
 
-                Intent(this@PairingActivity, MiBandService::class.java).also {
+                Intent(this@PairingActivity, DataGatheringService::class.java).also {
                     it.putExtra("device", devices[item])
-                    it.action = MiBandServiceActions.PAIR.name
+                    it.action = DataGatheringServiceActions.PAIR.name
                     startForegroundService(it)
                 }
 

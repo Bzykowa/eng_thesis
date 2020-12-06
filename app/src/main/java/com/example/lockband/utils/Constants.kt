@@ -31,11 +31,12 @@ val SETTINGS: List<SettingsItem> = listOf(
 //foreground scanning timeout
 const val DEFAULT_TIMEOUT = 5000L
 
+//heart rate scanning timeout
+const val HR_TIMEOUT = 10000L
+
 //encrypted files names
 const val PASS_FILE = "pass.txt"
 
-//BLE GATT base UUID
-const val BASE_UUID: String = "0000%s-0000-1000-8000-00805f9b34fb"
 
 //Device scan duration
 const val SCAN_TIMEOUT: Long = 20000
