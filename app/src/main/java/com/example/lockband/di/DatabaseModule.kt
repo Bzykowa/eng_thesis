@@ -2,6 +2,7 @@ package com.example.lockband.di
 
 import android.content.Context
 import com.example.lockband.data.room.*
+import com.example.lockband.data.room.daos.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.example.lockband.data.room
+package com.example.lockband.data.room.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

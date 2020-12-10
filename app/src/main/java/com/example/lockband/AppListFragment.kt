@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import com.example.lockband.adapters.AppListAdapter
-import com.example.lockband.data.room.AppState
+import com.example.lockband.data.room.entities.AppState
 import com.example.lockband.databinding.FragmentAppListBinding
 import com.example.lockband.viewmodels.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint

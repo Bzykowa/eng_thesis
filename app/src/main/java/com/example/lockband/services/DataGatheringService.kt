@@ -19,7 +19,13 @@ import com.example.lockband.MainActivity
 import com.example.lockband.R
 import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.data.room.*
+import com.example.lockband.data.room.entities.BandStep
+import com.example.lockband.data.room.entities.HeartRate
+import com.example.lockband.data.room.entities.PhoneStep
+import com.example.lockband.data.room.entities.SensorData
+import com.example.lockband.data.room.repos.HeartRateRepository
+import com.example.lockband.data.room.repos.SensorDataRepository
+import com.example.lockband.data.room.repos.StepRepository
 import com.example.lockband.utils.*
 import com.khmelenko.lab.miband.MiBand
 import com.khmelenko.lab.miband.listeners.HeartRateNotifyListener
@@ -56,22 +62,22 @@ class DataGatheringService : Service(), SensorEventListener {
     private var isServiceStarted = false
 
     private val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+    private val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
-    val batteryReceiver = object : BroadcastReceiver() {
+    private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             handleBatteryUpdate()
         }
     }
 
-    val alertReceiver = object : BroadcastReceiver() {
+    private val alertReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             handleAlert()
         }
     }
 
-    val batteryIntentFilter = IntentFilter(DataGatheringServiceActions.BATTERY.name)
-    val alertIntentFilter = IntentFilter(DataGatheringServiceActions.ALERT.name)
+    private val batteryIntentFilter = IntentFilter(DataGatheringServiceActions.BATTERY.name)
+    private val alertIntentFilter = IntentFilter(DataGatheringServiceActions.ALERT.name)
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -234,6 +240,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
         Intent(this, LockingService::class.java).also {
             it.action = LockingServiceActions.START.name
+            startForegroundService(it)
         }
 
         stopService()
@@ -271,7 +278,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
 
     private fun actionSetHeartRateNotifyListener() =
-        miBand.setHeartRateScanListener(object : HeartRateNotifyListener {
+        miBand.setHeartRateScanListenerMiBand2(object : HeartRateNotifyListener {
             override fun onNotify(heartRate: Int) {
                 Timber.d("heart rate: $heartRate")
 
@@ -325,7 +332,7 @@ class DataGatheringService : Service(), SensorEventListener {
     private fun actionStartHeartRateScan() =
         disposables.add(miBand.startHeartRateScan().subscribe())
 
-    //used for alerting user of starting lockdown in events with discrepancies between steps or no hr
+
     private fun actionStartVibration() = disposables.add(
         miBand.startVibration(VibrationMode.VIBRATION_WITHOUT_LED)
             .subscribe { Timber.d("Vibration started") }
@@ -356,35 +363,38 @@ class DataGatheringService : Service(), SensorEventListener {
                     val latest = stepRepository.getLatestPhoneStepSample()
                     val newTimestamp = Calendar.getInstance()
 
-                    //Day changed -> start counting steps from zero
-                    if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
-                        //reboot on date change -> clear offset
-                        if (currentOffset > sensorSteps) {
-                            setStepsOffset(
-                                this@DataGatheringService,
-                                0
-                            )
-                        } else {
-                            //increase offset by yesterday stepCount
-                            setStepsOffset(
-                                this@DataGatheringService,
-                                latest.stepCount + currentOffset
-                            )
-                        }
-                    }
-
-                    TODO("set correct checks for proper offset")
-
-                    //reboot happened on the same day -> offset is 0
+                    //reboot -> clear offset and record latest sample to fix current steps
                     if (currentOffset > sensorSteps) {
                         setStepsOffset(
                             this@DataGatheringService,
                             0
                         )
+                        setStepsOffsetFix(
+                            this@DataGatheringService,
+                            latest.stepCount
+                        )
                     }
 
-                    if(sensorSteps < latest.stepCount){
-                        sensorSteps += latest.stepCount
+                    //Day changed -> start counting steps from zero
+                    if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
+
+                        //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
+                        val offsetFix =
+                            if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
+                                this@DataGatheringService
+                            ) else latest.stepCount
+
+                        setStepsOffset(
+                            this@DataGatheringService,
+                            offsetFix + currentOffset
+                        )
+
+                    } else {
+
+                        //fix step number -> add steps from sample before reboot
+                        if (sensorSteps < latest.stepCount) {
+                            sensorSteps += getStepsOffsetFix(this@DataGatheringService)
+                        }
                     }
 
                     stepRepository.insertPhoneStepSample(

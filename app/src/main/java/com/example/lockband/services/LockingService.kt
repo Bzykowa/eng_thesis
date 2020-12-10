@@ -12,7 +12,7 @@ import com.example.lockband.R
 import com.example.lockband.UnlockActivity
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.data.DataGatheringServiceActions
-import com.example.lockband.data.room.AppStateRepository
+import com.example.lockband.data.room.repos.AppStateRepository
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers

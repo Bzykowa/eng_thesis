@@ -1,7 +1,8 @@
-package com.example.lockband.data.room
+package com.example.lockband.data.room.repos
 
-import androidx.annotation.CallSuper
 import androidx.annotation.WorkerThread
+import com.example.lockband.data.room.daos.SensorDataDao
+import com.example.lockband.data.room.entities.SensorData
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton

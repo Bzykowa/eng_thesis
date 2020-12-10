@@ -1,7 +1,8 @@
-package com.example.lockband.data.room
+package com.example.lockband.data.room.daos
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.example.lockband.data.room.entities.AppState
 
 @Dao
 interface AppStateDao {

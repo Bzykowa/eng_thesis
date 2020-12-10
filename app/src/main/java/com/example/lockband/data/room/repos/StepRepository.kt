@@ -1,6 +1,10 @@
-package com.example.lockband.data.room
+package com.example.lockband.data.room.repos
 
 import androidx.annotation.WorkerThread
+import com.example.lockband.data.room.daos.BandStepDao
+import com.example.lockband.data.room.daos.PhoneStepDao
+import com.example.lockband.data.room.entities.BandStep
+import com.example.lockband.data.room.entities.PhoneStep
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton

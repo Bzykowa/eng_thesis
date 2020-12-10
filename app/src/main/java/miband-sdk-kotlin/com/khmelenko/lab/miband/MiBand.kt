@@ -6,7 +6,12 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
+import android.widget.Toast
+import androidx.core.content.ContextCompat.startForegroundService
+import com.example.lockband.data.LockingServiceActions
+import com.example.lockband.services.LockingService
 import com.example.lockband.utils.SCAN_TIMEOUT
 import com.khmelenko.lab.miband.listeners.HeartRateNotifyListener
 import com.khmelenko.lab.miband.listeners.RealtimeStepsNotifyListener
@@ -354,7 +359,14 @@ class MiBand(private val context: Context) : BluetoothListener {
 
     override fun onDisconnected() {
         notifyConnectionResult(false)
-        //TODO("start locking service and show toast Band disconnected")
+
+        //start locking service and show toast Band disconnected
+        Intent(context,LockingService::class.java).also {
+            it.action = LockingServiceActions.START.name
+            startForegroundService(context,it)
+        }
+
+        Toast.makeText(context,"MiBand disconnected",Toast.LENGTH_LONG).show()
     }
 
     override fun onResult(data: BluetoothGattCharacteristic) {

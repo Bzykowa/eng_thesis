@@ -8,6 +8,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.lockband.data.room.daos.*
+import com.example.lockband.data.room.entities.*
 import com.example.lockband.utils.DATABASE_NAME
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

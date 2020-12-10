@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.lockband.data.room.AppState
+import com.example.lockband.data.room.entities.AppState
 import com.example.lockband.databinding.AppListElementBinding
 
 class AppListAdapter(val listener: (Any) -> Unit, private val icons : MutableList<Drawable>) : ListAdapter<AppState, RecyclerView.ViewHolder>(AppStateDiffCallback()) {

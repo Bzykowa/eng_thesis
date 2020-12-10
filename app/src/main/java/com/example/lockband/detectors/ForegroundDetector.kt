@@ -7,12 +7,13 @@ import android.content.Context
 import android.util.Log
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.hasUsageStatsPermission
+import timber.log.Timber
 
 
 class ForegroundDetector {
     fun getForegroundApp(context: Context): String? {
         if (!hasUsageStatsPermission(context)) return null
-        Log.d(null,"Scan started")
+        Timber.d("Scan started")
         var foregroundApp: String? = null
         val time = System.currentTimeMillis()
         val usageEvents =
@@ -23,12 +24,12 @@ class ForegroundDetector {
         val event = UsageEvents.Event()
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(event)
-            Log.d(null,event.packageName+" in scan")
+            Timber.d("${event.packageName} in scan")
             if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 foregroundApp = event.packageName
             }
         }
-        Log.d(null, "$foregroundApp on detector return")
+        Timber.d("$foregroundApp on detector return")
         return foregroundApp
     }
 }

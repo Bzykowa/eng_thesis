@@ -1,10 +1,10 @@
-package com.example.lockband.data.room
+package com.example.lockband.data.room.daos
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import com.example.lockband.data.room.entities.PhoneStep
 import java.util.*
 
 @Dao

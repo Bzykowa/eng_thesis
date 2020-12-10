@@ -3,8 +3,8 @@ package com.example.lockband.viewmodels
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.lockband.data.room.AppState
-import com.example.lockband.data.room.AppStateRepository
+import com.example.lockband.data.room.entities.AppState
+import com.example.lockband.data.room.repos.AppStateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
