@@ -10,7 +10,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityLauncherBinding
+import com.example.lockband.services.DataGatheringService
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -73,6 +75,10 @@ class LauncherActivity : AppCompatActivity() {
             }
 
         } else if (getServiceState(this) == ServiceState.STOPPED) {
+            Intent(this, DataGatheringService::class.java).also {
+                it.action = DataGatheringServiceActions.START.name
+                startForegroundService(it)
+            }
             Intent(this, MainActivity::class.java).also {
                 startActivity(it)
             }
@@ -91,14 +97,7 @@ class LauncherActivity : AppCompatActivity() {
 
     private fun requestUsageStatsPermission() {
         if (!hasUsageStatsPermission(this)) {
-            AlertDialog.Builder(this)
-                .setTitle("Usage stats permission")
-                .setMessage("Monitoring apps while restricting access to some requires this permission.")
-                .setPositiveButton("OK") { _, _ ->
-                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-                }
-                .create()
-                .show()
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
     }
 }

@@ -4,5 +4,4 @@ import androidx.fragment.app.Fragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class EventsStatsFragment : Fragment() {
-}
+class EventsStatsFragment : Fragment()

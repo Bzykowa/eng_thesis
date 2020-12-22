@@ -11,10 +11,12 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Handler
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
 import android.widget.Toast
+import androidx.core.os.postDelayed
 import com.example.lockband.MainActivity
 import com.example.lockband.R
 import com.example.lockband.data.DataGatheringServiceActions
@@ -61,8 +63,8 @@ class DataGatheringService : Service(), SensorEventListener {
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
 
-    private val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+    private lateinit var sensorManager: SensorManager
+    private lateinit var sensor: Sensor
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -87,10 +89,9 @@ class DataGatheringService : Service(), SensorEventListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
-                DataGatheringServiceActions.PAIR.name -> handlePairing(intent)
+                DataGatheringServiceActions.PAIR.name -> actionConnect(intent)
                 DataGatheringServiceActions.START.name -> {
                     actionConnect(intent)
-                    startService()
                 }
                 DataGatheringServiceActions.STOP.name -> stopService()
                 else -> Timber.e("This should never happen. No action in the received intent")
@@ -108,6 +109,8 @@ class DataGatheringService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
         Timber.d("The Mi Band communication service has been created")
         val notification = createNotification()
         startForeground(2, notification)
@@ -144,7 +147,6 @@ class DataGatheringService : Service(), SensorEventListener {
     private fun startService() {
         if (isServiceStarted) return
         Timber.d("Starting the foreground service task")
-        Toast.makeText(this, "Communication with band started", Toast.LENGTH_SHORT).show()
         isServiceStarted = true
         setMiBandServiceState(this, MiBandServiceState.STARTED)
 
@@ -160,10 +162,6 @@ class DataGatheringService : Service(), SensorEventListener {
         actionSetHeartRateNotifyListener()
         actionSetRealtimeNotifyListener()
         actionSetSensorDataNotifyListener()
-
-        //enable realtime notify on steps and accelerometer
-        actionEnableRealtimeStepsNotify()
-        actionEnableSensorDataNotify()
 
 
         //Register BroadcastReceivers for battery update and vibrating alerts
@@ -191,9 +189,6 @@ class DataGatheringService : Service(), SensorEventListener {
                 }
             }
 
-            actionDisableRealtimeStepsNotify()
-            actionDisableSensorDataNotify()
-
             unregisterReceiver(batteryReceiver)
             unregisterReceiver(alertReceiver)
 
@@ -208,18 +203,21 @@ class DataGatheringService : Service(), SensorEventListener {
             Timber.d("Mi Band Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
-        setServiceState(this, ServiceState.STOPPED)
+        setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
-    private fun handlePairing(intent: Intent?) {
-        actionConnect(intent)
-
+    private fun handlePairing() {
+        Timber.d("Starting to pair")
         val d = miBand.pair().subscribe(
-            { Timber.d("Pairing successful") },
+            {
+                Timber.d("Pairing successful")
+                setMiBandPaired(this, true)
+                //enable realtime notify on steps and accelerometer
+                actionEnableRealtimeStepsNotify()
+                actionEnableSensorDataNotify()
+            },
             { throwable -> Timber.e(throwable, "Pairing failed") })
         disposables.add(d)
-
-        startService()
     }
 
     private fun handleBatteryUpdate() = disposables.add(
@@ -249,6 +247,8 @@ class DataGatheringService : Service(), SensorEventListener {
     //Communication action handlers
 
     private fun actionConnect(intent: Intent?) {
+
+        val handler = Handler()
         val device = intent!!.getParcelableExtra<BluetoothDevice>("device")
 
         val d = miBand.connect(device!!)
@@ -256,12 +256,20 @@ class DataGatheringService : Service(), SensorEventListener {
                 Timber.d("Connect onNext: $result")
                 if (!result) {
                     actionConnect(intent)
+                } else {
+                    if (!getMiBandPaired(this)) {
+                        handlePairing()
+                    }
                 }
             }, { throwable ->
                 throwable.printStackTrace()
                 Timber.e(throwable)
             })
         disposables.add(d)
+
+        handler.postDelayed({
+            startService()
+        }, SCAN_TIMEOUT + 10000)
     }
 
     private fun actionEnableRealtimeStepsNotify() =
@@ -276,6 +284,28 @@ class DataGatheringService : Service(), SensorEventListener {
     private fun actionDisableSensorDataNotify() =
         disposables.add(miBand.disableSensorDataNotify().subscribe())
 
+    private fun actionSetPairingListener() = miBand.setPairingListener{data ->
+        when{
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x01,0x01)) -> {
+                //TODO request random number from band
+            }
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x01,0x04)) -> {
+                Timber.e("Sending pairing key failed")
+            }
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x02,0x01)) -> {
+                val randomNumber = data.sliceArray(3 until data.size)
+                //TODO send encrypted random number
+            }
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x02,0x04)) -> {
+                Timber.e("Requesting random number failed")
+            }
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x03,0x01)) -> {
+                val randomNumber = data.sliceArray(3 until data.size)
+                //TODO paired
+            }
+        }
+    }
+
 
     private fun actionSetHeartRateNotifyListener() =
         miBand.setHeartRateScanListenerMiBand2(object : HeartRateNotifyListener {
@@ -285,6 +315,7 @@ class DataGatheringService : Service(), SensorEventListener {
                 GlobalScope.launch(Dispatchers.IO) {
                     heartRateRepository.insertHeartRateSample(
                         HeartRate(
+                            0,
                             Calendar.getInstance(),
                             heartRate
                         )
@@ -300,7 +331,7 @@ class DataGatheringService : Service(), SensorEventListener {
                 Timber.d("RealtimeStepsNotifyListener:$steps")
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    stepRepository.insertBandStepSample(BandStep(Calendar.getInstance(), steps))
+                    stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))
                 }
             }
         })
@@ -319,6 +350,7 @@ class DataGatheringService : Service(), SensorEventListener {
         GlobalScope.launch(Dispatchers.IO) {
             sensorDataRepository.insertSensorDataSample(
                 SensorData(
+                    0,
                     Calendar.getInstance(),
                     d1,
                     d2,
@@ -329,8 +361,14 @@ class DataGatheringService : Service(), SensorEventListener {
     }
 
 
-    private fun actionStartHeartRateScan() =
-        disposables.add(miBand.startHeartRateScan().subscribe())
+    private fun actionStartHeartRateScan() = disposables.add(miBand.startHeartRateScan().subscribe(
+        { result ->
+            Timber.d("Scan result: $result")
+        }, { throwable ->
+            throwable.printStackTrace()
+            Timber.e(throwable)
+        })
+    )
 
 
     private fun actionStartVibration() = disposables.add(
@@ -360,7 +398,8 @@ class DataGatheringService : Service(), SensorEventListener {
                 }
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    val latest = stepRepository.getLatestPhoneStepSample()
+                    delay(100)
+                    val latest: PhoneStep? = stepRepository.getLatestPhoneStepSample()
                     val newTimestamp = Calendar.getInstance()
 
                     //reboot -> clear offset and record latest sample to fix current steps
@@ -371,34 +410,37 @@ class DataGatheringService : Service(), SensorEventListener {
                         )
                         setStepsOffsetFix(
                             this@DataGatheringService,
-                            latest.stepCount
+                            latest?.stepCount ?: 0
                         )
                     }
 
                     //Day changed -> start counting steps from zero
-                    if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
+                    if (latest != null) {
+                        if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
 
-                        //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
-                        val offsetFix =
-                            if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
-                                this@DataGatheringService
-                            ) else latest.stepCount
+                            //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
+                            val offsetFix =
+                                if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
+                                    this@DataGatheringService
+                                ) else latest.stepCount
 
-                        setStepsOffset(
-                            this@DataGatheringService,
-                            offsetFix + currentOffset
-                        )
+                            setStepsOffset(
+                                this@DataGatheringService,
+                                offsetFix + currentOffset
+                            )
 
-                    } else {
+                        } else {
 
-                        //fix step number -> add steps from sample before reboot
-                        if (sensorSteps < latest.stepCount) {
-                            sensorSteps += getStepsOffsetFix(this@DataGatheringService)
+                            //fix step number -> add steps from sample before reboot
+                            if (sensorSteps < latest.stepCount) {
+                                sensorSteps += getStepsOffsetFix(this@DataGatheringService)
+                            }
                         }
                     }
 
                     stepRepository.insertPhoneStepSample(
                         PhoneStep(
+                            0,
                             newTimestamp,
                             sensorSteps - getStepsOffset(this@DataGatheringService)
                         )

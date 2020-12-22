@@ -13,6 +13,7 @@ import com.example.lockband.data.room.entities.*
 import com.example.lockband.utils.DATABASE_NAME
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.*
 
 @Database(
     entities = [AppState::class, BandStep::class, PhoneStep::class, HeartRate::class, SensorData::class],

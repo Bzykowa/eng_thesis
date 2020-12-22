@@ -7,9 +7,9 @@ import java.util.*
 
 @Entity(tableName = "raw_sensor_data")
 data class SensorData(
-    @PrimaryKey @ColumnInfo(name = "timestamp") val timestamp: Calendar,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id : Int = 0,
+    @ColumnInfo(name = "timestamp") val timestamp: Calendar,
     @ColumnInfo(name = "x_axis") val xAxis: Int,
     @ColumnInfo(name = "y_axis") val yAxis: Int,
     @ColumnInfo(name = "z_axis") val zAxis: Int
-) {
-}
+)

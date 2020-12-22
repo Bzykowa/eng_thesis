@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.example.lockband.adapters.DeviceListAdapter
 import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityPairingBinding
 import com.example.lockband.services.DataGatheringService
@@ -18,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.activity_pairing.*
+import kotlinx.android.synthetic.main.device_item.view.*
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
@@ -37,26 +39,20 @@ class PairingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityPairingBinding>(this, R.layout.activity_pairing)
 
-        //wait with showing list for scan
-        deviceList.visibility = View.GONE
-
         miBand = MiBand(this)
-        adapter = ArrayAdapter(this, R.layout.device_item, ArrayList())
+        adapter = DeviceListAdapter(this, R.layout.device_item, R.id.deviceName, ArrayList())
 
         scanButton.setOnClickListener {
             val disposable = miBand.startScan()
                 .subscribe(handleScanResult(), handleScanError())
             disposables.add(disposable)
-
-            //Update visibilities
-            scanButton.visibility = View.GONE
-            deviceList.visibility = View.VISIBLE
         }
 
         //set up adapter plus pairing listener
         deviceList.adapter = adapter
         deviceList.setOnItemClickListener { parent, view, position, id ->
-            val item = (view as TextView).text.toString()
+            val item =
+                view.rootView.findViewById<TextView>(R.id.deviceName).text.toString()           //.deviceName.text.toString()
 
             if (devices.containsKey(item)) {
 
@@ -64,6 +60,7 @@ class PairingActivity : AppCompatActivity() {
                 disposables.add(disposable)
 
                 setMiBandAddress(this, devices[item]!!.address)
+                devices[item]!!.createBond()
 
                 Intent(this@PairingActivity, DataGatheringService::class.java).also {
                     it.putExtra("device", devices[item])

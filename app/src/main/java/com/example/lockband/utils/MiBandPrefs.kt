@@ -11,6 +11,7 @@ enum class MiBandServiceState {
 
 private const val name = "MIBAND_KEY"
 private const val addressKey = "MIBAND_ADDRESS"
+private const val pairedKey = "MIBAND_PAIRED"
 private const val stateKey = "MIBAND_SERVICE_STATE"
 private const val batteryLevel = "MIBAND_BATTERY_LEVEL"
 private const val batteryCycles = "MIBAND_BATTERY_CYCLES"
@@ -21,6 +22,18 @@ fun setMiBandAddress(context: Context, address: String) {
     val sharedPrefs = getPreferences(context, name)
     sharedPrefs.edit().let {
         it.putString(addressKey, address)
+        it.apply()
+    }
+}
+
+fun getMiBandPaired(context: Context): Boolean {
+    return getPreferences(context, name).getBoolean(pairedKey, false)
+}
+
+fun setMiBandPaired(context: Context, paired: Boolean) {
+    val sharedPrefs = getPreferences(context, name)
+    sharedPrefs.edit().let {
+        it.putBoolean(pairedKey,paired)
         it.apply()
     }
 }

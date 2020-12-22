@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.databinding.ActivitySetupPasswordBinding
 import com.example.lockband.utils.PASS_FILE
+import com.example.lockband.utils.getMiBandAddress
 import com.example.lockband.utils.hashPassword
 import com.example.lockband.utils.writeEncryptedFile
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,9 +27,19 @@ class SetupPasswordActivity : AppCompatActivity() {
             error_new_password.visibility = View.GONE
 
             if (new_password.text.toString() == repeated_new_password.text.toString()) {
-                writeEncryptedFile(applicationContext, PASS_FILE, hashPassword(new_password.text.toString()))
-                Intent(this, MainActivity::class.java).also {
-                    startActivity(it)
+                writeEncryptedFile(
+                    applicationContext,
+                    PASS_FILE,
+                    hashPassword(new_password.text.toString())
+                )
+                if (getMiBandAddress(this) == "err") {
+                    Intent(this, PairingActivity::class.java).also {
+                        startActivity(it)
+                    }
+                } else {
+                    Intent(this, MainActivity::class.java).also {
+                        startActivity(it)
+                    }
                 }
             } else {
                 error_new_password.visibility = View.VISIBLE

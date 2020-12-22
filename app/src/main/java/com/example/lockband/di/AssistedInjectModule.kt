@@ -8,5 +8,4 @@ import com.squareup.inject.assisted.dagger2.AssistedModule
 @InstallIn(FragmentComponent::class)
 @AssistedModule
 @Module()
-interface AssistedInjectModule {
-}
+interface AssistedInjectModule

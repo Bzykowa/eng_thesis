@@ -1,5 +1,7 @@
 package com.khmelenko.lab.miband.model
 
+import com.example.lockband.utils.KEY
+
 /**
  * Defines values for accessing data and controlling band
  *
@@ -7,7 +9,8 @@ package com.khmelenko.lab.miband.model
  */
 object Protocol {
 
-    val PAIR = byteArrayOf(2)
+    val NOTIFY_ENABLE = byteArrayOf(1, 0)
+    val PAIR = NOTIFY_ENABLE + KEY
     val VIBRATION_WITH_LED = byteArrayOf(1)
     val VIBRATION_10_TIMES_WITH_LED = byteArrayOf(2)
     val VIBRATION_WITHOUT_LED = byteArrayOf(4)

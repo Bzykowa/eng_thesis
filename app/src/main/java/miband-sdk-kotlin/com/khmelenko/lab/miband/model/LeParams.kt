@@ -30,7 +30,7 @@ class LeParams {
             params.advInt = (params.advInt * 0.625).toInt()
             params.timeout *= 10
 
-            return params;
+            return params
         }
     }
 

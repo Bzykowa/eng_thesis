@@ -4,6 +4,7 @@ import android.bluetooth.*
 import android.bluetooth.BluetoothDevice.TRANSPORT_LE
 import android.content.Context
 import com.khmelenko.lab.miband.model.Profile
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.HashMap
@@ -30,7 +31,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      * @param device  Device to connect
      */
     fun connect(context: Context, device: BluetoothDevice) {
-        device.connectGatt(context, false, this, TRANSPORT_LE)
+        device.connectGatt(context, false, this)
     }
 
     /**

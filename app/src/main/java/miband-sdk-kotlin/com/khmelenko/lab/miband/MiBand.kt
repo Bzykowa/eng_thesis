@@ -60,10 +60,10 @@ class MiBand(private val context: Context) : BluetoothListener {
             if (adapter != null) {
                 val scanner = adapter.bluetoothLeScanner
                 if (scanner != null) {
+                    scanner.startScan(getScanCallback(subscriber))
                     handler.postDelayed({
                         stopScan()
                     }, SCAN_TIMEOUT)
-                    scanner.startScan(getScanCallback(subscriber))
                 } else {
                     Timber.d("BluetoothLeScanner is null")
                     subscriber.onError(NullPointerException("BluetoothLeScanner is null"))
@@ -125,6 +125,7 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun connect(device: BluetoothDevice): Observable<Boolean> {
         return Observable.create<Boolean> { subscriber ->
+            Timber.d("MiBand connect() invoked")
             connectionSubject.subscribe(ObserverWrapper(subscriber))
             bluetoothIo.connect(context, device)
         }
@@ -136,8 +137,9 @@ class MiBand(private val context: Context) : BluetoothListener {
     fun pair(): Observable<Void> {
         return Observable.create<Void> { subscriber ->
             pairRequested = true
+            Timber.d("MiBand pair() invoked")
             pairSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_PAIR, Protocol.PAIR)
+            bluetoothIo.writeCharacteristic(Profile.UUID_SERVICE_MIBAND2, Profile.UUID_CHAR_PAIR, Protocol.PAIR)
         }
     }
 
@@ -217,6 +219,15 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setSensorDataNotifyListener(listener: (ByteArray) -> Unit) {
         bluetoothIo.setNotifyListener(Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_SENSOR_DATA, listener)
+    }
+
+    /**
+     * Set pairing notification listener
+     *
+     * @param listener Pairing listener
+     */
+    fun setPairingListener(listener : (ByteArray) -> Unit){
+        bluetoothIo.setNotifyListener(Profile.UUID_SERVICE_MIBAND2,Profile.UUID_CHAR_PAIR,listener)
     }
 
     /**
@@ -366,7 +377,7 @@ class MiBand(private val context: Context) : BluetoothListener {
             startForegroundService(context,it)
         }
 
-        Toast.makeText(context,"MiBand disconnected",Toast.LENGTH_LONG).show()
+        Timber.d("MiBand disconnected")
     }
 
     override fun onResult(data: BluetoothGattCharacteristic) {
