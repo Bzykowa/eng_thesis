@@ -32,7 +32,7 @@ val SETTINGS: List<SettingsItem> = listOf(
 const val DEFAULT_TIMEOUT = 5000L
 
 //heart rate scanning timeout
-const val HR_TIMEOUT = 10000L
+const val HR_TIMEOUT = 15000L
 
 //encrypted files names
 const val PASS_FILE = "pass.txt"
@@ -41,4 +41,5 @@ const val PASS_FILE = "pass.txt"
 const val SCAN_TIMEOUT: Long = 10000
 
 //Pairing key
-val KEY = byteArrayOf(0x01,0x23,0x45,0x67,0x89.toByte(),0x01,0x22,0x23,0x34,0x45,0x56,0x67,0x78,0x89.toByte(),0x90.toByte(),0x02)  //'\x01\x23\x45\x67\x89\x01\x22\x23\x34\x45\x56\x67\x78\x89\x90\x02'
+val KEY = "01234567890122233445566778899002"  //'\x01\x23\x45\x67\x89\x01\x22\x23\x34\x45\x56\x67\x78\x89\x90\x02'
+

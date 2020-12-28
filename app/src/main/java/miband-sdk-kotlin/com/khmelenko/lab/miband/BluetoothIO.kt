@@ -60,14 +60,20 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
             val characteristic = service.getCharacteristic(characteristicId)
             if (characteristic != null) {
                 characteristic.value = value
+
+                Timber.d("Trying to write to characteristic: ${characteristic.uuid}")
                 val writeResult = bluetoothGatt?.writeCharacteristic(characteristic) ?: false
+
                 if (!writeResult) {
                     notifyWithFail(
                         serviceUUID,
                         characteristicId,
                         "BluetoothGatt write operation failed"
                     )
+                } else {
+                    Timber.d("Written to characteristic: ${characteristic.uuid}")
                 }
+                
             } else {
                 notifyWithFail(
                     serviceUUID,
@@ -150,6 +156,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         checkConnectionState()
 
         val service = bluetoothGatt?.getService(serviceUUID)
+
         if (service != null) {
             val characteristic = service.getCharacteristic(characteristicId)
             if (characteristic != null) {
@@ -158,6 +165,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                     characteristic.getDescriptor(Profile.UUID_DESCRIPTOR_UPDATE_NOTIFICATION)
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                 bluetoothGatt?.writeDescriptor(descriptor)
+                Timber.d("setting listener: $serviceUUID; $characteristicId; ${descriptor.value.asList()}")
                 notifyListeners[characteristicId] = listener
             } else {
                 notifyWithFail(
@@ -226,6 +234,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         super.onServicesDiscovered(gatt, status)
         if (status == BluetoothGatt.GATT_SUCCESS) {
             bluetoothGatt = gatt
+            Timber.d("On Services Discovered : $status")
             checkAvailableServices()
             listener?.onConnectionEstablished()
         } else {

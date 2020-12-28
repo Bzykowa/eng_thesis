@@ -1,6 +1,7 @@
 package com.example.lockband
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -77,6 +78,11 @@ class LauncherActivity : AppCompatActivity() {
         } else if (getServiceState(this) == ServiceState.STOPPED) {
             Intent(this, DataGatheringService::class.java).also {
                 it.action = DataGatheringServiceActions.START.name
+                it.putExtra(
+                    "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
+                        getMiBandAddress(this)
+                    )
+                )
                 startForegroundService(it)
             }
             Intent(this, MainActivity::class.java).also {

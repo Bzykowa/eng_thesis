@@ -90,7 +90,7 @@ class PairingActivity : AppCompatActivity() {
 
             val item = "${device.name} (${device.address})"
 
-            if (!devices.containsKey(item)) {
+            if (!devices.containsKey(item) && device.name == "Mi Band 3") {
                 devices[item] = device
                 adapter.add(item)
             }

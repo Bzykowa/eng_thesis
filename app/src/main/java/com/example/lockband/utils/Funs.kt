@@ -10,6 +10,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 
 
 //check for usage stats permission (needed to monitor apps)
@@ -34,7 +36,7 @@ fun readEncryptedFile(applicationContext: Context, name: String): String {
         nextByte = inputStream.read()
     }
 
-    return String(byteArrayOutputStream.toByteArray(),StandardCharsets.UTF_8)
+    return String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8)
 }
 
 fun writeEncryptedFile(applicationContext: Context, name: String, data: String) {
@@ -61,7 +63,7 @@ fun referenceEncryptedFile(applicationContext: Context, name: String) : Encrypte
     ).build()
 }
 
-fun hashPassword(pass : String) : String {
+fun hashPassword(pass: String) : String {
     val message: ByteArray = pass.toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-512")
     return String(md.digest(message), StandardCharsets.UTF_8)
@@ -69,4 +71,45 @@ fun hashPassword(pass : String) : String {
 
 fun getPreferences(context: Context, name: String): SharedPreferences {
     return context.getSharedPreferences(name, 0)
+}
+
+fun parseHexBinary(s: String): ByteArray? {
+    val len = s.length
+
+    // "111" is not a valid hex encoding.
+    require(len % 2 == 0) { "hexBinary needs to be even-length: $s" }
+    val out = ByteArray(len / 2)
+    var i = 0
+    while (i < len) {
+        val h = hexToBin(s[i])
+        val l = hexToBin(s[i + 1])
+        require(!(h == -1 || l == -1)) { "contains illegal character for hexBinary: $s" }
+        out[i / 2] = (h * 16 + l).toByte()
+        i += 2
+    }
+    return out
+}
+
+private fun hexToBin(ch: Char): Int {
+    if (ch in '0'..'9') return ch - '0'
+    if (ch in 'A'..'F') return ch - 'A' + 10
+    return if (ch in 'a'..'f') ch - 'a' + 10 else -1
+}
+
+private val hexCode = "0123456789ABCDEF".toCharArray()
+
+fun printHexBinary(data: ByteArray): String? {
+    val r = StringBuilder(data.size * 2)
+    for (b in data) {
+        r.append(hexCode[b.toInt() shr 4 and 0xF])
+        r.append(hexCode[b.toInt() and 0xF])
+    }
+    return r.toString()
+}
+
+fun encryptAES(number: ByteArray, secretKey : ByteArray) : ByteArray{
+    val ecipher: Cipher = Cipher.getInstance("AES/ECB/NoPadding")
+    val newKey = SecretKeySpec(secretKey, "AES")
+    ecipher.init(Cipher.ENCRYPT_MODE, newKey)
+    return ecipher.doFinal(number)
 }

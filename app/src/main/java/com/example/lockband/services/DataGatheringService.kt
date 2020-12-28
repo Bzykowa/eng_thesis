@@ -11,12 +11,10 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Handler
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
 import android.widget.Toast
-import androidx.core.os.postDelayed
 import com.example.lockband.MainActivity
 import com.example.lockband.R
 import com.example.lockband.data.DataGatheringServiceActions
@@ -43,6 +41,7 @@ import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -159,10 +158,12 @@ class DataGatheringService : Service(), SensorEventListener {
             }
 
         //set up listeners for band data scans
-        actionSetHeartRateNotifyListener()
-        actionSetRealtimeNotifyListener()
+        miBand.removePairingListener()
+        actionSetRealtimeStepsNotifyListener()
         actionSetSensorDataNotifyListener()
-
+        actionSetHeartRateNotifyListener()
+        actionEnableSensorDataNotify()
+        actionStartMeasuringSensorData()
 
         //Register BroadcastReceivers for battery update and vibrating alerts
         registerReceiver(batteryReceiver, batteryIntentFilter)
@@ -206,18 +207,18 @@ class DataGatheringService : Service(), SensorEventListener {
         setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
-    private fun handlePairing() {
+    private fun handleAuthentication() {
         Timber.d("Starting to pair")
-        val d = miBand.pair().subscribe(
-            {
-                Timber.d("Pairing successful")
-                setMiBandPaired(this, true)
-                //enable realtime notify on steps and accelerometer
-                actionEnableRealtimeStepsNotify()
-                actionEnableSensorDataNotify()
-            },
-            { throwable -> Timber.e(throwable, "Pairing failed") })
-        disposables.add(d)
+
+        disposables.add(
+            miBand.initializePairing().delaySubscription(2, TimeUnit.SECONDS).subscribe({ result ->
+                Timber.d("Sent key to MiBand : $result")
+            }, { throwable ->
+                Timber.e(throwable)
+                handleAuthentication()
+            })
+        )
+
     }
 
     private fun handleBatteryUpdate() = disposables.add(
@@ -248,7 +249,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
     private fun actionConnect(intent: Intent?) {
 
-        val handler = Handler()
+        //val handler = Handler()
         val device = intent!!.getParcelableExtra<BluetoothDevice>("device")
 
         val d = miBand.connect(device!!)
@@ -256,52 +257,65 @@ class DataGatheringService : Service(), SensorEventListener {
                 Timber.d("Connect onNext: $result")
                 if (!result) {
                     actionConnect(intent)
-                } else {
-                    if (!getMiBandPaired(this)) {
-                        handlePairing()
-                    }
                 }
+                actionSetPairingListener()
+                handleAuthentication()
             }, { throwable ->
                 throwable.printStackTrace()
                 Timber.e(throwable)
             })
         disposables.add(d)
-
-        handler.postDelayed({
-            startService()
-        }, SCAN_TIMEOUT + 10000)
     }
 
-    private fun actionEnableRealtimeStepsNotify() =
-        disposables.add(miBand.enableRealtimeStepsNotify().subscribe())
 
-    private fun actionDisableRealtimeStepsNotify() =
-        disposables.add(miBand.disableRealtimeStepsNotify().subscribe())
-
-    private fun actionEnableSensorDataNotify() =
-        disposables.add(miBand.enableSensorDataNotify().subscribe())
-
-    private fun actionDisableSensorDataNotify() =
-        disposables.add(miBand.disableSensorDataNotify().subscribe())
-
-    private fun actionSetPairingListener() = miBand.setPairingListener{data ->
-        when{
-            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x01,0x01)) -> {
+    private fun actionSetPairingListener() = miBand.setPairingListener { data ->
+        Timber.d("Pairing listener received response")
+        when {
+            //Confirmation of receiving key from phone
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x01, 0x01)) -> {
                 //TODO request random number from band
+                disposables.add(
+                    miBand.requestRandomNumber().subscribe({ result ->
+                        Timber.d("Sent random number request to MiBand : $result")
+                    }, { throwable ->
+                        Timber.e(throwable)
+                    })
+                )
             }
-            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x01,0x04)) -> {
+            //Error in receiving key from phone
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x01, 0x04)) -> {
                 Timber.e("Sending pairing key failed")
             }
-            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x02,0x01)) -> {
+            //Received random number from band
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x02, 0x01)) -> {
                 val randomNumber = data.sliceArray(3 until data.size)
                 //TODO send encrypted random number
+                disposables.add(
+                    miBand.sendEncryptedNumber(randomNumber).subscribe({ result ->
+                        Timber.d("Sent encrypted number to MiBand : $result")
+                    }, { throwable ->
+                        Timber.e(throwable)
+                    })
+                )
             }
-            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x02,0x04)) -> {
+            //Error in receiving random number from band
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x02, 0x04)) -> {
                 Timber.e("Requesting random number failed")
             }
-            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10,0x03,0x01)) -> {
-                val randomNumber = data.sliceArray(3 until data.size)
+            //Successfully paired
+            data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x03, 0x01)) -> {
+                Timber.d("Pairing successful")
                 //TODO paired
+                setMiBandPaired(this, true)
+                startService()
+            }
+            else -> {
+                setMiBandPaired(this, false)
+                Toast.makeText(
+                    this@DataGatheringService,
+                    "Pairing failed. Try again.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -325,7 +339,7 @@ class DataGatheringService : Service(), SensorEventListener {
         })
 
 
-    private fun actionSetRealtimeNotifyListener() =
+    private fun actionSetRealtimeStepsNotifyListener() =
         miBand.setRealtimeStepsNotifyListener(object : RealtimeStepsNotifyListener {
             override fun onNotify(steps: Int) {
                 Timber.d("RealtimeStepsNotifyListener:$steps")
@@ -361,14 +375,15 @@ class DataGatheringService : Service(), SensorEventListener {
     }
 
 
-    private fun actionStartHeartRateScan() = disposables.add(miBand.startHeartRateScan().subscribe(
-        { result ->
-            Timber.d("Scan result: $result")
-        }, { throwable ->
-            throwable.printStackTrace()
-            Timber.e(throwable)
-        })
-    )
+    private fun actionStartHeartRateScan() =
+        disposables.add(miBand.startRealTimeHeartRateScan().delay(1, TimeUnit.SECONDS).subscribe(
+            { result ->
+                Timber.d("Scan result: $result")
+            }, { throwable ->
+                throwable.printStackTrace()
+                Timber.e(throwable)
+            })
+        )
 
 
     private fun actionStartVibration() = disposables.add(
@@ -382,6 +397,15 @@ class DataGatheringService : Service(), SensorEventListener {
             .subscribe { Timber.d("Vibration stopped") }
         disposables.add(d)
     }
+
+    private fun actionEnableSensorDataNotify() =
+        disposables.add(
+            miBand.enableSensorDataNotify().delaySubscription(1, TimeUnit.SECONDS).subscribe()
+        )
+
+    private fun actionStartMeasuringSensorData() = disposables.add(
+        miBand.startMeasuringSensorData().delaySubscription(2, TimeUnit.SECONDS).subscribe()
+    )
 
     //Step counter sensor callbacks
 

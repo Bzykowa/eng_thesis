@@ -20,9 +20,6 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
-    <uses-feature
-        android:name="android.software.companion_device_setup"
-        android:required="true" />
     <!--counting steps in phone-->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
