@@ -6,8 +6,10 @@ import android.content.SharedPreferences
 import android.os.Process
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKey
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.lang.Thread.sleep
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import javax.crypto.Cipher
@@ -23,6 +25,8 @@ fun hasUsageStatsPermission(context: Context): Boolean {
     )
     return mode == AppOpsManager.MODE_ALLOWED
 }
+
+//Encrypted password file
 
 fun readEncryptedFile(applicationContext: Context, name: String): String {
 
@@ -50,7 +54,7 @@ fun writeEncryptedFile(applicationContext: Context, name: String, data: String) 
     }
 }
 
-fun referenceEncryptedFile(applicationContext: Context, name: String) : EncryptedFile {
+fun referenceEncryptedFile(applicationContext: Context, name: String): EncryptedFile {
     val mainKey = MasterKey.Builder(applicationContext)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
@@ -63,7 +67,7 @@ fun referenceEncryptedFile(applicationContext: Context, name: String) : Encrypte
     ).build()
 }
 
-fun hashPassword(pass: String) : String {
+fun hashPassword(pass: String): String {
     val message: ByteArray = pass.toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-512")
     return String(md.digest(message), StandardCharsets.UTF_8)
@@ -107,9 +111,18 @@ fun printHexBinary(data: ByteArray): String? {
     return r.toString()
 }
 
-fun encryptAES(number: ByteArray, secretKey : ByteArray) : ByteArray{
+fun encryptAES(number: ByteArray, secretKey: ByteArray): ByteArray {
     val ecipher: Cipher = Cipher.getInstance("AES/ECB/NoPadding")
     val newKey = SecretKeySpec(secretKey, "AES")
     ecipher.init(Cipher.ENCRYPT_MODE, newKey)
     return ecipher.doFinal(number)
+}
+
+fun pauseBetweenOperations() {
+    try {
+        sleep(OP_TIMEOUT)
+    } catch (e: InterruptedException) {
+        Timber.e(e)
+    }
+
 }

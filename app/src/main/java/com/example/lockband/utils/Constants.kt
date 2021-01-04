@@ -32,7 +32,10 @@ val SETTINGS: List<SettingsItem> = listOf(
 const val DEFAULT_TIMEOUT = 5000L
 
 //heart rate scanning timeout
-const val HR_TIMEOUT = 15000L
+const val HR_TIMEOUT = 12000L
+
+//BLE operation delay
+const val OP_TIMEOUT = 500L
 
 //encrypted files names
 const val PASS_FILE = "pass.txt"
@@ -40,6 +43,6 @@ const val PASS_FILE = "pass.txt"
 //Device scan duration
 const val SCAN_TIMEOUT: Long = 10000
 
-//Pairing key
-val KEY = "01234567890122233445566778899002"  //'\x01\x23\x45\x67\x89\x01\x22\x23\x34\x45\x56\x67\x78\x89\x90\x02'
+//Authentication key
+val KEY = byteArrayOf(0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45)  //\xf5\xd2\x29\x87\x65\x0a\x1d\x82\x05\xab\x82\xbe\xb9\x38\x59\xcf
 

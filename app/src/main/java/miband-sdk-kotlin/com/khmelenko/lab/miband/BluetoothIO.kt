@@ -31,7 +31,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      * @param device  Device to connect
      */
     fun connect(context: Context, device: BluetoothDevice) {
-        device.connectGatt(context, false, this)
+        device.connectGatt(context, false, this, TRANSPORT_LE)
     }
 
     /**
@@ -139,6 +139,14 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         }
     }
 
+    fun requestMtu(mtu : Int){
+        checkConnectionState()
+        val result = bluetoothGatt?.requestMtu(mtu) ?: false
+        if(!result) {
+            notifyWithFail(3,"MTU request failed")
+        }
+    }
+
     /**
      * Sets notification listener for specific service and specific characteristic
 
@@ -160,11 +168,11 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         if (service != null) {
             val characteristic = service.getCharacteristic(characteristicId)
             if (characteristic != null) {
-                bluetoothGatt?.setCharacteristicNotification(characteristic, true)
+                bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
                 val descriptor =
                     characteristic.getDescriptor(Profile.UUID_DESCRIPTOR_UPDATE_NOTIFICATION)
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                bluetoothGatt?.writeDescriptor(descriptor)
+                bluetoothGatt!!.writeDescriptor(descriptor)
                 Timber.d("setting listener: $serviceUUID; $characteristicId; ${descriptor.value.asList()}")
                 notifyListeners[characteristicId] = listener
             } else {
@@ -304,6 +312,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
             throw IllegalStateException("Device is not connected")
         }
     }
+
 
     /**
      * Checks available services, characteristics and descriptors

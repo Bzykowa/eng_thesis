@@ -33,24 +33,30 @@ object Profile {
     val UUID_SERVICE_NOTIFICATION: UUID = UUID.fromString("00001811-0000-1000-8000-00805f9b34fb")
 
     /**
+     * Device information service (correct)
+     */
+    val UUID_SERVICE_DEVICE_INFORMATION: UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
+
+    /**
      * Unknown services
      */
     val UUID_SERVICE_UNKNOWN1: UUID = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
     val UUID_SERVICE_UNKNOWN2: UUID = UUID.fromString("00001801-0000-1000-8000-00805f9b34fb")
-    val UUID_SERVICE_UNKNOWN4: UUID = UUID.fromString("0000fee1-0000-1000-8000-00805f9b34fb")
-    val UUID_SERVICE_UNKNOWN5: UUID = UUID.fromString("0000fee7-0000-1000-8000-00805f9b34fb")
 
 
     // DESCRIPTORS (correct)
 
-    val UUID_DESCRIPTOR_UPDATE_NOTIFICATION: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    val UUID_DESCRIPTOR_UPDATE_NOTIFICATION: UUID =
+        UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 
     // CHARACTERISTICS
 
-    val UUID_CHAR_DEVICE_INFO: UUID = UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb")
+    val UUID_CHAR_SERIAL_NUMBER: UUID = UUID.fromString("00002a25-0000-1000-8000-00805f9b34fb")
 
-    val UUID_CHAR_DEVICE_NAME: UUID = UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb")
+    val UUID_CHAR_HARDWARE_REVISION: UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
+
+    val UUID_CHAR_SOFTWARE_REVISION: UUID = UUID.fromString("00002a28-0000-1000-8000-00805f9b34fb")
 
     /**
      * Notification (correct)
@@ -63,9 +69,9 @@ object Profile {
     val UUID_CHAR_USER_INFO: UUID = UUID.fromString("0000ff04-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Used for manipulations with service control (bad)
+     * Used for manipulations with service control (correct)
      */
-    val UUID_CHAR_CONTROL_POINT: UUID = UUID.fromString("0000ff05-0000-1000-8000-00805f9b34fb")
+    val UUID_CHAR_CONTROL_POINT: UUID = UUID.fromString("00000003-0000-3512-2118-0009af100700")
 
     /**
      * Used for steps measurement (correct)
@@ -103,12 +109,9 @@ object Profile {
      */
     val UUID_CHAR_DATA_TIME: UUID = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb")
 
-
-    //bad
-    val UUID_CHAR_ACTIVITY: UUID = UUID.fromString("0000ff07-0000-1000-8000-00805f9b34fb")
-    val UUID_CHAR_FIRMWARE_DATA: UUID = UUID.fromString("0000ff08-0000-1000-8000-00805f9b34fb")
-    val UUID_CHAR_LE_PARAMS: UUID = UUID.fromString("0000ff09-0000-1000-8000-00805f9b34fb")
-    val UUID_CHAR_STATISTICS: UUID = UUID.fromString("0000ff0b-0000-1000-8000-00805f9b34fb")
-    val UUID_CHAR_TEST: UUID = UUID.fromString("0000ff0d-0000-1000-8000-00805f9b34fb")
+    /**
+     * Used for getting events recorded by band (correct)
+     */
+    val UUID_CHAR_DEVICEEVENT: UUID = UUID.fromString("00000010-0000-3512-2118-0009af100700")
 
 }

@@ -17,58 +17,56 @@ private const val batteryLevel = "MIBAND_BATTERY_LEVEL"
 private const val batteryCycles = "MIBAND_BATTERY_CYCLES"
 private const val batteryStatus = "MIBAND_BATTERY_STATUS"
 private const val batterylastCharged = "MIBAND_BATTERY_LAST_CHARGED"
+private const val serialNumber = "MIBAND_SERIAL_NUMBER"
+private const val hardwareRevision = "MIBAND_HARDWARE_REVISION"
+private const val softwareRevision = "MIBAND_SOFTWARE_REVISION"
 
-fun setMiBandAddress(context: Context, address: String) {
-    val sharedPrefs = getPreferences(context, name)
-    sharedPrefs.edit().let {
+fun setMiBandAddress(context: Context, address: String) =
+    getPreferences(context, name).edit().let {
         it.putString(addressKey, address)
         it.apply()
     }
-}
 
-fun getMiBandPaired(context: Context): Boolean {
-    return getPreferences(context, name).getBoolean(pairedKey, false)
-}
 
-fun setMiBandPaired(context: Context, paired: Boolean) {
-    val sharedPrefs = getPreferences(context, name)
-    sharedPrefs.edit().let {
-        it.putBoolean(pairedKey,paired)
+fun getMiBandPaired(context: Context): Boolean =
+    getPreferences(context, name).getBoolean(pairedKey, false)
+
+
+fun setMiBandPaired(context: Context, paired: Boolean) =
+    getPreferences(context, name).edit().let {
+        it.putBoolean(pairedKey, paired)
         it.apply()
     }
-}
 
-fun getMiBandAddress(context: Context): String {
-    return getPreferences(context, name).getString(addressKey, "err")!!
-}
 
-fun setMiBandServiceState(context: Context, state: MiBandServiceState) {
-    val sharedPrefs = getPreferences(context, name)
-    sharedPrefs.edit().let {
+fun getMiBandAddress(context: Context): String =
+    getPreferences(context, name).getString(addressKey, "err")!!
+
+
+fun setMiBandServiceState(context: Context, state: MiBandServiceState) =
+    getPreferences(context, name).edit().let {
         it.putString(stateKey, state.name)
         it.apply()
     }
-}
 
-fun getMiBandServiceState(context: Context): MiBandServiceState {
-    return MiBandServiceState.valueOf(
-        getPreferences(context, name).getString(
-            stateKey,
-            MiBandServiceState.STOPPED.name
-        )!!
-    )
-}
 
-fun setMiBandBatteryInfo(context: Context, batteryInfo: BatteryInfo) {
-    val sharedPrefs = getPreferences(context, name)
-    sharedPrefs.edit().let {
+fun getMiBandServiceState(context: Context): MiBandServiceState = MiBandServiceState.valueOf(
+    getPreferences(context, name).getString(
+        stateKey,
+        MiBandServiceState.STOPPED.name
+    )!!
+)
+
+
+fun setMiBandBatteryInfo(context: Context, batteryInfo: BatteryInfo) =
+    getPreferences(context, name).edit().let {
         it.putInt(batteryLevel, batteryInfo.level)
         it.putInt(batteryCycles, batteryInfo.cycles)
         it.putString(batteryStatus, batteryInfo.status?.name)
         it.putLong(batterylastCharged, batteryInfo.lastChargedDate.timeInMillis)
         it.apply()
     }
-}
+
 
 fun getMiBandBatteryInfo(context: Context): BatteryInfo {
     val sharedPrefs = getPreferences(context, name)
@@ -81,3 +79,32 @@ fun getMiBandBatteryInfo(context: Context): BatteryInfo {
         Calendar.getInstance().apply { timeInMillis = sharedPrefs.getLong(batterylastCharged, 0) }
     )
 }
+
+fun setMiBandSerialNumber(context: Context, serialNum: String) =
+    getPreferences(context, name).edit().let {
+        it.putString(serialNumber, serialNum)
+        it.apply()
+    }
+
+
+fun getMiBandSerialNumber(context: Context): String =
+    getPreferences(context, name).getString(serialNumber, "err")!!
+
+fun setMiBandHardwareRevision(context: Context, hw_rev: String) =
+    getPreferences(context, name).edit().let {
+        it.putString(hardwareRevision, hw_rev)
+        it.apply()
+    }
+
+fun getMiBandHardwareRevision(context: Context): String =
+    getPreferences(context, name).getString(hardwareRevision, "err")!!
+
+fun setMiBandSoftwareRevision(context: Context, sw_rev: String) =
+    getPreferences(context, name).edit().let {
+        it.putString(softwareRevision, sw_rev)
+        it.apply()
+    }
+
+fun getMiBandSoftwareRevision(context: Context): String =
+    getPreferences(context, name).getString(softwareRevision, "err")!!
+

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.adapters.DeviceListAdapter
@@ -43,6 +44,7 @@ class PairingActivity : AppCompatActivity() {
         adapter = DeviceListAdapter(this, R.layout.device_item, R.id.deviceName, ArrayList())
 
         scanButton.setOnClickListener {
+            scanButton.text = getString(R.string.pairing_scan_stop)
             val disposable = miBand.startScan()
                 .subscribe(handleScanResult(), handleScanError())
             disposables.add(disposable)
@@ -85,6 +87,7 @@ class PairingActivity : AppCompatActivity() {
     private fun handleScanResult(): Consumer<ScanResult> {
         return Consumer { result ->
             val device = result.device
+            scanButton.text = getString(R.string.scan_for_devices)
 
             Timber.d("Scan results: name: ${device.name} uuid: ${Arrays.toString(device.uuids)}, add: ${device.address}, type: ${device.type} bondState: ${device.bondState}, rssi: ${result.rssi}")
 
@@ -99,6 +102,8 @@ class PairingActivity : AppCompatActivity() {
 
     private fun handleScanError(): Consumer<Throwable> {
         return Consumer { throwable ->
+            scanButton.text = getString(R.string.scan_for_devices)
+            Toast.makeText(this, "Scan failed. Try again.",Toast.LENGTH_SHORT).show()
             Timber.e(throwable)
         }
     }
