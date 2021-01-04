@@ -3,6 +3,9 @@ package com.example.lockband.utils
 import com.example.lockband.R
 import com.example.lockband.data.SettingsItem
 
+//encrypted files names
+const val PASS_FILE = "pass.txt"
+
 //navigation
 const val BAND_PAGE_INDEX = 0
 const val STATS_PAGE_INDEX = 1
@@ -28,6 +31,8 @@ val SETTINGS: List<SettingsItem> = listOf(
     )
 )
 
+//Delays and timeouts
+
 //foreground scanning timeout
 const val DEFAULT_TIMEOUT = 5000L
 
@@ -37,12 +42,9 @@ const val HR_TIMEOUT = 12000L
 //BLE operation delay
 const val OP_TIMEOUT = 500L
 
-//encrypted files names
-const val PASS_FILE = "pass.txt"
-
 //Device scan duration
-const val SCAN_TIMEOUT: Long = 10000
+const val SCAN_TIMEOUT: Long = 10000L
 
-//Authentication key
-val KEY = byteArrayOf(0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45)  //\xf5\xd2\x29\x87\x65\x0a\x1d\x82\x05\xab\x82\xbe\xb9\x38\x59\xcf
+//Mi Band authentication key
+val KEY = byteArrayOf(0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45)
 

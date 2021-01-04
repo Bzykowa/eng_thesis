@@ -10,15 +10,18 @@ enum class ServiceState {
 private const val name = "LOCKED_KEY"
 private const val key = "LOCKED_STATE"
 
-fun setServiceState(context: Context, state: ServiceState) {
-    val sharedPrefs = getPreferences(context, name)
-    sharedPrefs.edit().let {
+fun setServiceState(context: Context, state: ServiceState) =
+    getPreferences(context, name).edit().let {
         it.putString(key, state.name)
         it.apply()
     }
-}
 
-fun getServiceState(context: Context): ServiceState {
-    return ServiceState.valueOf(getPreferences(context,name).getString(key, ServiceState.STOPPED.name)!!)
-}
+
+fun getServiceState(context: Context): ServiceState = ServiceState.valueOf(
+    getPreferences(context, name).getString(
+        key,
+        ServiceState.STOPPED.name
+    )!!
+)
+
 
