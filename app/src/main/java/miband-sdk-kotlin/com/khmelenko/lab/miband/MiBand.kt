@@ -50,6 +50,9 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var heartRateSubject: PublishSubject<Void> = PublishSubject.create()
     private var mtuSubject: PublishSubject<Int> = PublishSubject.create()
     private var timeSubject: PublishSubject<Void> = PublishSubject.create()
+    private var serialNumberSubject: PublishSubject<String> = PublishSubject.create()
+    private var hardwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
+    private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -278,6 +281,37 @@ class MiBand(private val context: Context) : BluetoothListener {
             Profile.UUID_CHAR_DEVICEEVENT,
             listener
         )
+    }
+
+
+    /**
+     * Read band serial number
+     */
+    fun readSerialNumber(): Observable<String> {
+        return Observable.create<String> { subscriber ->
+            serialNumberSubject.subscribe(ObserverWrapper(subscriber))
+            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_SERIAL_NUMBER)
+        }
+    }
+
+    /**
+     * Read band hardware version
+     */
+    fun readHardwareRevision() : Observable<String> {
+        return Observable.create<String>{
+            hardwareRevisionSubject.subscribe(ObserverWrapper(it))
+            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_HARDWARE_REVISION)
+        }
+    }
+
+    /**
+     * Read band software version
+     */
+    fun readSoftwareRevision() : Observable<String> {
+        return Observable.create<String>{
+            softwareRevisionSubject.subscribe(ObserverWrapper(it))
+            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_SOFTWARE_REVISION)
+        }
     }
 
     /**
@@ -665,18 +699,6 @@ class MiBand(private val context: Context) : BluetoothListener {
                 batteryInfoSubject = PublishSubject.create()
             }
 
-            // Pair
-            /*
-            if (characteristicId == Profile.UUID_CHAR_PAIR) {
-                Timber.d("Pair result ${Arrays.toString(data.value)}")
-                if (data.value.size == 1 && data.value[0].toInt() == 2) {
-                    pairSubject.onComplete()
-                } else {
-                    pairSubject.onError(Exception("Pairing failed"))
-                }
-                pairSubject = PublishSubject.create()
-            }
-            */
             // sensor notify
             if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
                 val changedValue = data.value
@@ -754,7 +776,7 @@ class MiBand(private val context: Context) : BluetoothListener {
             }
         }
 
-        // heart rate
+        // heart rate (fix this crap)
         if (serviceId == Profile.UUID_SERVICE_HEARTRATE) {
             if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
                 val changedValue = data.value
@@ -762,6 +784,29 @@ class MiBand(private val context: Context) : BluetoothListener {
                     heartRateSubject.onComplete()
                     heartRateSubject = PublishSubject.create()
                 }
+            }
+        }
+
+
+        //Device Information values
+        if(serviceId == Profile.UUID_SERVICE_DEVICE_INFORMATION){
+            if (characteristicId == Profile.UUID_CHAR_SERIAL_NUMBER){
+                val changedValue = data.getStringValue(0).trim()
+                serialNumberSubject.onNext(changedValue)
+                serialNumberSubject.onComplete()
+                serialNumberSubject = PublishSubject.create()
+            }
+            if (characteristicId == Profile.UUID_CHAR_HARDWARE_REVISION){
+                val changedValue = data.getStringValue(0).trim()
+                hardwareRevisionSubject.onNext(changedValue)
+                hardwareRevisionSubject.onComplete()
+                hardwareRevisionSubject = PublishSubject.create()
+            }
+            if (characteristicId == Profile.UUID_CHAR_SOFTWARE_REVISION){
+                val changedValue = data.getStringValue(0).trim()
+                softwareRevisionSubject.onNext(changedValue)
+                softwareRevisionSubject.onComplete()
+                softwareRevisionSubject = PublishSubject.create()
             }
         }
     }

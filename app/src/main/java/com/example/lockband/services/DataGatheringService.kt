@@ -225,8 +225,14 @@ class DataGatheringService : Service(), SensorEventListener {
     }
 
     private fun handleDeviceSetup() {
+        enableDataNotifications()
+        
         GlobalScope.launch(Dispatchers.IO) {
-            enableDataNotifications()
+            actionReadSerialNumber()
+            delay(OP_TIMEOUT)
+            actionReadHardwareRevision()
+            delay(OP_TIMEOUT)
+            actionReadSoftwareRevision()
         }
     }
 
@@ -383,6 +389,33 @@ class DataGatheringService : Service(), SensorEventListener {
     private fun setBandEventsListener() = miBand.setBandEventsListener { data ->
         Timber.d(data.toString())
     }
+
+    private fun actionReadSerialNumber() = disposables.add(
+        miBand.readSerialNumber().delaySubscription(1, TimeUnit.SECONDS).subscribe({
+            setMiBandSerialNumber(this@DataGatheringService, it)
+            Timber.d("Serial number: $it")
+        }, {
+            Timber.e(it)
+        })
+    )
+
+    private fun actionReadHardwareRevision() = disposables.add(
+        miBand.readHardwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
+            setMiBandHardwareRevision(this@DataGatheringService, it)
+            Timber.d("Hardware revision: $it")
+        }, {
+            Timber.e(it)
+        })
+    )
+
+    private fun actionReadSoftwareRevision() = disposables.add(
+        miBand.readSoftwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
+            setMiBandSoftwareRevision(this@DataGatheringService, it)
+            Timber.d("Software revision: $it")
+        }, {
+            Timber.e(it)
+        })
+    )
 
 
     private fun actionSetHeartRateNotifyListener() =

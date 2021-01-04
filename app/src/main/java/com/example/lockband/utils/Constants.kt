@@ -40,7 +40,7 @@ const val DEFAULT_TIMEOUT = 5000L
 const val HR_TIMEOUT = 12000L
 
 //BLE operation delay
-const val OP_TIMEOUT = 500L
+const val OP_TIMEOUT = 100L
 
 //Device scan duration
 const val SCAN_TIMEOUT: Long = 10000L
