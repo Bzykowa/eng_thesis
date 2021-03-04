@@ -1,4 +1,4 @@
-package com.khmelenko.lab.miband
+package com.example.lockband.miband3
 
 import io.reactivex.Emitter
 import io.reactivex.Observer

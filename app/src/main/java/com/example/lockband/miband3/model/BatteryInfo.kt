@@ -1,5 +1,6 @@
-package com.khmelenko.lab.miband.model
+package com.example.lockband.miband3.model
 
+import com.example.lockband.utils.CalendarConversions
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -16,16 +17,14 @@ class BatteryInfo constructor(
 ) {
 
     enum class Status {
-        UNKNOWN, LOW, FULL, CHARGING, NOT_CHARGING;
+        NORMAL, CHARGING, UNKNOWN;
 
         companion object {
 
             fun fromByte(b: Byte): Status {
                 return when (b.toInt()) {
-                    1 -> LOW
-                    2 -> CHARGING
-                    3 -> FULL
-                    4 -> NOT_CHARGING
+                    0 -> NORMAL
+                    1 -> CHARGING
                     else -> UNKNOWN
                 }
             }
@@ -51,18 +50,23 @@ class BatteryInfo constructor(
          * @return Battery info
          */
         fun fromByteData(data: ByteArray): BatteryInfo {
-            val level = data[0].toInt()
-            val status = Status.fromByte(data[9])
-            val cycles = 0xffff and (0xff and data[7].toInt() or (0xff and data[8].toInt() shl 8))
+            val level = if (data.size >= 2) data[1].toInt() else 50
+            val status = if (data.size >= 3) Status.fromByte(data[2]) else Status.UNKNOWN
+            val cycles =
+                if (data.size >= 10) 0xffff and (0xff and data[7].toInt() or (0xff and data[8].toInt() shl 8)) else -1
 
-            val lastChargeDay = Calendar.getInstance()
-            lastChargeDay.set(Calendar.YEAR, data[1] + 2000)
-            lastChargeDay.set(Calendar.MONTH, data[2].toInt())
-            lastChargeDay.set(Calendar.DATE, data[3].toInt())
-
-            lastChargeDay.set(Calendar.HOUR_OF_DAY, data[4].toInt())
-            lastChargeDay.set(Calendar.MINUTE, data[5].toInt())
-            lastChargeDay.set(Calendar.SECOND, data[6].toInt())
+            val lastChargeDay = if (data.size >= 18) CalendarConversions.rawBytesToCalendar(
+                byteArrayOf(
+                    data[10],
+                    data[11],
+                    data[12],
+                    data[13],
+                    data[14],
+                    data[15],
+                    data[16],
+                    data[17]
+                )
+            ) else GregorianCalendar.getInstance()
 
             return BatteryInfo(level, cycles, status, lastChargeDay)
         }

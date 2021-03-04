@@ -1,4 +1,4 @@
-package com.khmelenko.lab.miband.listeners
+package com.example.lockband.miband3.listeners
 
 /**
  * Listener for data notifications

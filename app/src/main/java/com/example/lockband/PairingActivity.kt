@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
@@ -15,7 +14,7 @@ import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityPairingBinding
 import com.example.lockband.services.DataGatheringService
 import com.example.lockband.utils.setMiBandAddress
-import com.khmelenko.lab.miband.MiBand
+import com.example.lockband.miband3.MiBand
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer

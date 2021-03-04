@@ -1,4 +1,4 @@
-package com.khmelenko.lab.miband
+package com.example.lockband.miband3
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -14,11 +14,12 @@ import androidx.core.content.ContextCompat.startForegroundService
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.services.LockingService
 import com.example.lockband.utils.*
-import com.khmelenko.lab.miband.listeners.HeartRateNotifyListener
-import com.khmelenko.lab.miband.listeners.RealtimeStepsNotifyListener
-import com.khmelenko.lab.miband.model.*
+import com.example.lockband.miband3.listeners.HeartRateNotifyListener
+import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
+import com.example.lockband.miband3.model.*
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
+import io.reactivex.internal.operators.observable.ObservableAll
 import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.util.*
@@ -53,6 +54,8 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var serialNumberSubject: PublishSubject<String> = PublishSubject.create()
     private var hardwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
     private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
+    private var dateDisplaySubject: PublishSubject<Void> = PublishSubject.create()
+    private var timeFormatSubject: PublishSubject<Void> = PublishSubject.create()
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -210,24 +213,50 @@ class MiBand(private val context: Context) : BluetoothListener {
         }
     }
 
-    fun requestMtu(mtu: Int): Observable<Int> {
-        return Observable.create<Int> {
-            mtuSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.requestMtu(mtu)
-        }
+    fun requestMtu(mtu: Int): Observable<Int> = Observable.create<Int> {
+        mtuSubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.requestMtu(mtu)
     }
+
 
     /**
      * Send current time to band
      */
-    fun setCurrentTime() : Observable<Void> {
+    fun setCurrentTime(): Observable<Void> {
         val now: GregorianCalendar = CalendarConversions.createCalendar()
         val bytes: ByteArray = getTimeBytes(now, TimeUnit.SECONDS)!!
 
-        return Observable.create<Void>{
+        return Observable.create<Void> {
             timeSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.writeCharacteristic(Profile.UUID_SERVICE_MILI,Profile.UUID_CHAR_DATA_TIME,bytes)
+            bluetoothIo.writeCharacteristic(
+                Profile.UUID_SERVICE_MILI,
+                Profile.UUID_CHAR_DATA_TIME, bytes
+            )
         }
+    }
+
+    /**
+     * Sends date display configuration to band
+     */
+    fun setDateDisplay(): Observable<Void> = Observable.create{
+        dateDisplaySubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_CONTROL_POINT,
+            Protocol.DATEFORMAT_DATE_TIME
+        )
+    }
+
+    /**
+     * Sends time format config to band
+     */
+    fun setTimeFormat(): Observable<Void> = Observable.create{
+        timeFormatSubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_CONTROL_POINT,
+            Protocol.DATEFORMAT_TIME_24_HOURS
+        )
     }
 
     /**
@@ -290,27 +319,36 @@ class MiBand(private val context: Context) : BluetoothListener {
     fun readSerialNumber(): Observable<String> {
         return Observable.create<String> { subscriber ->
             serialNumberSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_SERIAL_NUMBER)
+            bluetoothIo.readCharacteristic(
+                Profile.UUID_SERVICE_DEVICE_INFORMATION,
+                Profile.UUID_CHAR_SERIAL_NUMBER
+            )
         }
     }
 
     /**
      * Read band hardware version
      */
-    fun readHardwareRevision() : Observable<String> {
-        return Observable.create<String>{
+    fun readHardwareRevision(): Observable<String> {
+        return Observable.create<String> {
             hardwareRevisionSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_HARDWARE_REVISION)
+            bluetoothIo.readCharacteristic(
+                Profile.UUID_SERVICE_DEVICE_INFORMATION,
+                Profile.UUID_CHAR_HARDWARE_REVISION
+            )
         }
     }
 
     /**
      * Read band software version
      */
-    fun readSoftwareRevision() : Observable<String> {
-        return Observable.create<String>{
+    fun readSoftwareRevision(): Observable<String> {
+        return Observable.create<String> {
             softwareRevisionSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_DEVICE_INFORMATION, Profile.UUID_CHAR_SOFTWARE_REVISION)
+            bluetoothIo.readCharacteristic(
+                Profile.UUID_SERVICE_DEVICE_INFORMATION,
+                Profile.UUID_CHAR_SOFTWARE_REVISION
+            )
         }
     }
 
@@ -372,7 +410,7 @@ class MiBand(private val context: Context) : BluetoothListener {
     }
 
     fun disableSensorMeasurement(): Observable<Void> {
-        return Observable.create<Void>{
+        return Observable.create<Void> {
             sensorDataSubject.subscribe(ObserverWrapper(it))
             bluetoothIo.writeCharacteristic(
                 Profile.UUID_SERVICE_MILI,
@@ -683,130 +721,141 @@ class MiBand(private val context: Context) : BluetoothListener {
     override fun onResult(data: BluetoothGattCharacteristic) {
         val serviceId = data.service.uuid
         val characteristicId = data.uuid
-        if (serviceId == Profile.UUID_SERVICE_MILI) {
 
-            // Battery info
-            if (characteristicId == Profile.UUID_CHAR_BATTERY) {
-                Timber.d("getBatteryInfo result ${Arrays.toString(data.value)}")
-                if (data.value.size == 10) {
-                    val info = BatteryInfo.fromByteData(data.value)
 
-                    batteryInfoSubject.onNext(info)
-                    batteryInfoSubject.onComplete()
-                } else {
-                    batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
-                }
-                batteryInfoSubject = PublishSubject.create()
-            }
-
-            // sensor notify
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                val changedValue = data.value
-                if (Arrays.equals(changedValue, Protocol.ENABLE_SENSOR_DATA_NOTIFY)) {
-                    sensorNotificationSubject.onNext(true)
-                } else {
-                    sensorNotificationSubject.onNext(false)
-                }
-                sensorNotificationSubject.onComplete()
-                sensorNotificationSubject = PublishSubject.create()
-            }
-
-            // realtime notify
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                val changedValue = data.value
-                if (Arrays.equals(changedValue, Protocol.ENABLE_REALTIME_STEPS_NOTIFY)) {
-                    realtimeNotificationSubject.onNext(true)
-                } else {
-                    realtimeNotificationSubject.onNext(false)
-                }
-                realtimeNotificationSubject.onComplete()
-                realtimeNotificationSubject = PublishSubject.create()
-            }
-
-            // led color
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                val changedValue = data.value
-                var ledColor = LedColor.BLUE
-                if (Arrays.equals(changedValue, Protocol.SET_COLOR_RED)) {
-                    ledColor = LedColor.RED
-                } else if (Arrays.equals(changedValue, Protocol.SET_COLOR_BLUE)) {
-                    ledColor = LedColor.BLUE
-                } else if (Arrays.equals(changedValue, Protocol.SET_COLOR_GREEN)) {
-                    ledColor = LedColor.GREEN
-                } else if (Arrays.equals(changedValue, Protocol.SET_COLOR_ORANGE)) {
-                    ledColor = LedColor.ORANGE
-                }
-                ledColorSubject.onNext(ledColor)
-                ledColorSubject.onComplete()
-                ledColorSubject = PublishSubject.create()
-            }
-
-            // user info
-            if (characteristicId == Profile.UUID_CHAR_USER_INFO) {
-                userInfoSubject.onComplete()
-
-                userInfoSubject = PublishSubject.create()
-            }
-        }
-
-        if (serviceId == Profile.UUID_SERVICE_MIBAND2) {
-            // pair
-            if (characteristicId == Profile.UUID_CHAR_PAIR) {
-                Timber.d("pair requested $pairRequested")
-                if (pairRequested) {
-                    pairRequested = false
-                } else {
-                    pairInitSubject.onComplete()
-                }
-                pairInitSubject = PublishSubject.create()
-            }
-        }
-
-        // vibration service
-        if (serviceId == Profile.UUID_SERVICE_VIBRATION) {
-            if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
-                val changedValue = data.value
-                if (Arrays.equals(changedValue, Protocol.STOP_VIBRATION)) {
-                    stopVibrationSubject.onComplete()
-                    stopVibrationSubject = PublishSubject.create()
-                } else {
-                    startVibrationSubject.onComplete()
-                    startVibrationSubject = PublishSubject.create()
+        when (serviceId) {
+            //Device Information values
+            Profile.UUID_SERVICE_DEVICE_INFORMATION -> {
+                when (characteristicId) {
+                    Profile.UUID_CHAR_SERIAL_NUMBER -> {
+                        val changedValue = data.getStringValue(0).trim()
+                        serialNumberSubject.onNext(changedValue)
+                        serialNumberSubject.onComplete()
+                        serialNumberSubject = PublishSubject.create()
+                    }
+                    Profile.UUID_CHAR_HARDWARE_REVISION -> {
+                        val changedValue = data.getStringValue(0).trim()
+                        hardwareRevisionSubject.onNext(changedValue)
+                        hardwareRevisionSubject.onComplete()
+                        hardwareRevisionSubject = PublishSubject.create()
+                    }
+                    Profile.UUID_CHAR_SOFTWARE_REVISION -> {
+                        val changedValue = data.getStringValue(0).trim()
+                        softwareRevisionSubject.onNext(changedValue)
+                        softwareRevisionSubject.onComplete()
+                        softwareRevisionSubject = PublishSubject.create()
+                    }
                 }
             }
-        }
-
-        // heart rate (fix this crap)
-        if (serviceId == Profile.UUID_SERVICE_HEARTRATE) {
-            if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
-                val changedValue = data.value
-                if (Arrays.equals(changedValue, Protocol.PING_HR_MONITOR)) {
-                    heartRateSubject.onComplete()
-                    heartRateSubject = PublishSubject.create()
+            // heart rate (fix this crap)
+            Profile.UUID_SERVICE_HEARTRATE -> {
+                if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
+                    val changedValue = data.value
+                    if (Arrays.equals(changedValue, Protocol.PING_HR_MONITOR)) {
+                        heartRateSubject.onComplete()
+                        heartRateSubject = PublishSubject.create()
+                    }
                 }
             }
-        }
+            // vibration service
+            Profile.UUID_SERVICE_VIBRATION -> {
+                if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
+                    val changedValue = data.value
+                    if (Arrays.equals(changedValue, Protocol.STOP_VIBRATION)) {
+                        stopVibrationSubject.onComplete()
+                        stopVibrationSubject = PublishSubject.create()
+                    } else {
+                        startVibrationSubject.onComplete()
+                        startVibrationSubject = PublishSubject.create()
+                    }
+                }
+            }
+            Profile.UUID_SERVICE_MIBAND2 -> {
+                // pair
+                if (characteristicId == Profile.UUID_CHAR_PAIR) {
+                    Timber.d("pair requested $pairRequested")
+                    if (pairRequested) {
+                        pairRequested = false
+                    } else {
+                        pairInitSubject.onComplete()
+                    }
+                    pairInitSubject = PublishSubject.create()
+                }
+            }
+            Profile.UUID_SERVICE_MILI -> {
+                // Battery info
+                when (characteristicId) {
+                    Profile.UUID_CHAR_BATTERY -> {
+                        Timber.d("getBatteryInfo result ${Arrays.toString(data.value)}")
+                        if (data.value.size == 10) {
+                            val info = BatteryInfo.fromByteData(data.value)
+
+                            batteryInfoSubject.onNext(info)
+                            batteryInfoSubject.onComplete()
+                        } else {
+                            batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
+                        }
+                        batteryInfoSubject = PublishSubject.create()
+                    }
+
+                    //TODO("Fix this char")
+                    // sensor notify
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        val changedValue = data.value
+                        if (Arrays.equals(changedValue, Protocol.ENABLE_SENSOR_DATA_NOTIFY)) {
+                            sensorNotificationSubject.onNext(true)
+                        } else {
+                            sensorNotificationSubject.onNext(false)
+                        }
+                        sensorNotificationSubject.onComplete()
+                        sensorNotificationSubject = PublishSubject.create()
+                    }
 
 
-        //Device Information values
-        if(serviceId == Profile.UUID_SERVICE_DEVICE_INFORMATION){
-            if (characteristicId == Profile.UUID_CHAR_SERIAL_NUMBER){
-                val changedValue = data.getStringValue(0).trim()
-                serialNumberSubject.onNext(changedValue)
-                serialNumberSubject.onComplete()
-                serialNumberSubject = PublishSubject.create()
-            }
-            if (characteristicId == Profile.UUID_CHAR_HARDWARE_REVISION){
-                val changedValue = data.getStringValue(0).trim()
-                hardwareRevisionSubject.onNext(changedValue)
-                hardwareRevisionSubject.onComplete()
-                hardwareRevisionSubject = PublishSubject.create()
-            }
-            if (characteristicId == Profile.UUID_CHAR_SOFTWARE_REVISION){
-                val changedValue = data.getStringValue(0).trim()
-                softwareRevisionSubject.onNext(changedValue)
-                softwareRevisionSubject.onComplete()
-                softwareRevisionSubject = PublishSubject.create()
+                    // realtime notify
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        val changedValue = data.value
+                        if (Arrays.equals(changedValue, Protocol.ENABLE_REALTIME_STEPS_NOTIFY)) {
+                            realtimeNotificationSubject.onNext(true)
+                        } else {
+                            realtimeNotificationSubject.onNext(false)
+                        }
+                        realtimeNotificationSubject.onComplete()
+                        realtimeNotificationSubject = PublishSubject.create()
+                    }
+
+
+                    // led color
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        val changedValue = data.value
+                        var ledColor = LedColor.BLUE
+                        when {
+                            Arrays.equals(changedValue, Protocol.SET_COLOR_RED) -> {
+                                ledColor = LedColor.RED
+                            }
+                            Arrays.equals(changedValue, Protocol.SET_COLOR_BLUE) -> {
+                                ledColor = LedColor.BLUE
+                            }
+                            Arrays.equals(changedValue, Protocol.SET_COLOR_GREEN) -> {
+                                ledColor = LedColor.GREEN
+                            }
+                            Arrays.equals(changedValue, Protocol.SET_COLOR_ORANGE) -> {
+                                ledColor = LedColor.ORANGE
+                            }
+                        }
+                        ledColorSubject.onNext(ledColor)
+                        ledColorSubject.onComplete()
+                        ledColorSubject = PublishSubject.create()
+                    }
+
+
+                    // user info
+                    Profile.UUID_CHAR_USER_INFO -> {
+                        userInfoSubject.onComplete()
+
+                        userInfoSubject = PublishSubject.create()
+                    }
+                }
             }
         }
     }
@@ -819,68 +868,69 @@ class MiBand(private val context: Context) : BluetoothListener {
     }
 
     override fun onFail(serviceUUID: UUID, characteristicId: UUID, msg: String) {
-        if (serviceUUID == Profile.UUID_SERVICE_MILI) {
+        when (serviceUUID) {
+            Profile.UUID_SERVICE_MILI -> {
 
-            // Battery info
-            if (characteristicId == Profile.UUID_CHAR_BATTERY) {
-                Timber.d("getBatteryInfo failed: $msg")
-                batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
-                batteryInfoSubject = PublishSubject.create()
+                // Battery info
+                when (characteristicId) {
+                    Profile.UUID_CHAR_BATTERY -> {
+                        Timber.d("getBatteryInfo failed: $msg")
+                        batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
+                        batteryInfoSubject = PublishSubject.create()
+                    }
+
+                    // sensor notify
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        Timber.d("Sensor notify failed $msg")
+                        sensorNotificationSubject.onError(Exception("Sensor notify failed"))
+                        sensorNotificationSubject = PublishSubject.create()
+                    }
+
+                    // realtime notify
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        Timber.d("Realtime notify failed $msg")
+                        realtimeNotificationSubject.onError(Exception("Realtime notify failed"))
+                        realtimeNotificationSubject = PublishSubject.create()
+                    }
+
+                    // led color
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        Timber.d("Led color failed")
+                        ledColorSubject.onError(Exception("Changing LED color failed"))
+                        ledColorSubject = PublishSubject.create()
+                    }
+
+                    // user info
+                    Profile.UUID_CHAR_USER_INFO -> {
+                        Timber.d("User info failed")
+                        userInfoSubject.onError(Exception("Setting User info failed"))
+                        userInfoSubject = PublishSubject.create()
+                    }
+                }
             }
-
-            // sensor notify
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                Timber.d("Sensor notify failed $msg")
-                sensorNotificationSubject.onError(Exception("Sensor notify failed"))
-                sensorNotificationSubject = PublishSubject.create()
-            }
-
-            // realtime notify
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                Timber.d("Realtime notify failed $msg")
-                realtimeNotificationSubject.onError(Exception("Realtime notify failed"))
-                realtimeNotificationSubject = PublishSubject.create()
-            }
-
-            // led color
-            if (characteristicId == Profile.UUID_CHAR_CONTROL_POINT) {
-                Timber.d("Led color failed")
-                ledColorSubject.onError(Exception("Changing LED color failed"))
-                ledColorSubject = PublishSubject.create()
-            }
-
-            // user info
-            if (characteristicId == Profile.UUID_CHAR_USER_INFO) {
-                Timber.d("User info failed")
-                userInfoSubject.onError(Exception("Setting User info failed"))
-                userInfoSubject = PublishSubject.create()
-            }
-        }
-
-        if (serviceUUID == Profile.UUID_SERVICE_MIBAND2) {
             // Pair
-            if (characteristicId == Profile.UUID_CHAR_PAIR) {
-                Timber.d(msg)
-                pairInitSubject.onError(Exception("Pairing failed"))
-                pairInitSubject = PublishSubject.create()
+            Profile.UUID_SERVICE_MIBAND2 -> {
+                if (characteristicId == Profile.UUID_CHAR_PAIR) {
+                    Timber.d(msg)
+                    pairInitSubject.onError(Exception("Pairing failed"))
+                    pairInitSubject = PublishSubject.create()
+                }
             }
-        }
-
-        // vibration service
-        if (serviceUUID == Profile.UUID_SERVICE_VIBRATION) {
-            if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
-                Timber.d("Enable/disable vibration failed")
-                stopVibrationSubject.onError(Exception("Enable/disable vibration failed"))
-                stopVibrationSubject = PublishSubject.create()
+            // vibration service
+            Profile.UUID_SERVICE_VIBRATION -> {
+                if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
+                    Timber.d("Enable/disable vibration failed")
+                    stopVibrationSubject.onError(Exception("Enable/disable vibration failed"))
+                    stopVibrationSubject = PublishSubject.create()
+                }
             }
-        }
-
-        // heart rate
-        if (serviceUUID == Profile.UUID_SERVICE_HEARTRATE) {
-            if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
-                Timber.d("Reading heartrate failed")
-                heartRateSubject.onError(Exception("Reading heartrate failed"))
-                heartRateSubject = PublishSubject.create()
+            // heart rate
+            Profile.UUID_SERVICE_HEARTRATE -> {
+                if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
+                    Timber.d("Reading heartrate failed")
+                    heartRateSubject.onError(Exception("Reading heartrate failed"))
+                    heartRateSubject = PublishSubject.create()
+                }
             }
         }
     }

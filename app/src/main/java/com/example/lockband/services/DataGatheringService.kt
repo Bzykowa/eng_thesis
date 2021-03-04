@@ -27,11 +27,11 @@ import com.example.lockband.data.room.repos.HeartRateRepository
 import com.example.lockband.data.room.repos.SensorDataRepository
 import com.example.lockband.data.room.repos.StepRepository
 import com.example.lockband.utils.*
-import com.khmelenko.lab.miband.MiBand
-import com.khmelenko.lab.miband.listeners.HeartRateNotifyListener
-import com.khmelenko.lab.miband.listeners.RealtimeStepsNotifyListener
-import com.khmelenko.lab.miband.model.BatteryInfo
-import com.khmelenko.lab.miband.model.VibrationMode
+import com.example.lockband.miband3.MiBand
+import com.example.lockband.miband3.listeners.HeartRateNotifyListener
+import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
+import com.example.lockband.miband3.model.BatteryInfo
+import com.example.lockband.miband3.model.VibrationMode
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
@@ -224,15 +224,23 @@ class DataGatheringService : Service(), SensorEventListener {
         setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
+
+    //Sets up band settings and gets basic info
     private fun handleDeviceSetup() {
         enableDataNotifications()
-        
+
         GlobalScope.launch(Dispatchers.IO) {
             actionReadSerialNumber()
             delay(OP_TIMEOUT)
             actionReadHardwareRevision()
             delay(OP_TIMEOUT)
             actionReadSoftwareRevision()
+            delay(OP_TIMEOUT)
+            handleBatteryUpdate()
+            delay(OP_TIMEOUT)
+            setDateDisplay()
+            delay(OP_TIMEOUT)
+            setTimeFormat()
         }
     }
 
@@ -257,6 +265,22 @@ class DataGatheringService : Service(), SensorEventListener {
                 Timber.d(batteryInfo.toString())
             }, { throwable -> Timber.e(throwable, "getBatteryInfo fail") }
             )
+    )
+
+    private fun setDateDisplay() = disposables.add(
+        miBand.setDateDisplay().subscribe({
+            Timber.d("Set date display to datetime")
+        },{
+            Timber.e(it)
+        })
+    )
+
+    private fun setTimeFormat() = disposables.add(
+        miBand.setTimeFormat().subscribe({
+            Timber.d("Set time format to 24h")
+        },{
+            Timber.e(it)
+        })
     )
 
 
@@ -417,7 +441,6 @@ class DataGatheringService : Service(), SensorEventListener {
         })
     )
 
-
     private fun actionSetHeartRateNotifyListener() =
         miBand.setHeartRateScanListenerMiBand2(object : HeartRateNotifyListener {
             override fun onNotify(heartRate: Int) {
@@ -435,11 +458,10 @@ class DataGatheringService : Service(), SensorEventListener {
             }
         })
 
-
     private fun actionSetRealtimeStepsNotifyListener() =
         miBand.setRealtimeStepsNotifyListener(object : RealtimeStepsNotifyListener {
             override fun onNotify(steps: Int) {
-                Timber.d("RealtimeStepsNotifyListener:$steps")
+                Timber.d("RealtimeStepsNotifyListener: $steps")
 
                 GlobalScope.launch(Dispatchers.IO) {
                     stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))

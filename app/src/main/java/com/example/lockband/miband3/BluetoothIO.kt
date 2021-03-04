@@ -1,10 +1,9 @@
-package com.khmelenko.lab.miband
+package com.example.lockband.miband3
 
 import android.bluetooth.*
 import android.bluetooth.BluetoothDevice.TRANSPORT_LE
 import android.content.Context
-import com.khmelenko.lab.miband.model.Profile
-import kotlinx.coroutines.delay
+import com.example.lockband.miband3.model.Profile
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.HashMap

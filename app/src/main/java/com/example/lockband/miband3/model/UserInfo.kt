@@ -1,4 +1,4 @@
-package com.khmelenko.lab.miband.model
+package com.example.lockband.miband3.model
 
 import java.io.UnsupportedEncodingException
 import java.nio.ByteBuffer

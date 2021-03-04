@@ -1,7 +1,7 @@
 package com.example.lockband.utils
 
 import android.content.Context
-import com.khmelenko.lab.miband.model.BatteryInfo
+import com.example.lockband.miband3.model.BatteryInfo
 import java.util.*
 
 enum class MiBandServiceState {

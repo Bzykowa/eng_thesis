@@ -1,4 +1,4 @@
-package com.khmelenko.lab.miband
+package com.example.lockband.miband3
 
 import android.bluetooth.BluetoothGattCharacteristic
 import java.util.*
