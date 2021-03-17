@@ -2,6 +2,7 @@ package com.example.lockband.utils
 
 import com.example.lockband.R
 import com.example.lockband.data.SettingsItem
+import com.example.lockband.miband3.model.UserInfo
 
 //encrypted files names
 const val PASS_FILE = "pass.txt"
@@ -47,4 +48,7 @@ const val SCAN_TIMEOUT: Long = 10000L
 
 //Mi Band authentication key
 val KEY = byteArrayOf(0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45)
+
+//Placeholder user info for MiBand setup
+val user = UserInfo("miband3".hashCode(),2000,1,1,0,175,65)
 

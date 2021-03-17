@@ -48,12 +48,14 @@ object Protocol {
     val SET_COLOR_GREEN = byteArrayOf(14, 4, 5, 0, 1)
 
     //Band settings
-    val ENDPOINT_DISPLAY: Byte = 6
+    const val ENDPOINT_DISPLAY: Byte = 6
     val SET_ENGLISH_LANGUAGE: ByteArray = parseHexBinary("061700656e5f5553")!!
     val DATEFORMAT_DATE_TIME = byteArrayOf(ENDPOINT_DISPLAY, 0x0a, 0, 3)
     val DATEFORMAT_TIME = byteArrayOf(ENDPOINT_DISPLAY, 0x0a, 0, 0)
     val DATEFORMAT_TIME_24_HOURS = byteArrayOf(ENDPOINT_DISPLAY, 2, 0, 1)
     val COMMAND_DISTANCE_UNIT_METRIC = byteArrayOf(ENDPOINT_DISPLAY, 3, 0, 0)
+    const val COMMAND_SET_USERINFO : Byte = 0x4f
+    val WEAR_LOCATION_LEFT_WRIST = byteArrayOf( 0x20, 0x00, 0x00, 0x02)
 
 
     val REBOOT = byteArrayOf(12)

@@ -40,8 +40,9 @@ interface BluetoothListener {
      * @param serviceUUID      Service UUID
      * @param characteristicId Characteristic ID
      * @param msg              Error message
+     * @param data             Value of failed action
      */
-    fun onFail(serviceUUID: UUID, characteristicId: UUID, msg: String)
+    fun onFail(serviceUUID: UUID, characteristicId: UUID, msg: String, data: ByteArray)
 
     /**
      * Called on fail from Bluetooth IO

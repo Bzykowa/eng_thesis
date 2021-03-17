@@ -64,9 +64,9 @@ object Profile {
     val UUID_CHAR_NOTIFICATION: UUID = UUID.fromString("00002a46-0000-1000-8000-00805f9b34fb")
 
     /**
-     * User info (bad)
+     * User info (correct)
      */
-    val UUID_CHAR_USER_INFO: UUID = UUID.fromString("0000ff04-0000-1000-8000-00805f9b34fb")
+    val UUID_CHAR_USER_INFO: UUID = UUID.fromString("00000008-0000-3512-2118-0009af100700")
 
     /**
      * Used for manipulations with service control (correct)

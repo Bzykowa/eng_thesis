@@ -241,6 +241,10 @@ class DataGatheringService : Service(), SensorEventListener {
             setDateDisplay()
             delay(OP_TIMEOUT)
             setTimeFormat()
+            delay(OP_TIMEOUT)
+            setUserInfo()
+            delay(OP_TIMEOUT)
+            setMetricUnits()
         }
     }
 
@@ -278,6 +282,22 @@ class DataGatheringService : Service(), SensorEventListener {
     private fun setTimeFormat() = disposables.add(
         miBand.setTimeFormat().subscribe({
             Timber.d("Set time format to 24h")
+        },{
+            Timber.e(it)
+        })
+    )
+
+    private fun setUserInfo() = disposables.add(
+        miBand.setUserInfo(user).subscribe({
+            Timber.d("User info set")
+        },{
+            Timber.e(it)
+        })
+    )
+
+    private fun setMetricUnits() = disposables.add(
+        miBand.setMetricUnits().subscribe({
+            Timber.d("Set units to metric")
         },{
             Timber.e(it)
         })

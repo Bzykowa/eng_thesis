@@ -14,7 +14,6 @@ const val ERROR_READ_RSSI_FAILED = 2
 /**
  * Defines Bluetooth communication
  *
- * @author Dmytro Khmelenko
  */
 internal class BluetoothIO(private val listener: BluetoothListener?) : BluetoothGattCallback() {
 
@@ -67,7 +66,8 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                     notifyWithFail(
                         serviceUUID,
                         characteristicId,
-                        "BluetoothGatt write operation failed"
+                        "BluetoothGatt write operation failed",
+                        value
                     )
                 } else {
                     Timber.d("Written to characteristic: ${characteristic.uuid}")
@@ -77,14 +77,16 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                 notifyWithFail(
                     serviceUUID,
                     characteristicId,
-                    "BluetoothGattCharacteristic $characteristicId does not exist"
+                    "BluetoothGattCharacteristic $characteristicId does not exist",
+                    value
                 )
             }
         } else {
             notifyWithFail(
                 serviceUUID,
                 characteristicId,
-                "BluetoothGattService $serviceUUID does not exist"
+                "BluetoothGattService $serviceUUID does not exist",
+                value
             )
         }
     }
@@ -108,21 +110,24 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                     notifyWithFail(
                         serviceUUID,
                         characteristicId,
-                        "BluetoothGatt read operation failed"
+                        "BluetoothGatt read operation failed",
+                        byteArrayOf()
                     )
                 }
             } else {
                 notifyWithFail(
                     serviceUUID,
                     characteristicId,
-                    "BluetoothGattCharacteristic $characteristicId does not exist"
+                    "BluetoothGattCharacteristic $characteristicId does not exist",
+                    byteArrayOf()
                 )
             }
         } else {
             notifyWithFail(
                 serviceUUID,
                 characteristicId,
-                "BluetoothGattService $serviceUUID does not exist"
+                "BluetoothGattService $serviceUUID does not exist",
+                byteArrayOf()
             )
         }
     }
@@ -178,14 +183,16 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                 notifyWithFail(
                     serviceUUID,
                     characteristicId,
-                    "BluetoothGattCharacteristic $characteristicId does not exist"
+                    "BluetoothGattCharacteristic $characteristicId does not exist",
+                    byteArrayOf()
                 )
             }
         } else {
             notifyWithFail(
                 serviceUUID,
                 characteristicId,
-                "BluetoothGattService $serviceUUID does not exist"
+                "BluetoothGattService $serviceUUID does not exist",
+                byteArrayOf()
             )
         }
     }
@@ -214,14 +221,16 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                 notifyWithFail(
                     serviceUUID,
                     characteristicId,
-                    "BluetoothGattCharacteristic $characteristicId does not exist"
+                    "BluetoothGattCharacteristic $characteristicId does not exist",
+                    byteArrayOf()
                 )
             }
         } else {
             notifyWithFail(
                 serviceUUID,
                 characteristicId,
-                "BluetoothGattService $serviceUUID does not exist"
+                "BluetoothGattService $serviceUUID does not exist",
+                byteArrayOf()
             )
         }
     }
@@ -260,7 +269,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         } else {
             val serviceId = characteristic.service.uuid
             val characteristicId = characteristic.uuid
-            notifyWithFail(serviceId, characteristicId, "onCharacteristicRead fail")
+            notifyWithFail(serviceId, characteristicId, "onCharacteristicRead fail", characteristic.value)
         }
     }
 
@@ -269,13 +278,14 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
+        val dataCopy = characteristic.value
         super.onCharacteristicWrite(gatt, characteristic, status)
         if (BluetoothGatt.GATT_SUCCESS == status) {
             notifyWithResult(characteristic)
         } else {
             val serviceId = characteristic.service.uuid
             val characteristicId = characteristic.uuid
-            notifyWithFail(serviceId, characteristicId, "onCharacteristicWrite fail")
+            notifyWithFail(serviceId, characteristicId, "onCharacteristicWrite fail", dataCopy)
         }
     }
 
@@ -359,8 +369,8 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      * *
      * @param msg              Message
      */
-    private fun notifyWithFail(serviceUUID: UUID, characteristicId: UUID, msg: String) {
-        listener?.onFail(serviceUUID, characteristicId, msg)
+    private fun notifyWithFail(serviceUUID: UUID, characteristicId: UUID, msg: String, data: ByteArray) {
+        listener?.onFail(serviceUUID, characteristicId, msg, data)
     }
 
     /**

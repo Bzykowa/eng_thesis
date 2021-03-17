@@ -12,14 +12,13 @@ import android.content.Intent
 import android.os.Handler
 import androidx.core.content.ContextCompat.startForegroundService
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.services.LockingService
-import com.example.lockband.utils.*
 import com.example.lockband.miband3.listeners.HeartRateNotifyListener
 import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
 import com.example.lockband.miband3.model.*
+import com.example.lockband.services.LockingService
+import com.example.lockband.utils.*
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
-import io.reactivex.internal.operators.observable.ObservableAll
 import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.util.*
@@ -56,6 +55,8 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
     private var dateDisplaySubject: PublishSubject<Void> = PublishSubject.create()
     private var timeFormatSubject: PublishSubject<Void> = PublishSubject.create()
+    private var unitFormatSubject: PublishSubject<Void> = PublishSubject.create()
+    private var wearLocationSubject: PublishSubject<Void> = PublishSubject.create()
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -238,7 +239,8 @@ class MiBand(private val context: Context) : BluetoothListener {
     /**
      * Sends date display configuration to band
      */
-    fun setDateDisplay(): Observable<Void> = Observable.create{
+    //potential rework
+    fun setDateDisplay(): Observable<Void> = Observable.create {
         dateDisplaySubject.subscribe(ObserverWrapper(it))
         bluetoothIo.writeCharacteristic(
             Profile.UUID_SERVICE_MILI,
@@ -250,12 +252,38 @@ class MiBand(private val context: Context) : BluetoothListener {
     /**
      * Sends time format config to band
      */
-    fun setTimeFormat(): Observable<Void> = Observable.create{
+    //potential rework?
+    fun setTimeFormat(): Observable<Void> = Observable.create {
         timeFormatSubject.subscribe(ObserverWrapper(it))
         bluetoothIo.writeCharacteristic(
             Profile.UUID_SERVICE_MILI,
             Profile.UUID_CHAR_CONTROL_POINT,
             Protocol.DATEFORMAT_TIME_24_HOURS
+        )
+    }
+
+    /**
+     * Sends unit configuration to band
+     */
+    //potential rework
+    fun setMetricUnits(): Observable<Void> = Observable.create {
+        unitFormatSubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_CONTROL_POINT,
+            Protocol.COMMAND_DISTANCE_UNIT_METRIC
+        )
+    }
+
+    /**
+     * Set wear location to left hand
+     */
+    fun setWearLocation(): Observable<Void> = Observable.create {
+        wearLocationSubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_USER_INFO,
+            Protocol.WEAR_LOCATION_LEFT_WRIST
         )
     }
 
@@ -527,7 +555,7 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setRealtimeStepsNotifyListener(listener: RealtimeStepsNotifyListener) {
         bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_SERVICE_MIBAND2,
             Profile.UUID_CHAR_REALTIME_STEPS
         ) { data: ByteArray ->
             Timber.d(data.contentToString())
@@ -583,8 +611,7 @@ class MiBand(private val context: Context) : BluetoothListener {
     fun setUserInfo(userInfo: UserInfo): Observable<Void> {
         return Observable.create<Void> { subscriber ->
             userInfoSubject.subscribe(ObserverWrapper(subscriber))
-
-            val data = userInfo.getBytes(device?.address ?: "")
+            val data = userInfo.getBytes()
             bluetoothIo.writeCharacteristic(
                 Profile.UUID_SERVICE_MILI,
                 Profile.UUID_CHAR_CONTROL_POINT,
@@ -718,6 +745,24 @@ class MiBand(private val context: Context) : BluetoothListener {
         Timber.d("MiBand disconnected")
     }
 
+    /**
+     * Parse response from UUID_CHAR_CONTROL_POINT and pass info to Observables
+     */
+    private fun handleConfigurationResult(data: ByteArray) {
+        //TODO("big when with specific actions (based on data)")
+        //(subject.onNext(data)) -> subject.onComplete() -> subject = PublishSubject.create()
+        //possible that onNext is unnecessary as I don't need any specific data from config just confirmation that it's set so I can notify Observables
+    }
+
+    /**
+     * Parse failures from UUID_CHAR_CONTROL_POINT and pass info to Observables
+     */
+    private fun handleConfigurationFail(data: ByteArray){
+        //TODO("big when with specific actions (based on data)")
+        //Timber.d("action failed") -> subject.onError(Exception("message")) -> subject = PublishSubject.create()
+
+    }
+
     override fun onResult(data: BluetoothGattCharacteristic) {
         val serviceId = data.service.uuid
         val characteristicId = data.uuid
@@ -798,63 +843,19 @@ class MiBand(private val context: Context) : BluetoothListener {
                         batteryInfoSubject = PublishSubject.create()
                     }
 
-                    //TODO("Fix this char")
-                    // sensor notify
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        val changedValue = data.value
-                        if (Arrays.equals(changedValue, Protocol.ENABLE_SENSOR_DATA_NOTIFY)) {
-                            sensorNotificationSubject.onNext(true)
-                        } else {
-                            sensorNotificationSubject.onNext(false)
-                        }
-                        sensorNotificationSubject.onComplete()
-                        sensorNotificationSubject = PublishSubject.create()
-                    }
-
-
-                    // realtime notify
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        val changedValue = data.value
-                        if (Arrays.equals(changedValue, Protocol.ENABLE_REALTIME_STEPS_NOTIFY)) {
-                            realtimeNotificationSubject.onNext(true)
-                        } else {
-                            realtimeNotificationSubject.onNext(false)
-                        }
-                        realtimeNotificationSubject.onComplete()
-                        realtimeNotificationSubject = PublishSubject.create()
-                    }
-
-
-                    // led color
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        val changedValue = data.value
-                        var ledColor = LedColor.BLUE
-                        when {
-                            Arrays.equals(changedValue, Protocol.SET_COLOR_RED) -> {
-                                ledColor = LedColor.RED
-                            }
-                            Arrays.equals(changedValue, Protocol.SET_COLOR_BLUE) -> {
-                                ledColor = LedColor.BLUE
-                            }
-                            Arrays.equals(changedValue, Protocol.SET_COLOR_GREEN) -> {
-                                ledColor = LedColor.GREEN
-                            }
-                            Arrays.equals(changedValue, Protocol.SET_COLOR_ORANGE) -> {
-                                ledColor = LedColor.ORANGE
-                            }
-                        }
-                        ledColorSubject.onNext(ledColor)
-                        ledColorSubject.onComplete()
-                        ledColorSubject = PublishSubject.create()
-                    }
-
-
+                    //TODO("Possible multiple calls to this char. Write proper fun if needed")
                     // user info
                     Profile.UUID_CHAR_USER_INFO -> {
                         userInfoSubject.onComplete()
-
                         userInfoSubject = PublishSubject.create()
                     }
+
+                    // device config
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        val changedValue = data.value
+                        handleConfigurationResult(changedValue)
+                    }
+
                 }
             }
         }
@@ -867,7 +868,7 @@ class MiBand(private val context: Context) : BluetoothListener {
         rssiSubject = PublishSubject.create()
     }
 
-    override fun onFail(serviceUUID: UUID, characteristicId: UUID, msg: String) {
+    override fun onFail(serviceUUID: UUID, characteristicId: UUID, msg: String, data: ByteArray) {
         when (serviceUUID) {
             Profile.UUID_SERVICE_MILI -> {
 
@@ -878,42 +879,31 @@ class MiBand(private val context: Context) : BluetoothListener {
                         batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
                         batteryInfoSubject = PublishSubject.create()
                     }
-
-                    // sensor notify
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        Timber.d("Sensor notify failed $msg")
-                        sensorNotificationSubject.onError(Exception("Sensor notify failed"))
-                        sensorNotificationSubject = PublishSubject.create()
-                    }
-
-                    // realtime notify
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        Timber.d("Realtime notify failed $msg")
-                        realtimeNotificationSubject.onError(Exception("Realtime notify failed"))
-                        realtimeNotificationSubject = PublishSubject.create()
-                    }
-
-                    // led color
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        Timber.d("Led color failed")
-                        ledColorSubject.onError(Exception("Changing LED color failed"))
-                        ledColorSubject = PublishSubject.create()
-                    }
-
+                    //TODO("Possible multiple calls. Write fun if needed")
                     // user info
                     Profile.UUID_CHAR_USER_INFO -> {
                         Timber.d("User info failed")
                         userInfoSubject.onError(Exception("Setting User info failed"))
                         userInfoSubject = PublishSubject.create()
                     }
+
+                    //TODO("Fix this crap")
+                    // sensor notify
+                    Profile.UUID_CHAR_CONTROL_POINT -> {
+                        Timber.d("Device config action failed")
+                        handleConfigurationFail(data)
+                    }
                 }
             }
-            // Pair
+
             Profile.UUID_SERVICE_MIBAND2 -> {
-                if (characteristicId == Profile.UUID_CHAR_PAIR) {
-                    Timber.d(msg)
-                    pairInitSubject.onError(Exception("Pairing failed"))
-                    pairInitSubject = PublishSubject.create()
+                when (characteristicId) {
+                    // Pair
+                    Profile.UUID_CHAR_PAIR -> {
+                        Timber.d(msg)
+                        pairInitSubject.onError(Exception("Pairing failed"))
+                        pairInitSubject = PublishSubject.create()
+                    }
                 }
             }
             // vibration service
