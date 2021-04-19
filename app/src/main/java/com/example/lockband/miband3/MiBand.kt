@@ -37,8 +37,6 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var rssiSubject: PublishSubject<Int> = PublishSubject.create()
     private var batteryInfoSubject: PublishSubject<BatteryInfo> = PublishSubject.create()
     private var pairInitSubject: PublishSubject<Void> = PublishSubject.create()
-    private var requestNumberSubject: PublishSubject<Void> = PublishSubject.create()
-    private var sendEncNumSubject: PublishSubject<Void> = PublishSubject.create()
     private var pairRequested: Boolean = false
     private var startVibrationSubject: PublishSubject<Void> = PublishSubject.create()
     private var stopVibrationSubject: PublishSubject<Void> = PublishSubject.create()
@@ -53,10 +51,6 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var serialNumberSubject: PublishSubject<String> = PublishSubject.create()
     private var hardwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
     private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
-    private var dateDisplaySubject: PublishSubject<Void> = PublishSubject.create()
-    private var timeFormatSubject: PublishSubject<Void> = PublishSubject.create()
-    private var unitFormatSubject: PublishSubject<Void> = PublishSubject.create()
-    private var wearLocationSubject: PublishSubject<Void> = PublishSubject.create()
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -172,35 +166,32 @@ class MiBand(private val context: Context) : BluetoothListener {
     /**
      * Requests random key from MiBand
      */
-    fun requestRandomNumber(): Observable<Void> {
-        return Observable.create<Void> {
-            Timber.d("Request random number from MiBand")
-            requestNumberSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MIBAND2,
-                Profile.UUID_CHAR_PAIR,
-                Protocol.REQ_RAND_NUMBER
-            )
-        }
+    fun requestRandomNumber() {
+        Timber.d("Request random number from MiBand")
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_CHAR_PAIR,
+            Protocol.REQ_RAND_NUMBER
+        )
     }
 
     /**
      * Send encrypted number to band
      */
-    fun sendEncryptedNumber(num: ByteArray): Observable<Void> {
-        return Observable.create<Void> {
-            Timber.d("Send encrypted number to MiBand")
+    fun sendEncryptedNumber(num: ByteArray) {
 
-            val encryptedNum = encryptAES(num, KEY)
-            val message = Protocol.SEND_ENC_NUMBER + encryptedNum
+        Timber.d("Send encrypted number to MiBand")
 
-            sendEncNumSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MIBAND2,
-                Profile.UUID_CHAR_PAIR,
-                message
-            )
-        }
+        val encryptedNum = encryptAES(num, KEY)
+        val message = Protocol.SEND_ENC_NUMBER + encryptedNum
+
+
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_CHAR_PAIR,
+            message
+        )
+
     }
 
 
@@ -219,84 +210,267 @@ class MiBand(private val context: Context) : BluetoothListener {
         bluetoothIo.requestMtu(mtu)
     }
 
+    /**
+     * Initial set up methods   ********************************************************************
+     */
+
+
+    /**
+     * Set english language in band
+     */
+    fun setEnglishLanguage() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.SET_ENGLISH_LANGUAGE
+    )
+
+    /**
+     * Disable screen unlock in band
+     */
+    fun disableScreenUnlock() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISABLE_BAND_SCREEN_UNLOCK
+    )
+
+    /**
+     * Disable night mode in band
+     */
+    fun disableNightMode() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_NIGHT_MODE_OFF
+    )
+
+    /**
+     * Set date format to dd/MM/yyyy
+     */
+    fun setDateFormat() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.DATEFORMAT_DATE_DD_MM_YYYY
+    )
+
 
     /**
      * Send current time to band
      */
-    fun setCurrentTime(): Observable<Void> {
-        val now: GregorianCalendar = CalendarConversions.createCalendar()
-        val bytes: ByteArray = getTimeBytes(now, TimeUnit.SECONDS)!!
+    fun setCurrentTime(): Observable<Void> = Observable.create<Void> {
+        timeSubject.subscribe(ObserverWrapper(it))
+        bluetoothIo.writeCharacteristic(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_DATA_TIME,
+            getTimeBytes(Conversions.createCalendar(), TimeUnit.SECONDS)!!
+        )
+    }
 
-        return Observable.create<Void> {
-            timeSubject.subscribe(ObserverWrapper(it))
+
+    /**
+     * Sends date display configuration to band
+     */
+    fun setDateDisplay() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.DATEFORMAT_DATE_TIME
+    )
+
+
+    /**
+     * Sends time format config to band
+     */
+    fun setTimeFormat() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.DATEFORMAT_TIME_24_HOURS
+    )
+
+    /**
+     * Sets user info
+
+     * @param userInfo User info
+     */
+    fun setUserInfo(userInfo: UserInfo): Observable<Void> {
+        return Observable.create<Void> { subscriber ->
+            userInfoSubject.subscribe(ObserverWrapper(subscriber))
             bluetoothIo.writeCharacteristic(
                 Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_DATA_TIME, bytes
+                Profile.UUID_CHAR_CONTROL_POINT,
+                userInfo.getBytes()
             )
         }
     }
 
     /**
-     * Sends date display configuration to band
-     */
-    //potential rework
-    fun setDateDisplay(): Observable<Void> = Observable.create {
-        dateDisplaySubject.subscribe(ObserverWrapper(it))
-        bluetoothIo.writeCharacteristic(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_CONTROL_POINT,
-            Protocol.DATEFORMAT_DATE_TIME
-        )
-    }
-
-    /**
-     * Sends time format config to band
-     */
-    //potential rework?
-    fun setTimeFormat(): Observable<Void> = Observable.create {
-        timeFormatSubject.subscribe(ObserverWrapper(it))
-        bluetoothIo.writeCharacteristic(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_CONTROL_POINT,
-            Protocol.DATEFORMAT_TIME_24_HOURS
-        )
-    }
-
-    /**
      * Sends unit configuration to band
      */
-    //potential rework
-    fun setMetricUnits(): Observable<Void> = Observable.create {
-        unitFormatSubject.subscribe(ObserverWrapper(it))
-        bluetoothIo.writeCharacteristic(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_CONTROL_POINT,
-            Protocol.COMMAND_DISTANCE_UNIT_METRIC
-        )
-    }
+    fun setMetricUnits() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISTANCE_UNIT_METRIC
+    )
+
 
     /**
      * Set wear location to left hand
      */
-    fun setWearLocation(): Observable<Void> = Observable.create {
-        wearLocationSubject.subscribe(ObserverWrapper(it))
+    fun setWearLocation() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_USER_INFO,
+        Protocol.WEAR_LOCATION_LEFT_WRIST
+    )
+
+    /**
+     * Sets up fitness goal (10000 steps)
+     */
+    fun setFitnessGoal(): Observable<Void> = Observable.create<Void> { subscriber ->
+        Timber.d("Setting up fitness goal")
+        userInfoSubject.subscribe(ObserverWrapper(subscriber))
         bluetoothIo.writeCharacteristic(
             Profile.UUID_SERVICE_MILI,
             Profile.UUID_CHAR_USER_INFO,
-            Protocol.WEAR_LOCATION_LEFT_WRIST
+            Protocol.COMMAND_SET_FITNESS_GOAL_START + Conversions.fromUint16(stepGoal) + Protocol.COMMAND_SET_FITNESS_GOAL_END
         )
     }
 
     /**
-     * Requests battery info
-
-     * @return Battery info instance
+     * Set up default items displayed in band menu
      */
-    val batteryInfo: Observable<BatteryInfo>
-        get() = Observable.create<BatteryInfo> { subscriber ->
-            batteryInfoSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_BATTERY)
+    fun setDisplayItems() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.DISPLAY_ITEMS_DEFAULT
+    )
+
+    /**
+     * Disable Do Not Distrurb mode
+     */
+    fun disableDND() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DO_NOT_DISTURB_OFF
+    )
+
+    /**
+     * Disable rotate wrist gesture action
+     */
+    fun disableRotateWristToSwitchInfo() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISABLE_ROTATE_WRIST_TO_SWITCH_INFO
+    )
+
+    /**
+     * Disable lift wrist gesture action
+     */
+    fun disableLiftWristToActivateDisplay() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISABLE_DISPLAY_ON_LIFT_WRIST
+    )
+
+    /**
+     * Enable displaying caller
+     */
+    fun enableDisplayCaller() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_ENABLE_DISPLAY_CALLER
+    )
+
+    /**
+     * Disable step goal notifications
+     */
+    fun disableGoalNotification() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISABLE_GOAL_NOTIFICATION
+    )
+
+    /**
+     * Disable Inactivity Warnings
+     */
+    fun disableInactivityWarnings() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_DISABLE_INACTIVITY_WARNINGS
+    )
+
+    /**
+     * Sets up support for better sleep recognition using hr data
+     */
+    fun enableHeartRateSleepSupport(): Observable<Void> {
+        return Observable.create<Void> { subscriber ->
+            heartRateSubject.subscribe(ObserverWrapper(subscriber))
+            bluetoothIo.writeCharacteristic(
+                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
+                Protocol.SET_HR_SLEEP_SUPPORT
+            )
         }
+    }
+
+    /**
+     * Enable onDisconnect Notification
+     */
+    fun enableDisconnectNotification() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_ENABLE_DISCONNECT_NOTIFCATION
+    )
+
+    /**
+     * Disable BT connected advertisement
+     */
+    fun enableBTConnectedAdvertisement() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_ENABLE_BT_CONNECTED_ADVERTISEMENT
+    )
+
+    /**
+     * Sets up automatic hr measure interval to 1 minute (shortest available)
+     */
+    fun setHeartRateMeasureInterval(): Observable<Void> {
+        return Observable.create<Void> { subscriber ->
+            heartRateSubject.subscribe(ObserverWrapper(subscriber))
+            bluetoothIo.writeCharacteristic(
+                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
+                Protocol.SET_HR_MEASURE_INTERVAL
+            )
+        }
+    }
+
+    fun requestAlarms() = bluetoothIo.writeCharacteristic(
+        Profile.UUID_SERVICE_MILI,
+        Profile.UUID_CHAR_CONTROL_POINT,
+        Protocol.COMMAND_REQUEST_ALARMS
+    )
+
+    /**
+     * Listeners    ********************************************************************************
+     */
+
+    /**
+     * Set listener for UserInfo characteristic
+     */
+    fun setUserInfoListener(listener: (ByteArray) -> Unit) {
+        Timber.d("Setting up listener on User Info characteristic")
+        bluetoothIo.setNotifyListener(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_USER_INFO,
+            listener
+        )
+    }
+
+    /**
+     * Remove listener for UserInfo characteristic
+     */
+    fun removeUserInfoListener() {
+        Timber.d("Disabling listener on User Info characteristic")
+        bluetoothIo.removeNotifyListener(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_USER_INFO
+        )
+    }
 
     /**
      * Set battery info listener
@@ -340,6 +514,97 @@ class MiBand(private val context: Context) : BluetoothListener {
         )
     }
 
+    /**
+     * Set authentication notification listener
+     *
+     * @param listener Pairing listener
+     */
+    fun setAuthenticationListener(listener: (ByteArray) -> Unit) {
+        Timber.d("Setting up pairing listener")
+        bluetoothIo.setNotifyListener(
+            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_CHAR_PAIR,
+            listener
+        )
+    }
+
+    /**
+     * Disable notifications on initial authentication
+     *
+     */
+    fun removeAuthenticationListener() {
+        Timber.d("Removing pairing listener")
+        bluetoothIo.removeNotifyListener(
+            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_CHAR_PAIR
+        )
+    }
+
+    /**
+     * Sets realtime steps notification listener
+
+     * @param listener Notification listener
+     */
+    fun setRealtimeStepsNotifyListener(listener: RealtimeStepsNotifyListener) {
+        bluetoothIo.setNotifyListener(
+            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_CHAR_REALTIME_STEPS
+        ) { data: ByteArray ->
+            Timber.d(data.contentToString())
+            if (data.size == 4) {
+                val steps = data[3].toInt() shl 24 or (data[2].toInt() and 0xFF shl 16) or
+                        (data[1].toInt() and 0xFF shl 8) or (data[0].toInt() and 0xFF)
+                listener.onNotify(steps)
+            }
+        }
+    }
+
+    /**
+     * Sets heart rate scanner listener
+     *
+     * @param listener Listener
+     */
+    fun setHeartRateScanListenerMiBand2(listener: HeartRateNotifyListener) {
+        bluetoothIo.setNotifyListener(
+            Profile.UUID_SERVICE_HEARTRATE,
+            Profile.UUID_CHAR_HEARTRATE
+        ) { data ->
+            Timber.d(data.contentToString())
+            if (data.size == 2 && data[0].toInt() == 0) {
+                val heartRate = data[1].toInt() and 0xFF
+                listener.onNotify(heartRate)
+            }
+        }
+    }
+
+    /**
+     * Sets notification listener
+
+     * @param listener Listener
+     */
+    fun setNormalNotifyListener(listener: (ByteArray) -> Unit) {
+        bluetoothIo.setNotifyListener(
+            Profile.UUID_SERVICE_MILI,
+            Profile.UUID_CHAR_NOTIFICATION,
+            listener
+        )
+    }
+
+    /**
+     * Device information getters   ****************************************************************
+     */
+
+    /**
+     * Requests battery info
+
+     * @return Battery info instance
+     */
+    val batteryInfo: Observable<BatteryInfo>
+        get() = Observable.create<BatteryInfo> { subscriber ->
+            batteryInfoSubject.subscribe(ObserverWrapper(subscriber))
+            bluetoothIo.readCharacteristic(Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_BATTERY)
+        }
+
 
     /**
      * Read band serial number
@@ -381,6 +646,10 @@ class MiBand(private val context: Context) : BluetoothListener {
     }
 
     /**
+     * Vibration methods   *************************************************************************
+     */
+
+    /**
      * Requests starting vibration
      */
     fun startVibration(mode: VibrationMode): Observable<Void> {
@@ -412,309 +681,9 @@ class MiBand(private val context: Context) : BluetoothListener {
         }
     }
 
-
     /**
-     * Enables sensor notifications on hr and accelerometer (010319)
+     * BT methods   ********************************************************************************
      */
-    fun enableSensorDataNotify(): Observable<Boolean> {
-        return Observable.create<Boolean> { subscriber ->
-            sensorNotificationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_SENSOR_DATA,
-                Protocol.ENABLE_SENSOR_DATA_NOTIFY
-            )
-        }
-    }
-
-    fun startSensorMeasurement(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            sensorDataSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_SENSOR_DATA, byteArrayOf(2)
-            )
-        }
-    }
-
-    fun disableSensorMeasurement(): Observable<Void> {
-        return Observable.create<Void> {
-            sensorDataSubject.subscribe(ObserverWrapper(it))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_SENSOR_DATA, byteArrayOf(2)
-            )
-        }
-
-    }
-
-    /**
-     * Disables sensor notifications
-     */
-    fun disableSensorDataNotify(): Observable<Boolean> {
-        return Observable.create<Boolean> { subscriber ->
-            sensorNotificationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_SENSOR_DATA,
-                Protocol.DISABLE_SENSOR_DATA_NOTIFY
-            )
-        }
-    }
-
-
-    /**
-     * Sets sensor data notification listener
-
-     * @param listener Notification listener
-     */
-    fun setSensorDataNotifyListener(listener: (ByteArray) -> Unit) {
-        Timber.d("Setting up sensor listener")
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_SENSOR_DATA,
-            listener
-        )
-    }
-
-    /**
-     * Set authentication notification listener
-     *
-     * @param listener Pairing listener
-     */
-    fun setAuthenticationListener(listener: (ByteArray) -> Unit) {
-        Timber.d("Setting up pairing listener")
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MIBAND2,
-            Profile.UUID_CHAR_PAIR,
-            listener
-        )
-    }
-
-    /**
-     * Disable notifications on initial authentication
-     *
-     */
-    fun removeAuthenticationListener() {
-        Timber.d("Removing pairing listener")
-        bluetoothIo.removeNotifyListener(
-            Profile.UUID_SERVICE_MIBAND2,
-            Profile.UUID_CHAR_PAIR
-        )
-    }
-
-    fun removeSensorListener() {
-        Timber.d("Removing sensor listener")
-        bluetoothIo.removeNotifyListener(Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_SENSOR_DATA)
-    }
-
-    fun removeHRListeners() {
-        Timber.d("Removing HR listeners")
-        bluetoothIo.removeNotifyListener(
-            Profile.UUID_SERVICE_HEARTRATE,
-            Profile.UUID_CHAR_HEARTRATE
-        )
-    }
-
-
-    /*
-    *Unnecessary in MiBand3
-    /**
-     * Enables realtime steps notification
-     */
-    fun enableRealtimeStepsNotify(): Observable<Boolean> {
-        return Observable.create<Boolean> { subscriber ->
-            realtimeNotificationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_CONTROL_POINT,
-                Protocol.ENABLE_REALTIME_STEPS_NOTIFY
-            )
-        }
-    }
-
-    /**
-     * Disables realtime steps notification
-     */
-    fun disableRealtimeStepsNotify(): Observable<Boolean> {
-        return Observable.create<Boolean> { subscriber ->
-            realtimeNotificationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI, Profile.UUID_CHAR_CONTROL_POINT,
-                Protocol.DISABLE_REALTIME_STEPS_NOTIFY
-            )
-        }
-    }
-
-     */
-
-    //fun readSteps(): Observable<Int> {}
-
-    /**
-     * Sets realtime steps notification listener
-
-     * @param listener Notification listener
-     */
-    fun setRealtimeStepsNotifyListener(listener: RealtimeStepsNotifyListener) {
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MIBAND2,
-            Profile.UUID_CHAR_REALTIME_STEPS
-        ) { data: ByteArray ->
-            Timber.d(data.contentToString())
-            if (data.size == 4) {
-                val steps = data[3].toInt() shl 24 or (data[2].toInt() and 0xFF shl 16) or
-                        (data[1].toInt() and 0xFF shl 8) or (data[0].toInt() and 0xFF)
-                listener.onNotify(steps)
-            }
-        }
-    }
-
-    /**
-     * Sets notification listener
-
-     * @param listener Listener
-     */
-    fun setNormalNotifyListener(listener: (ByteArray) -> Unit) {
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_NOTIFICATION,
-            listener
-        )
-    }
-
-    /**
-     * Sets LED color
-
-     * @param color Color
-     */
-    fun setLedColor(color: LedColor): Observable<LedColor> {
-        return Observable.create<LedColor> { subscriber ->
-            val protocol: ByteArray = when (color) {
-                LedColor.RED -> Protocol.SET_COLOR_RED
-                LedColor.BLUE -> Protocol.SET_COLOR_BLUE
-                LedColor.GREEN -> Protocol.SET_COLOR_GREEN
-                LedColor.ORANGE -> Protocol.SET_COLOR_ORANGE
-            }
-            ledColorSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_CONTROL_POINT,
-                protocol
-            )
-        }
-
-    }
-
-    /**
-     * Sets user info
-
-     * @param userInfo User info
-     */
-    fun setUserInfo(userInfo: UserInfo): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            userInfoSubject.subscribe(ObserverWrapper(subscriber))
-            val data = userInfo.getBytes()
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_MILI,
-                Profile.UUID_CHAR_CONTROL_POINT,
-                data
-            )
-        }
-    }
-
-    /**
-     * Sets up support for better sleep recognition using hr data
-     */
-    fun enableHeartRateSleepSupport(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            heartRateSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
-                Protocol.SET_HR_SLEEP_SUPPORT
-            )
-        }
-    }
-
-    /**
-     * Sets up automatic hr measure interval to 1 minute (shortest available)
-     */
-    fun setHeartRateMeasureInterval(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            heartRateSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
-                Protocol.SET_HR_MEASURE_INTERVAL
-            )
-        }
-    }
-
-    /**
-     * Starts heart rate scanner real time
-     */
-    fun startManualHeartRateScan(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            heartRateSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
-                Protocol.START_HR_SCAN_MANUAL
-            )
-        }
-    }
-
-    fun pingHRService() {
-        bluetoothIo.writeCharacteristic(
-            Profile.UUID_SERVICE_HEARTRATE,
-            Profile.UUID_CONTROL_HEARTRATE,
-            Protocol.PING_HR_MONITOR
-        )
-    }
-
-    /**
-     * Stops heart rate scanner
-     */
-    fun disableRealTimeHeartRateScan(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            heartRateSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
-                Protocol.DISABLE_HEART_RATE_SCAN_AUTO
-            )
-        }
-    }
-
-    /**
-     * Sets heart rate scanner listener
-     *
-     * @param listener Listener
-     */
-    fun setHeartRateScanListener(listener: HeartRateNotifyListener) {
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_HEARTRATE,
-            Profile.UUID_CONTROL_HEARTRATE
-        ) { data ->
-            Timber.d(data.contentToString())
-            if (data.size == 2 && data[0].toInt() == 6) {
-                val heartRate = data[1].toInt() and 0xFF
-                listener.onNotify(heartRate)
-            }
-        }
-    }
-
-    /**
-     * Sets heart rate scanner listener for Xiaomi MiBand 2
-     *
-     * @param listener Listener
-     */
-    fun setHeartRateScanListenerMiBand2(listener: HeartRateNotifyListener) {
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_HEARTRATE,
-            Profile.UUID_CHAR_HEARTRATE
-        ) { data ->
-            Timber.d(data.contentToString())
-            if (data.size == 2 && data[0].toInt() == 0) {
-                val heartRate = data[1].toInt() and 0xFF
-                listener.onNotify(heartRate)
-            }
-        }
-    }
 
     /**
      * Notify for connection results
@@ -743,24 +712,6 @@ class MiBand(private val context: Context) : BluetoothListener {
         }
 
         Timber.d("MiBand disconnected")
-    }
-
-    /**
-     * Parse response from UUID_CHAR_CONTROL_POINT and pass info to Observables
-     */
-    private fun handleConfigurationResult(data: ByteArray) {
-        //TODO("big when with specific actions (based on data)")
-        //(subject.onNext(data)) -> subject.onComplete() -> subject = PublishSubject.create()
-        //possible that onNext is unnecessary as I don't need any specific data from config just confirmation that it's set so I can notify Observables
-    }
-
-    /**
-     * Parse failures from UUID_CHAR_CONTROL_POINT and pass info to Observables
-     */
-    private fun handleConfigurationFail(data: ByteArray){
-        //TODO("big when with specific actions (based on data)")
-        //Timber.d("action failed") -> subject.onError(Exception("message")) -> subject = PublishSubject.create()
-
     }
 
     override fun onResult(data: BluetoothGattCharacteristic) {
@@ -843,19 +794,11 @@ class MiBand(private val context: Context) : BluetoothListener {
                         batteryInfoSubject = PublishSubject.create()
                     }
 
-                    //TODO("Possible multiple calls to this char. Write proper fun if needed")
                     // user info
                     Profile.UUID_CHAR_USER_INFO -> {
                         userInfoSubject.onComplete()
                         userInfoSubject = PublishSubject.create()
                     }
-
-                    // device config
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        val changedValue = data.value
-                        handleConfigurationResult(changedValue)
-                    }
-
                 }
             }
         }
@@ -885,13 +828,6 @@ class MiBand(private val context: Context) : BluetoothListener {
                         Timber.d("User info failed")
                         userInfoSubject.onError(Exception("Setting User info failed"))
                         userInfoSubject = PublishSubject.create()
-                    }
-
-                    //TODO("Fix this crap")
-                    // sensor notify
-                    Profile.UUID_CHAR_CONTROL_POINT -> {
-                        Timber.d("Device config action failed")
-                        handleConfigurationFail(data)
                     }
                 }
             }

@@ -5,7 +5,7 @@ import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.TimeZone
 
-class CalendarConversions {
+class Conversions {
 
     companion object {
 
@@ -155,7 +155,7 @@ class CalendarConversions {
             return start + end
         }
 
-        fun calendarToLocalTimeBytes(now: GregorianCalendar): ByteArray? {
+        fun calendarToLocalTimeBytes(now: GregorianCalendar): ByteArray {
             val result = ByteArray(2)
             result[0] = mapTimeZone(now.timeZone)
             result[1] = mapDstOffset(now)

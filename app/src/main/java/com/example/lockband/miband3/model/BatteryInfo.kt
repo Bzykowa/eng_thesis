@@ -1,6 +1,6 @@
 package com.example.lockband.miband3.model
 
-import com.example.lockband.utils.CalendarConversions
+import com.example.lockband.utils.Conversions
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -55,7 +55,7 @@ class BatteryInfo constructor(
             val cycles =
                 if (data.size >= 10) 0xffff and (0xff and data[7].toInt() or (0xff and data[8].toInt() shl 8)) else -1
 
-            val lastChargeDay = if (data.size >= 18) CalendarConversions.rawBytesToCalendar(
+            val lastChargeDay = if (data.size >= 18) Conversions.rawBytesToCalendar(
                 byteArrayOf(
                     data[10],
                     data[11],
