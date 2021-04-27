@@ -25,7 +25,7 @@ class StartReceiver : BroadcastReceiver() {
             }
 
             if (getMiBandServiceState(context) == MiBandServiceState.STARTED) {
-                Intent(context, DataGatheringService::class.java).also {
+                Intent(context, MiBandService::class.java).also {
                     it.action = DataGatheringServiceActions.START.name
                     it.putExtra(
                         "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(

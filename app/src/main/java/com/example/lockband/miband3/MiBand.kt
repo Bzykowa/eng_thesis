@@ -20,6 +20,7 @@ import com.example.lockband.utils.*
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -324,6 +325,9 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setFitnessGoal(): Observable<Void> = Observable.create<Void> { subscriber ->
         Timber.d("Setting up fitness goal")
+        while(userInfoSubject.hasObservers()){
+            pauseBetweenOperations()
+        }
         userInfoSubject.subscribe(ObserverWrapper(subscriber))
         bluetoothIo.writeCharacteristic(
             Profile.UUID_SERVICE_MILI,
@@ -431,6 +435,9 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setHeartRateMeasureInterval(): Observable<Void> {
         return Observable.create<Void> { subscriber ->
+            while(heartRateSubject.hasObservers()){
+                pauseBetweenOperations()
+            }
             heartRateSubject.subscribe(ObserverWrapper(subscriber))
             bluetoothIo.writeCharacteristic(
                 Profile.UUID_SERVICE_HEARTRATE, Profile.UUID_CONTROL_HEARTRATE,
@@ -550,7 +557,7 @@ class MiBand(private val context: Context) : BluetoothListener {
             Profile.UUID_SERVICE_MIBAND2,
             Profile.UUID_CHAR_REALTIME_STEPS
         ) { data: ByteArray ->
-            Timber.d(data.contentToString())
+            Timber.d("Steps Raw - %s", data.contentToString())
             if (data.size == 4) {
                 val steps = data[3].toInt() shl 24 or (data[2].toInt() and 0xFF shl 16) or
                         (data[1].toInt() and 0xFF shl 8) or (data[0].toInt() and 0xFF)
@@ -746,11 +753,8 @@ class MiBand(private val context: Context) : BluetoothListener {
             // heart rate (fix this crap)
             Profile.UUID_SERVICE_HEARTRATE -> {
                 if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
-                    val changedValue = data.value
-                    if (Arrays.equals(changedValue, Protocol.PING_HR_MONITOR)) {
-                        heartRateSubject.onComplete()
-                        heartRateSubject = PublishSubject.create()
-                    }
+                    heartRateSubject.onComplete()
+                    heartRateSubject = PublishSubject.create()
                 }
             }
             // vibration service
@@ -782,11 +786,10 @@ class MiBand(private val context: Context) : BluetoothListener {
                 // Battery info
                 when (characteristicId) {
                     Profile.UUID_CHAR_BATTERY -> {
-                        Timber.d("getBatteryInfo result ${Arrays.toString(data.value)}")
-                        if (data.value.size == 10) {
-                            val info = BatteryInfo.fromByteData(data.value)
-
-                            batteryInfoSubject.onNext(info)
+                        val changedValue = data.value
+                        Timber.d("getBatteryInfo result ${Arrays.toString(changedValue)}")
+                        if (changedValue.size == 10) {
+                            batteryInfoSubject.onNext(BatteryInfo.fromByteData(changedValue))
                             batteryInfoSubject.onComplete()
                         } else {
                             batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
@@ -798,6 +801,12 @@ class MiBand(private val context: Context) : BluetoothListener {
                     Profile.UUID_CHAR_USER_INFO -> {
                         userInfoSubject.onComplete()
                         userInfoSubject = PublishSubject.create()
+                    }
+
+                    //Set time
+                    Profile.UUID_CHAR_DATA_TIME -> {
+                        timeSubject.onComplete()
+                        timeSubject = PublishSubject.create()
                     }
                 }
             }
@@ -822,12 +831,17 @@ class MiBand(private val context: Context) : BluetoothListener {
                         batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
                         batteryInfoSubject = PublishSubject.create()
                     }
-                    //TODO("Possible multiple calls. Write fun if needed")
                     // user info
                     Profile.UUID_CHAR_USER_INFO -> {
                         Timber.d("User info failed")
                         userInfoSubject.onError(Exception("Setting User info failed"))
                         userInfoSubject = PublishSubject.create()
+                    }
+
+                    //Set time
+                    Profile.UUID_CHAR_DATA_TIME -> {
+                        timeSubject.onError(Exception("Setting current time failed."))
+                        timeSubject = PublishSubject.create()
                     }
                 }
             }

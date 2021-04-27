@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    entities = [AppState::class, BandStep::class, PhoneStep::class, HeartRate::class, SensorData::class],
+    entities = [AppState::class, BandStep::class, PhoneStep::class, HeartRate::class],
     version = 1,
     exportSchema = false
 )
@@ -26,7 +26,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun bandStepDao(): BandStepDao
     abstract fun phoneStepDao() : PhoneStepDao
     abstract fun heartRateDao() : HeartRateDao
-    abstract fun sensorDataDao() : SensorDataDao
 
     companion object {
         @Volatile

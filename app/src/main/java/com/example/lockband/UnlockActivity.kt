@@ -10,7 +10,7 @@ import androidx.databinding.DataBindingUtil
 import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.ActivityUnlockBinding
-import com.example.lockband.services.DataGatheringService
+import com.example.lockband.services.MiBandService
 import com.example.lockband.services.LockingService
 import com.example.lockband.utils.PASS_FILE
 import com.example.lockband.utils.getMiBandAddress
@@ -35,7 +35,7 @@ class UnlockActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
-        Intent(this, DataGatheringService::class.java).also {
+        Intent(this, MiBandService::class.java).also {
             it.action = DataGatheringServiceActions.START.name
             it.putExtra(
                 "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(

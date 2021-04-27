@@ -24,6 +24,10 @@ object Protocol {
     val VIBRATION_WITHOUT_LED = byteArrayOf(4)
     val STOP_VIBRATION = byteArrayOf(0)
 
+    //Device Events
+    const val FELL_ASLEEP: Byte = 0x01
+    const val START_NONWEAR: Byte = 0x06
+
     //Heart Rate Protocol
     val PING_HR_MONITOR = parseHexBinary("16")!!
     val ENABLE_HR_SCAN_AUTO: ByteArray = byteArrayOf(21, 1, 1)

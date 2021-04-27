@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.databinding.ActivityLauncherBinding
-import com.example.lockband.services.DataGatheringService
+import com.example.lockband.services.MiBandService
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -76,7 +76,7 @@ class LauncherActivity : AppCompatActivity() {
             }
 
         } else if (getServiceState(this) == ServiceState.STOPPED) {
-            Intent(this, DataGatheringService::class.java).also {
+            Intent(this, MiBandService::class.java).also {
                 it.action = DataGatheringServiceActions.START.name
                 it.putExtra(
                     "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(

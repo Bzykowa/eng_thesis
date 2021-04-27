@@ -60,7 +60,7 @@
             android:stopWithTask="false" />
 
         <service
-            android:name=".services.DataGatheringService"
+            android:name=".services.MiBandService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false" />

@@ -42,7 +42,7 @@ class LockingService : Service() {
         if (intent != null) {
             when (intent.action) {
                 LockingServiceActions.START.name -> {
-                    Intent(this, DataGatheringService::class.java).also {
+                    Intent(this, MiBandService::class.java).also {
                         it.action = DataGatheringServiceActions.STOP.name
                         startForegroundService(it)
                     }

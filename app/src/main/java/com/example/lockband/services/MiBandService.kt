@@ -22,9 +22,7 @@ import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.data.room.entities.BandStep
 import com.example.lockband.data.room.entities.HeartRate
 import com.example.lockband.data.room.entities.PhoneStep
-import com.example.lockband.data.room.entities.SensorData
 import com.example.lockband.data.room.repos.HeartRateRepository
-import com.example.lockband.data.room.repos.SensorDataRepository
 import com.example.lockband.data.room.repos.StepRepository
 import com.example.lockband.miband3.MiBand
 import com.example.lockband.miband3.listeners.HeartRateNotifyListener
@@ -40,14 +38,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class DataGatheringService : Service(), SensorEventListener {
+class MiBandService : Service(), SensorEventListener {
 
     @Inject
     lateinit var stepRepository: StepRepository
@@ -55,8 +51,6 @@ class DataGatheringService : Service(), SensorEventListener {
     @Inject
     lateinit var heartRateRepository: HeartRateRepository
 
-    @Inject
-    lateinit var sensorDataRepository: SensorDataRepository
 
     private var miBand = MiBand(this)
     private val disposables = CompositeDisposable()
@@ -132,7 +126,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val restartServiceIntent =
-            Intent(applicationContext, DataGatheringService::class.java).also {
+            Intent(applicationContext, MiBandService::class.java).also {
                 it.setPackage(packageName)
             }
         val restartServicePendingIntent: PendingIntent =
@@ -172,15 +166,14 @@ class DataGatheringService : Service(), SensorEventListener {
 
 
         //set up listeners for band data scans
+        actionSetHeartRateNotifyListener()
+        actionSetRealtimeStepsNotifyListener()
+
         //TODO("Fix zatto shitto")
         GlobalScope.launch(Dispatchers.IO) {
-            delay(OP_TIMEOUT)
-            actionSetHeartRateNotifyListener()
-            delay(OP_TIMEOUT)
-
-            //Periodically ping hr scanner
             while (isServiceStarted) {
                 delay(60000)
+                Timber.d("Mi Band Service working...")
             }
 
         }
@@ -201,7 +194,6 @@ class DataGatheringService : Service(), SensorEventListener {
 
             unregisterReceiver(batteryReceiver)
             unregisterReceiver(alertReceiver)
-
 
             disposables.clear()
 
@@ -404,7 +396,7 @@ class DataGatheringService : Service(), SensorEventListener {
             else -> {
                 setMiBandPaired(this, false)
                 Toast.makeText(
-                    this@DataGatheringService,
+                    this@MiBandService,
                     "Authentication failed. Try again.",
                     Toast.LENGTH_LONG
                 ).show()
@@ -454,13 +446,34 @@ class DataGatheringService : Service(), SensorEventListener {
         Timber.d(batteryInfo.toString())
     }
 
+    /**
+     * Catching falling asleep and taking off band
+     */
     private fun setBandEventsListener() = miBand.setBandEventsListener { data ->
+        when(data.first()) {
+            Protocol.FELL_ASLEEP -> {
+                Timber.d("Registered sleeping")
+                Intent(this, LockingService::class.java).also {
+                    it.action = LockingServiceActions.START.name
+                    startForegroundService(it)
+                }
+                stopService()
+            }
+            Protocol.START_NONWEAR -> {
+                Timber.d("Took off band")
+                Intent(this, LockingService::class.java).also {
+                    it.action = LockingServiceActions.START.name
+                    startForegroundService(it)
+                }
+                stopService()
+            }
+        }
         Timber.d(data.toString())
     }
 
     private fun actionReadSerialNumber() = disposables.add(
         miBand.readSerialNumber().delaySubscription(1, TimeUnit.SECONDS).subscribe({
-            setMiBandSerialNumber(this@DataGatheringService, it)
+            setMiBandSerialNumber(this@MiBandService, it)
             Timber.d("Serial number: $it")
         }, {
             Timber.e(it)
@@ -469,7 +482,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
     private fun actionReadHardwareRevision() = disposables.add(
         miBand.readHardwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
-            setMiBandHardwareRevision(this@DataGatheringService, it)
+            setMiBandHardwareRevision(this@MiBandService, it)
             Timber.d("Hardware revision: $it")
         }, {
             Timber.e(it)
@@ -478,7 +491,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
     private fun actionReadSoftwareRevision() = disposables.add(
         miBand.readSoftwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
-            setMiBandSoftwareRevision(this@DataGatheringService, it)
+            setMiBandSoftwareRevision(this@MiBandService, it)
             Timber.d("Software revision: $it")
         }, {
             Timber.e(it)
@@ -518,7 +531,7 @@ class DataGatheringService : Service(), SensorEventListener {
         disposables.add(miBand.enableHeartRateSleepSupport().delaySubscription(1, TimeUnit.SECONDS)
             .subscribe(
                 { result ->
-                    Timber.d("Scan result: $result")
+                    Timber.d("Sleep support: $result")
                 }, { throwable ->
                     throwable.printStackTrace()
                     Timber.e(throwable)
@@ -574,12 +587,12 @@ class DataGatheringService : Service(), SensorEventListener {
                     //reboot -> clear offset and record latest sample to fix current steps
                     if (currentOffset > sensorSteps) {
                         setStepsOffset(
-                            this@DataGatheringService,
+                            this@MiBandService,
                             0
                         )
                         setStepsOffsetFix(
-                            this@DataGatheringService,
-                            latest?.stepCount ?: 0
+                            this@MiBandService,
+                            latest.stepCount ?: 0
                         )
                     }
 
@@ -589,11 +602,11 @@ class DataGatheringService : Service(), SensorEventListener {
                         //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
                         val offsetFix =
                             if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
-                                this@DataGatheringService
+                                this@MiBandService
                             ) else latest.stepCount
 
                         setStepsOffset(
-                            this@DataGatheringService,
+                            this@MiBandService,
                             offsetFix + currentOffset
                         )
 
@@ -601,7 +614,7 @@ class DataGatheringService : Service(), SensorEventListener {
 
                         //fix step number -> add steps from sample before reboot
                         if (sensorSteps < latest.stepCount) {
-                            sensorSteps += getStepsOffsetFix(this@DataGatheringService)
+                            sensorSteps += getStepsOffsetFix(this@MiBandService)
                         }
                     }
 
@@ -609,7 +622,7 @@ class DataGatheringService : Service(), SensorEventListener {
                         PhoneStep(
                             0,
                             newTimestamp,
-                            sensorSteps - getStepsOffset(this@DataGatheringService)
+                            sensorSteps - getStepsOffset(this@MiBandService)
                         )
                     )
 
