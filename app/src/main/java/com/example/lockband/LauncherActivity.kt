@@ -25,11 +25,17 @@ class LauncherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityLauncherBinding>(this, R.layout.activity_launcher)
 
+        if (needsUsageStatsPermission()) {
+            requestUsageStatsPermission()
+        }
+
         val requestPermissionLauncher =
             registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
-                if (!isGranted) {
+                if (isGranted) {
+                    eventsAfterPermissionCheck()
+                } else {
                     finish()
                 }
             }
@@ -39,7 +45,7 @@ class LauncherActivity : AppCompatActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // You can use the API that requires the permission.
+                eventsAfterPermissionCheck()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
             -> {
@@ -61,10 +67,9 @@ class LauncherActivity : AppCompatActivity() {
             }
         }
 
-        if (needsUsageStatsPermission()) {
-            requestUsageStatsPermission()
-        }
+    }
 
+    private fun eventsAfterPermissionCheck(){
         val passFile = File(applicationContext.dataDir, PASS_FILE)
         if (!passFile.exists()) {
             Intent(this, SetupPasswordActivity::class.java).also {
@@ -93,7 +98,6 @@ class LauncherActivity : AppCompatActivity() {
                 startActivity(it)
             }
         }
-
 
     }
 

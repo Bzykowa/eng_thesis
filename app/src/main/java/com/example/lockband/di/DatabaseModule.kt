@@ -1,8 +1,11 @@
 package com.example.lockband.di
 
 import android.content.Context
-import com.example.lockband.data.room.*
-import com.example.lockband.data.room.daos.*
+import com.example.lockband.data.room.AppDatabase
+import com.example.lockband.data.room.daos.AppStateDao
+import com.example.lockband.data.room.daos.BandStepDao
+import com.example.lockband.data.room.daos.HeartRateDao
+import com.example.lockband.data.room.daos.PhoneStepDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,33 +18,28 @@ import javax.inject.Singleton
 class DatabaseModule {
     @Singleton
     @Provides
-    fun provideAppDatabase(@ApplicationContext context : Context) : AppDatabase {
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return AppDatabase.getInstance(context)
     }
 
     @Provides
-    fun provideAppStateDao(appDatabase: AppDatabase) : AppStateDao {
+    fun provideAppStateDao(appDatabase: AppDatabase): AppStateDao {
         return appDatabase.appStateDao()
     }
 
     @Provides
-    fun provideBandStepDao(appDatabase: AppDatabase) : BandStepDao {
+    fun provideBandStepDao(appDatabase: AppDatabase): BandStepDao {
         return appDatabase.bandStepDao()
     }
 
     @Provides
-    fun providePhoneStepDao(appDatabase: AppDatabase) : PhoneStepDao {
+    fun providePhoneStepDao(appDatabase: AppDatabase): PhoneStepDao {
         return appDatabase.phoneStepDao()
     }
 
     @Provides
-    fun provideHeartRateDao(appDatabase: AppDatabase) : HeartRateDao {
+    fun provideHeartRateDao(appDatabase: AppDatabase): HeartRateDao {
         return appDatabase.heartRateDao()
-    }
-
-    @Provides
-    fun provideSensorDataDao(appDatabase: AppDatabase) : SensorDataDao {
-        return appDatabase.sensorDataDao()
     }
 
 }
