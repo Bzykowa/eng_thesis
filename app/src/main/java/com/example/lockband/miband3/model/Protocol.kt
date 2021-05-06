@@ -14,9 +14,9 @@ object Protocol {
     val NOTIFY_DISABLE = byteArrayOf(0, 0)
 
     //Authentication protocol
-    val SEND_KEY = byteArrayOf(1, 8) + KEY
-    val REQ_RAND_NUMBER = byteArrayOf(2, 8)
-    val SEND_ENC_NUMBER = byteArrayOf(3, 8)
+    val SEND_KEY = byteArrayOf(1, 0) + KEY
+    val REQ_RAND_NUMBER = byteArrayOf(2, 0)
+    val SEND_ENC_NUMBER = byteArrayOf(3, 0)
 
     //Vibration protocol
     val VIBRATION_WITH_LED = byteArrayOf(1)

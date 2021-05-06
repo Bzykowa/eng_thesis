@@ -9,6 +9,10 @@ import androidx.fragment.app.Fragment
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.FragmentBandStateBinding
 import com.example.lockband.services.LockingService
+import com.example.lockband.utils.getMiBandBatteryInfo
+import com.example.lockband.utils.getMiBandHardwareRevision
+import com.example.lockband.utils.getMiBandSerialNumber
+import com.example.lockband.utils.getMiBandSoftwareRevision
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -35,6 +39,11 @@ class BandStateFragment : Fragment() {
             }
 
         }
+
+        binding.serialNum.text = getMiBandSerialNumber(requireContext())
+        binding.hardwareRev.text = getMiBandHardwareRevision(requireContext())
+        binding.softwareRev.text = getMiBandSoftwareRevision(requireContext())
+        binding.batteryPercentage.text = "${getMiBandBatteryInfo(requireContext()).level}%)"
 
         return binding.root
     }

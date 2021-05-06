@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Main class for interacting with MiBand
-
- * @author Dmytro Khmelenko
  */
 class MiBand(private val context: Context) : BluetoothListener {
 
@@ -52,6 +50,8 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var serialNumberSubject: PublishSubject<String> = PublishSubject.create()
     private var hardwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
     private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
+
+    private var disconnectCounter = 0
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -257,6 +257,8 @@ class MiBand(private val context: Context) : BluetoothListener {
      * Send current time to band
      */
     fun setCurrentTime(): Observable<Void> = Observable.create<Void> {
+        val bytes = getTimeBytes(Conversions.createCalendar(), TimeUnit.SECONDS)!!
+        Timber.d("Current time bytes: ${printHexBinary(bytes)}")
         timeSubject.subscribe(ObserverWrapper(it))
         bluetoothIo.writeCharacteristic(
             Profile.UUID_SERVICE_MILI,
@@ -554,13 +556,13 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setRealtimeStepsNotifyListener(listener: RealtimeStepsNotifyListener) {
         bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MIBAND2,
+            Profile.UUID_SERVICE_MILI,
             Profile.UUID_CHAR_REALTIME_STEPS
         ) { data: ByteArray ->
-            Timber.d("Steps Raw - %s", data.contentToString())
-            if (data.size == 4) {
-                val steps = data[3].toInt() shl 24 or (data[2].toInt() and 0xFF shl 16) or
-                        (data[1].toInt() and 0xFF shl 8) or (data[0].toInt() and 0xFF)
+            Timber.d("Steps Raw - %s", printHexBinary(data))
+            if (data.size == 5) {
+                val steps = data[4].toInt() shl 24 or (data[3].toInt() and 0xFF shl 16) or
+                        (data[2].toInt() and 0xFF shl 8) or (data[1].toInt() and 0xFF)
                 listener.onNotify(steps)
             }
         }
@@ -576,7 +578,7 @@ class MiBand(private val context: Context) : BluetoothListener {
             Profile.UUID_SERVICE_HEARTRATE,
             Profile.UUID_CHAR_HEARTRATE
         ) { data ->
-            Timber.d(data.contentToString())
+            Timber.d("Received HR: ${data.contentToString()}")
             if (data.size == 2 && data[0].toInt() == 0) {
                 val heartRate = data[1].toInt() and 0xFF
                 listener.onNotify(heartRate)
@@ -706,19 +708,27 @@ class MiBand(private val context: Context) : BluetoothListener {
     }
 
     override fun onConnectionEstablished() {
+        disconnectCounter = 0
         notifyConnectionResult(true)
     }
 
     override fun onDisconnected() {
         notifyConnectionResult(false)
 
-        //start locking service and show toast Band disconnected
-        Intent(context, LockingService::class.java).also {
-            it.action = LockingServiceActions.START.name
-            startForegroundService(context, it)
-        }
+        disconnectCounter += 1
 
-        Timber.d("MiBand disconnected")
+        if(disconnectCounter <= 5){
+            Timber.d("MiBand disconnected... Attempting to reconnect")
+            connect(device!!)
+        } else {
+            //start locking service and show toast Band disconnected
+            Intent(context, LockingService::class.java).also {
+                it.action = LockingServiceActions.START.name
+                startForegroundService(context, it)
+            }
+
+            Timber.d("MiBand disconnected. Entering Lockdown mode.")
+        }
     }
 
     override fun onResult(data: BluetoothGattCharacteristic) {

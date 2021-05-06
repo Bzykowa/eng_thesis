@@ -16,6 +16,148 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.9" />
+
+        <TextView
+            android:id="@+id/band_info_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/band_info"
+            android:textColor="@color/design_default_color_primary_dark"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_10"
+            app:layout_constraintTop_toTopOf="@+id/upper_guideline"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/battery_level_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/battery_info"
+            android:textColor="@color/design_default_color_primary_dark"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_10"
+            app:layout_constraintTop_toTopOf="@+id/lower_guideline"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/upper_guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.2" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/lower_guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.6" />
+
+        <TextView
+            android:id="@+id/battery_percentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@android:string/yes"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.1"
+            app:layout_constraintStart_toEndOf="@+id/battery_level_label"
+            app:layout_constraintTop_toTopOf="@+id/lower_guideline" />
+
+        <TextView
+            android:id="@+id/serial_num_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/serial_number"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_15"
+            app:layout_constraintTop_toBottomOf="@+id/band_info_label"
+            app:layout_constraintVertical_bias="0.05" />
+
+        <TextView
+            android:id="@+id/serial_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/serial_number"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.05"
+            app:layout_constraintStart_toEndOf="@+id/serial_num_label"
+            app:layout_constraintTop_toBottomOf="@+id/band_info_label"
+            app:layout_constraintVertical_bias="0.05" />
+
+        <TextView
+            android:id="@+id/hardware_version_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hardware_revision"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_15"
+            app:layout_constraintTop_toBottomOf="@+id/serial_num_label"
+            app:layout_constraintVertical_bias="0.05" />
+
+        <TextView
+            android:id="@+id/hardware_rev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hardware_revision"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.05"
+            app:layout_constraintStart_toEndOf="@+id/hardware_version_label"
+            app:layout_constraintTop_toBottomOf="@+id/serial_num_label"
+            app:layout_constraintVertical_bias="0.05" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.1" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.15" />
+
+        <TextView
+            android:id="@+id/software_revision_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/software_revision"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_15"
+            app:layout_constraintTop_toBottomOf="@+id/hardware_version_label"
+            app:layout_constraintVertical_bias="0.05" />
+
+        <TextView
+            android:id="@+id/software_rev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/software_revision"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.05"
+            app:layout_constraintStart_toEndOf="@+id/software_revision_label"
+            app:layout_constraintTop_toBottomOf="@+id/hardware_version_label"
+            app:layout_constraintVertical_bias="0.05" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

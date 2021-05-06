@@ -24,4 +24,10 @@
     <string name="device_tmp">Device to pair</string>
     <string name="scan_for_devices">Scan for devices</string>
     <string name="pairing_scan_stop">Stop scan</string>
+    //band info
+    <string name="band_info">About MiBand</string>
+    <string name="serial_number">Serial number</string>
+    <string name="hardware_revision">Hardware revision</string>
+    <string name="software_revision">Software revision</string>
+    <string name="battery_info">Battery level</string>
 </resources>

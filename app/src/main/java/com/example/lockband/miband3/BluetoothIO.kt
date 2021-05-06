@@ -29,7 +29,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      * @param device  Device to connect
      */
     fun connect(context: Context, device: BluetoothDevice) {
-        device.connectGatt(context, false, this, TRANSPORT_LE)
+        device.connectGatt(context, true, this, TRANSPORT_LE)
     }
 
     /**

@@ -76,6 +76,8 @@ class MiBandService : Service(), SensorEventListener {
     private val batteryIntentFilter = IntentFilter(DataGatheringServiceActions.BATTERY.name)
     private val alertIntentFilter = IntentFilter(DataGatheringServiceActions.ALERT.name)
 
+    private var currentIntent = DataGatheringServiceActions.PAIR.name
+
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -90,11 +92,11 @@ class MiBandService : Service(), SensorEventListener {
             when (intent.action) {
                 DataGatheringServiceActions.PAIR.name -> {
                     actionConnect(intent)
-                    actionRequestMtu(128)
-                    actionSetAuthenticationListener()
-                    handleAuthentication()
                 }
-                DataGatheringServiceActions.START.name -> actionConnect(intent)
+                DataGatheringServiceActions.START.name -> {
+                    currentIntent = DataGatheringServiceActions.START.name
+                    actionConnect(intent)
+                }
                 DataGatheringServiceActions.STOP.name -> stopService()
                 else -> Timber.e("This should never happen. No action in the received intent")
             }
@@ -167,9 +169,9 @@ class MiBandService : Service(), SensorEventListener {
 
         //set up listeners for band data scans
         actionSetHeartRateNotifyListener()
+        pauseBetweenOperations()
         actionSetRealtimeStepsNotifyListener()
 
-        //TODO("Fix zatto shitto")
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
                 delay(60000)
@@ -271,19 +273,22 @@ class MiBandService : Service(), SensorEventListener {
             setHeartRateMeasureInterval()
             delay(OP_TIMEOUT)
             miBand.requestAlarms()
+            delay(OP_TIMEOUT)
+            startService()
         }
     }
 
     private fun handleAuthentication() {
-        Timber.d("Starting to pair")
+        Timber.d("Starting to authenticate")
 
         disposables.add(
-            miBand.initializePairing().delaySubscription(2, TimeUnit.SECONDS).subscribe({ result ->
-                Timber.d("Sent key to MiBand : $result")
-            }, { throwable ->
-                Timber.e(throwable)
-                handleAuthentication()
-            })
+            miBand.initializePairing().delaySubscription(2, TimeUnit.SECONDS)
+                .subscribe({ result ->
+                    Timber.d("Sent key to MiBand : $result")
+                }, { throwable ->
+                    Timber.e(throwable)
+                    handleAuthentication()
+                })
         )
 
     }
@@ -337,6 +342,10 @@ class MiBandService : Service(), SensorEventListener {
                 Timber.d("Connect onNext: $result")
                 if (!result) {
                     actionConnect(intent)
+                } else {
+                    actionRequestMtu(512)
+                    actionSetAuthenticationListener()
+                    handleAuthentication()
                 }
             }, { throwable ->
                 throwable.printStackTrace()
@@ -450,7 +459,7 @@ class MiBandService : Service(), SensorEventListener {
      * Catching falling asleep and taking off band
      */
     private fun setBandEventsListener() = miBand.setBandEventsListener { data ->
-        when(data.first()) {
+        when (data.first()) {
             Protocol.FELL_ASLEEP -> {
                 Timber.d("Registered sleeping")
                 Intent(this, LockingService::class.java).also {
@@ -468,7 +477,7 @@ class MiBandService : Service(), SensorEventListener {
                 stopService()
             }
         }
-        Timber.d(data.toString())
+        Timber.d(printHexBinary(data))
     }
 
     private fun actionReadSerialNumber() = disposables.add(
@@ -581,7 +590,7 @@ class MiBandService : Service(), SensorEventListener {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     delay(100)
-                    val latest: PhoneStep = stepRepository.getLatestPhoneStepSample()
+                    val latest: PhoneStep? = stepRepository.getLatestPhoneStepSample()
                     val newTimestamp = Calendar.getInstance()
 
                     //reboot -> clear offset and record latest sample to fix current steps
@@ -590,31 +599,35 @@ class MiBandService : Service(), SensorEventListener {
                             this@MiBandService,
                             0
                         )
+
                         setStepsOffsetFix(
                             this@MiBandService,
-                            latest.stepCount ?: 0
+                            latest?.stepCount ?: 0
                         )
+
                     }
 
                     //Day changed -> start counting steps from zero
-                    if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
+                    if (latest != null) {
+                        if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
 
-                        //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
-                        val offsetFix =
-                            if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
-                                this@MiBandService
-                            ) else latest.stepCount
+                            //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
+                            val offsetFix =
+                                if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
+                                    this@MiBandService
+                                ) else latest.stepCount
 
-                        setStepsOffset(
-                            this@MiBandService,
-                            offsetFix + currentOffset
-                        )
+                            setStepsOffset(
+                                this@MiBandService,
+                                offsetFix + currentOffset
+                            )
 
-                    } else {
+                        } else {
 
-                        //fix step number -> add steps from sample before reboot
-                        if (sensorSteps < latest.stepCount) {
-                            sensorSteps += getStepsOffsetFix(this@MiBandService)
+                            //fix step number -> add steps from sample before reboot
+                            if (sensorSteps < latest.stepCount) {
+                                sensorSteps += getStepsOffsetFix(this@MiBandService)
+                            }
                         }
                     }
 

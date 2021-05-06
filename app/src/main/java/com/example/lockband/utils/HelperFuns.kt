@@ -25,9 +25,9 @@ fun getPreferences(context: Context, name: String): SharedPreferences {
 
 
 //Add delay between BLE operations while not in coroutine
-fun pauseBetweenOperations() {
+fun pauseBetweenOperations(time: Long = OP_TIMEOUT) {
     try {
-        sleep(OP_TIMEOUT)
+        sleep(time)
     } catch (e: InterruptedException) {
         Timber.e(e)
     }

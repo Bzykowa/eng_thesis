@@ -88,7 +88,7 @@ fun setMiBandSerialNumber(context: Context, serialNum: String) =
 
 
 fun getMiBandSerialNumber(context: Context): String =
-    getPreferences(context, name).getString(serialNumber, "err")!!
+    getPreferences(context, name).getString(serialNumber, "unknown")!!
 
 fun setMiBandHardwareRevision(context: Context, hw_rev: String) =
     getPreferences(context, name).edit().let {
@@ -97,7 +97,7 @@ fun setMiBandHardwareRevision(context: Context, hw_rev: String) =
     }
 
 fun getMiBandHardwareRevision(context: Context): String =
-    getPreferences(context, name).getString(hardwareRevision, "err")!!
+    getPreferences(context, name).getString(hardwareRevision, "unknown")!!
 
 fun setMiBandSoftwareRevision(context: Context, sw_rev: String) =
     getPreferences(context, name).edit().let {
@@ -106,5 +106,5 @@ fun setMiBandSoftwareRevision(context: Context, sw_rev: String) =
     }
 
 fun getMiBandSoftwareRevision(context: Context): String =
-    getPreferences(context, name).getString(softwareRevision, "err")!!
+    getPreferences(context, name).getString(softwareRevision, "unknown")!!
 
