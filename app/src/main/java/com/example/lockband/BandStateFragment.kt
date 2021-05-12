@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.FragmentBandStateBinding
 import com.example.lockband.services.LockingService
@@ -22,6 +23,12 @@ class BandStateFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+        Intent().also { intent ->
+            intent.action = DataGatheringServiceActions.BATTERY.name
+            activity?.sendBroadcast(intent)
+        }
+
         val binding = FragmentBandStateBinding.inflate(inflater, container, false)
         context ?: return binding.root
 
@@ -43,7 +50,7 @@ class BandStateFragment : Fragment() {
         binding.serialNum.text = getMiBandSerialNumber(requireContext())
         binding.hardwareRev.text = getMiBandHardwareRevision(requireContext())
         binding.softwareRev.text = getMiBandSoftwareRevision(requireContext())
-        binding.batteryPercentage.text = "${getMiBandBatteryInfo(requireContext()).level}%)"
+        binding.batteryPercentage.text = getString(R.string.percent_placeholder, getMiBandBatteryInfo(requireContext()).level)
 
         return binding.root
     }

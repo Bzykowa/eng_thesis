@@ -40,7 +40,8 @@
     <fragment
         android:id="@+id/eventsStatsFragment"
         android:name="com.example.lockband.EventsStatsFragment"
-        android:label="EventsStatsFragment" />
+        android:label="EventsStatsFragment"
+        tools:layout="@layout/fragment_stats"/>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.lockband.SettingsFragment"
