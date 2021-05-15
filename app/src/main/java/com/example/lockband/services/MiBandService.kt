@@ -220,6 +220,7 @@ class MiBandService : Service(), SensorEventListener {
         enableDataNotifications()
 
         GlobalScope.launch(Dispatchers.IO) {
+            delay(OP_TIMEOUT)
             actionReadSerialNumber()
             delay(OP_TIMEOUT)
             actionReadHardwareRevision()
@@ -450,9 +451,11 @@ class MiBandService : Service(), SensorEventListener {
     }
 
     private fun setBatteryInfoListener() = miBand.setBatteryInfoListener { data ->
+        Timber.d("HHuuj hhuj hhehhe")
         val batteryInfo = BatteryInfo.fromByteData(data)
         setMiBandBatteryInfo(this, batteryInfo)
         Timber.d(batteryInfo.toString())
+        Timber.d(batteryInfo.level.toString())
     }
 
     /**
@@ -590,7 +593,7 @@ class MiBandService : Service(), SensorEventListener {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     delay(100)
-                    val latest: PhoneStep? = stepRepository.getLatestPhoneStepSample()
+                    val latest: PhoneStep? = stepRepository.getLatestPhoneStepSample().value
                     val newTimestamp = Calendar.getInstance()
 
                     //reboot -> clear offset and record latest sample to fix current steps

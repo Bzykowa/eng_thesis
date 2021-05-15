@@ -8,8 +8,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.lockband.data.room.daos.*
-import com.example.lockband.data.room.entities.*
+import com.example.lockband.data.room.daos.AppStateDao
+import com.example.lockband.data.room.daos.BandStepDao
+import com.example.lockband.data.room.daos.HeartRateDao
+import com.example.lockband.data.room.daos.PhoneStepDao
+import com.example.lockband.data.room.entities.AppState
+import com.example.lockband.data.room.entities.BandStep
+import com.example.lockband.data.room.entities.HeartRate
+import com.example.lockband.data.room.entities.PhoneStep
 import com.example.lockband.utils.DATABASE_NAME
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -24,8 +30,8 @@ import java.util.*
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appStateDao(): AppStateDao
     abstract fun bandStepDao(): BandStepDao
-    abstract fun phoneStepDao() : PhoneStepDao
-    abstract fun heartRateDao() : HeartRateDao
+    abstract fun phoneStepDao(): PhoneStepDao
+    abstract fun heartRateDao(): HeartRateDao
 
     companion object {
         @Volatile
@@ -42,7 +48,6 @@ abstract class AppDatabase : RoomDatabase() {
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
                             GlobalScope.launch {
                                 val pm = context.packageManager
                                 val appList: MutableList<ApplicationInfo> =
@@ -58,7 +63,9 @@ abstract class AppDatabase : RoomDatabase() {
                                 }
                                 getInstance(context).appStateDao().insertAll(entities)
                             }
+                            super.onCreate(db)
                         }
+
                     }
                 ).build()
         }

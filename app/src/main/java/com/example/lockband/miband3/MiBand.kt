@@ -12,6 +12,7 @@ import android.content.Intent
 import android.os.Handler
 import androidx.core.content.ContextCompat.startForegroundService
 import com.example.lockband.data.LockingServiceActions
+import com.example.lockband.miband3.BluetoothIO.Companion.disconnectCounter
 import com.example.lockband.miband3.listeners.HeartRateNotifyListener
 import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
 import com.example.lockband.miband3.model.*
@@ -20,7 +21,6 @@ import com.example.lockband.utils.*
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.delay
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -51,7 +51,6 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var hardwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
     private var softwareRevisionSubject: PublishSubject<String> = PublishSubject.create()
 
-    private var disconnectCounter = 0
 
     val device: BluetoothDevice?
         get() = bluetoothIo.getConnectedDevice()
@@ -327,7 +326,7 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setFitnessGoal(): Observable<Void> = Observable.create<Void> { subscriber ->
         Timber.d("Setting up fitness goal")
-        while(userInfoSubject.hasObservers()){
+        while (userInfoSubject.hasObservers()) {
             pauseBetweenOperations()
         }
         userInfoSubject.subscribe(ObserverWrapper(subscriber))
@@ -437,7 +436,7 @@ class MiBand(private val context: Context) : BluetoothListener {
      */
     fun setHeartRateMeasureInterval(): Observable<Void> {
         return Observable.create<Void> { subscriber ->
-            while(heartRateSubject.hasObservers()){
+            while (heartRateSubject.hasObservers()) {
                 pauseBetweenOperations()
             }
             heartRateSubject.subscribe(ObserverWrapper(subscriber))
@@ -717,9 +716,8 @@ class MiBand(private val context: Context) : BluetoothListener {
 
         disconnectCounter += 1
 
-        if(disconnectCounter <= 5){
+        if (disconnectCounter <= MAX_RECONNECTIONS) {
             Timber.d("MiBand disconnected... Attempting to reconnect")
-            connect(device!!)
         } else {
             //start locking service and show toast Band disconnected
             Intent(context, LockingService::class.java).also {
@@ -798,12 +796,10 @@ class MiBand(private val context: Context) : BluetoothListener {
                     Profile.UUID_CHAR_BATTERY -> {
                         val changedValue = data.value
                         Timber.d("getBatteryInfo result ${Arrays.toString(changedValue)}")
-                        if (changedValue.size == 10) {
-                            batteryInfoSubject.onNext(BatteryInfo.fromByteData(changedValue))
-                            batteryInfoSubject.onComplete()
-                        } else {
-                            batteryInfoSubject.onError(Exception("Wrong data format for battery info"))
-                        }
+
+                        batteryInfoSubject.onNext(BatteryInfo.fromByteData(changedValue))
+                        batteryInfoSubject.onComplete()
+
                         batteryInfoSubject = PublishSubject.create()
                     }
 

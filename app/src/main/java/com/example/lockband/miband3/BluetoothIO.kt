@@ -4,6 +4,7 @@ import android.bluetooth.*
 import android.bluetooth.BluetoothDevice.TRANSPORT_LE
 import android.content.Context
 import com.example.lockband.miband3.model.Profile
+import com.example.lockband.utils.MAX_RECONNECTIONS
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.HashMap
@@ -30,6 +31,17 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      */
     fun connect(context: Context, device: BluetoothDevice) {
         device.connectGatt(context, true, this, TRANSPORT_LE)
+    }
+
+    /**
+     * Reconnects to the Bluetooth device
+
+     * @param gatt Context
+     * *
+     * @param device  Device to connect
+     */
+    fun reconnect(gatt: BluetoothGatt) {
+        gatt.connect()
     }
 
     /**
@@ -106,7 +118,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
             val characteristic = service.getCharacteristic(characteristicId)
             if (characteristic != null) {
                 val readResult = bluetoothGatt?.readCharacteristic(characteristic) ?: false
-                if (readResult) {
+                if (!readResult) {
                     notifyWithFail(
                         serviceUUID,
                         characteristicId,
@@ -238,11 +250,18 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
         super.onConnectionStateChange(gatt, status, newState)
 
-        if (newState == BluetoothProfile.STATE_CONNECTED) {
-            gatt.discoverServices()
-        } else {
-            gatt.close()
-            listener?.onDisconnected()
+        when {
+            newState == BluetoothProfile.STATE_CONNECTED -> {
+                gatt.discoverServices()
+            }
+            disconnectCounter < MAX_RECONNECTIONS -> {
+                reconnect(gatt)
+                listener?.onDisconnected()
+            }
+            else -> {
+                gatt.close()
+                listener?.onDisconnected()
+            }
         }
     }
 
@@ -382,6 +401,10 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
      */
     private fun notifyWithFail(errorCode: Int, msg: String) {
         listener?.onFail(errorCode, msg)
+    }
+
+    companion object{
+        public var disconnectCounter = 0
     }
 
 }

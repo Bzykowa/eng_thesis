@@ -12,15 +12,32 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.room.entities.BandStep
+import com.example.lockband.data.room.entities.HeartRate
+import com.example.lockband.data.room.entities.PhoneStep
+import com.example.lockband.data.room.repos.HeartRateRepository
+import com.example.lockband.data.room.repos.StepRepository
 import com.example.lockband.databinding.ActivityLauncherBinding
 import com.example.lockband.services.MiBandService
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
+import java.util.*
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class LauncherActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var heartRateRepository: HeartRateRepository
+
+    @Inject
+    lateinit var stepRepository: StepRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityLauncherBinding>(this, R.layout.activity_launcher)
@@ -69,9 +86,17 @@ class LauncherActivity : AppCompatActivity() {
 
     }
 
-    private fun eventsAfterPermissionCheck(){
+    private fun eventsAfterPermissionCheck() {
         val passFile = File(applicationContext.dataDir, PASS_FILE)
         if (!passFile.exists()) {
+
+            //Pre-populate Database with starting values for steps and hr
+            GlobalScope.launch(Dispatchers.IO) {
+                heartRateRepository.insertHeartRateSample(HeartRate(0, Calendar.getInstance(), 0))
+                stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), 0))
+                stepRepository.insertPhoneStepSample(PhoneStep(0, Calendar.getInstance(), 0))
+            }
+
             Intent(this, SetupPasswordActivity::class.java).also {
                 startActivity(it)
             }

@@ -2,6 +2,11 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="viewModel"
+            type="com.example.lockband.viewmodels.StatsViewModel" />
+    </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -95,7 +100,7 @@
             android:id="@+id/steps_band_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/steps_label"
+            android:text="@{viewModel.bandStepsStr}"
             android:textSize="24sp"
             app:layout_constraintBottom_toTopOf="@+id/guideline50percent"
             app:layout_constraintEnd_toStartOf="@+id/guideline50vertical"
@@ -107,7 +112,7 @@
             android:id="@+id/steps_phone_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/steps_label"
+            android:text="@{viewModel.phoneStepsStr}"
             android:textSize="24sp"
             app:layout_constraintBottom_toTopOf="@+id/guideline50percent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -119,7 +124,7 @@
             android:id="@+id/hr_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hr_label"
+            android:text="@{viewModel.hrStr}"
             android:textSize="30sp"
             app:layout_constraintBottom_toTopOf="@+id/guideline75percent"
             app:layout_constraintEnd_toStartOf="@+id/guideline50vertical"

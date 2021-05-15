@@ -1,5 +1,6 @@
 package com.example.lockband.data.room.daos
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -20,6 +21,6 @@ interface PhoneStepDao {
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<PhoneStep>
 
     @Query("SELECT * FROM steps_phone WHERE timestamp = (SELECT MAX(timestamp) FROM steps_phone)")
-    fun getLatestSample() : PhoneStep
+    fun getLatestSample() : LiveData<PhoneStep>
 
 }

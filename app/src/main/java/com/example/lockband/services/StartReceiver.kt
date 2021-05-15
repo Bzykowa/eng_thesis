@@ -23,8 +23,7 @@ class StartReceiver : BroadcastReceiver() {
                     return
                 }
             }
-
-            if (getMiBandServiceState(context) == MiBandServiceState.STARTED) {
+            else {
                 Intent(context, MiBandService::class.java).also {
                     it.action = DataGatheringServiceActions.START.name
                     it.putExtra(

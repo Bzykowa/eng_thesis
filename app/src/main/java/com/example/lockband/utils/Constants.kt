@@ -73,4 +73,7 @@ val user = UserInfo("miband3".hashCode(), 2000, 1, 1, 0, 175, 65)
 //Placeholder fitness goal
 val stepGoal = 10000
 
+//Max amount of consequent failures to connect
+val MAX_RECONNECTIONS = 6
+
 

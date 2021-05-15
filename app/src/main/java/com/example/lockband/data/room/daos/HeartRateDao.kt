@@ -1,5 +1,6 @@
 package com.example.lockband.data.room.daos
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -21,5 +22,5 @@ interface HeartRateDao {
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<HeartRate>
 
     @Query("SELECT * FROM heart_rate WHERE timestamp = (SELECT MAX(timestamp) FROM heart_rate)")
-    fun getLatestSample() : HeartRate
+    fun getLatestSample() : LiveData<HeartRate>
 }

@@ -4,13 +4,13 @@ import android.app.Service
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.util.Log
 import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.hasUsageStatsPermission
 import timber.log.Timber
 
 
 class ForegroundDetector {
+
     fun getForegroundApp(context: Context): String? {
         if (!hasUsageStatsPermission(context)) return null
         Timber.d("Scan started")

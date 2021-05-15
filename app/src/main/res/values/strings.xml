@@ -30,10 +30,11 @@
     <string name="hardware_revision">Hardware revision</string>
     <string name="software_revision">Software revision</string>
     <string name="battery_info">Battery level</string>
-    <string name="percent_placeholder">%1$d\%</string>
+    <string name="percent_placeholder">%1$d percent</string>
     //stats
     <string name="steps_label">Steps</string>
     <string name="steps_band_label">MiBand</string>
     <string name="steps_phone_label">Smartphone</string>
     <string name="hr_label">Heart Rate</string>
+    <string name="bpm_placeholder">%1$d bpm</string>
 </resources>
