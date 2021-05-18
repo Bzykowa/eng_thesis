@@ -3,7 +3,6 @@ package com.example.lockband.miband3.model
 /**
  * LE parameters
  *
- * @author Dmytro Khmelenko
  */
 class LeParams {
 

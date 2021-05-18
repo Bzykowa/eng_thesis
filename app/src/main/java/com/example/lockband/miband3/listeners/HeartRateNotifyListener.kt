@@ -2,8 +2,6 @@ package com.example.lockband.miband3.listeners
 
 /**
  * Listener for hear rate notifications
- *
- * @author Dmytro Khmelenko
  */
 interface HeartRateNotifyListener {
 

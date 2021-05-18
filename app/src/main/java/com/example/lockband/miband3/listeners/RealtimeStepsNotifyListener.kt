@@ -2,8 +2,6 @@ package com.example.lockband.miband3.listeners
 
 /**
  * Listener for realtime steps notifications
- *
- * @author Dmytro Khmelenko
  */
 interface RealtimeStepsNotifyListener {
 

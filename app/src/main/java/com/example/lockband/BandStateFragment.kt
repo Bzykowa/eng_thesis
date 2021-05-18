@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.FragmentBandStateBinding
 import com.example.lockband.services.LockingService
@@ -25,7 +25,7 @@ class BandStateFragment : Fragment() {
     ): View? {
 
         Intent().also { intent ->
-            intent.action = DataGatheringServiceActions.BATTERY.name
+            intent.action = MiBandServiceActions.BATTERY.name
             activity?.sendBroadcast(intent)
         }
 

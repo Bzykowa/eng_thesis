@@ -20,6 +20,7 @@ private const val batterylastCharged = "MIBAND_BATTERY_LAST_CHARGED"
 private const val serialNumber = "MIBAND_SERIAL_NUMBER"
 private const val hardwareRevision = "MIBAND_HARDWARE_REVISION"
 private const val softwareRevision = "MIBAND_SOFTWARE_REVISION"
+private const val disconnectKey = "DISCONNECTS_KEY"
 
 fun setMiBandAddress(context: Context, address: String) =
     getPreferences(context, name).edit().let {
@@ -107,4 +108,11 @@ fun setMiBandSoftwareRevision(context: Context, sw_rev: String) =
 
 fun getMiBandSoftwareRevision(context: Context): String =
     getPreferences(context, name).getString(softwareRevision, "unknown")!!
+
+fun setDisconnectsNumber(context: Context, num: Int) = getPreferences(context, name).edit().let {
+    it.putInt(disconnectKey, num)
+    it.apply()
+}
+
+fun getDisconnectsNumber(context: Context) = getPreferences(context, name).getInt(disconnectKey, 0)
 

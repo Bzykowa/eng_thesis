@@ -6,8 +6,6 @@ import java.util.*
 
 /**
  * Battery info
-
- * @author Dmytro Khmelenko
  */
 class BatteryInfo constructor(
     val level: Int,

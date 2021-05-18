@@ -2,7 +2,10 @@ package com.example.lockband
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.TextView
@@ -10,7 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.lockband.adapters.DeviceListAdapter
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.databinding.ActivityPairingBinding
 import com.example.lockband.services.MiBandService
 import com.example.lockband.utils.setMiBandAddress
@@ -35,6 +38,31 @@ class PairingActivity : AppCompatActivity() {
 
     private val disposables = CompositeDisposable()
 
+    private lateinit var item : String
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            with(intent) {
+                if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+                    val bondState = getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+
+                    if(bondState == BluetoothDevice.BOND_BONDED){
+                        Intent(this@PairingActivity, MiBandService::class.java).also {
+                            it.putExtra("device", devices[item])
+                            it.action = MiBandServiceActions.PAIR.name
+                            startForegroundService(it)
+                        }
+
+                        Intent(this@PairingActivity, MainActivity::class.java).also {
+                            startActivity(it)
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DataBindingUtil.setContentView<ActivityPairingBinding>(this, R.layout.activity_pairing)
@@ -51,9 +79,10 @@ class PairingActivity : AppCompatActivity() {
 
         //set up adapter plus pairing listener
         deviceList.adapter = adapter
-        deviceList.setOnItemClickListener { parent, view, position, id ->
-            val item =
-                view.rootView.findViewById<TextView>(R.id.deviceName).text.toString()           //.deviceName.text.toString()
+        deviceList.setOnItemClickListener { _, view, _, _ ->
+            item = view.rootView.findViewById<TextView>(R.id.deviceName).text.toString()           //.deviceName.text.toString()
+            val intentFilter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+            registerReceiver(broadcastReceiver, intentFilter)
 
             if (devices.containsKey(item)) {
 
@@ -63,16 +92,6 @@ class PairingActivity : AppCompatActivity() {
                 setMiBandAddress(this, devices[item]!!.address)
                 devices[item]!!.createBond()
 
-                Intent(this@PairingActivity, MiBandService::class.java).also {
-                    it.putExtra("device", devices[item])
-                    it.action = DataGatheringServiceActions.PAIR.name
-                    startForegroundService(it)
-                }
-
-                Intent(this@PairingActivity, MainActivity::class.java).also {
-                    startActivity(it)
-                }
-
             }
         }
 
@@ -80,6 +99,7 @@ class PairingActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         disposables.clear()
+        unregisterReceiver(broadcastReceiver)
         super.onDestroy()
     }
 

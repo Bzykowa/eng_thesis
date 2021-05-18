@@ -5,7 +5,6 @@ import java.util.*
 /**
  * Defines keys for services, descriptors and characteristics
  *
- * @author Dmytro Khmelenko
  */
 object Profile {
 

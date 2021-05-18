@@ -2,8 +2,6 @@ package com.example.lockband.miband3.model
 
 /**
  * Available vibration modes
-
- * @author Dmytro Khmelenko
  */
 enum class VibrationMode {
     VIBRATION_WITH_LED,

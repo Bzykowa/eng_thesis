@@ -1,6 +1,7 @@
 package com.example.lockband.services
 
 import android.app.*
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,8 +18,8 @@ import android.os.SystemClock
 import android.widget.Toast
 import com.example.lockband.MainActivity
 import com.example.lockband.R
-import com.example.lockband.data.DataGatheringServiceActions
 import com.example.lockband.data.LockingServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.data.room.entities.BandStep
 import com.example.lockband.data.room.entities.HeartRate
 import com.example.lockband.data.room.entities.PhoneStep
@@ -42,6 +43,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+
 @AndroidEntryPoint
 class MiBandService : Service(), SensorEventListener {
 
@@ -60,6 +62,7 @@ class MiBandService : Service(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private lateinit var sensor: Sensor
+    private var btTurnedOff = false
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -67,16 +70,45 @@ class MiBandService : Service(), SensorEventListener {
         }
     }
 
-    private val alertReceiver = object : BroadcastReceiver() {
+    private val reconnectReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            handleAlert()
+            Timber.d("Reconnection attempt received")
+            handleReconnection()
         }
     }
 
-    private val batteryIntentFilter = IntentFilter(DataGatheringServiceActions.BATTERY.name)
-    private val alertIntentFilter = IntentFilter(DataGatheringServiceActions.ALERT.name)
+    private val btReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val state = intent.getIntExtra(
+                BluetoothAdapter.EXTRA_STATE,
+                BluetoothAdapter.ERROR
+            )
+            when (state) {
+                BluetoothAdapter.STATE_OFF -> {
+                    btTurnedOff = true
+                    GlobalScope.launch(Dispatchers.Default) {
+                        delay(BT_TIMEOUT)
+                        if(btTurnedOff){
+                            stopService()
+                        }
+                    }
+                }
+                BluetoothAdapter.STATE_TURNING_OFF -> Timber.d("BT Turning off")
+                BluetoothAdapter.STATE_ON -> {
+                    btTurnedOff = false
+                    actionConnect(currentIntent)
+                }
+                BluetoothAdapter.STATE_TURNING_ON -> Timber.d("BT turning on")
+            }
+        }
 
-    private var currentIntent = DataGatheringServiceActions.PAIR.name
+    }
+
+    private val batteryIntentFilter = IntentFilter(MiBandServiceActions.BATTERY.name)
+    private val reconnectIntentFilter = IntentFilter(MiBandServiceActions.RECONNECT.name)
+    private val btIntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+
+    private lateinit var currentIntent: Intent
 
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -90,14 +122,15 @@ class MiBandService : Service(), SensorEventListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
-                DataGatheringServiceActions.PAIR.name -> {
+                MiBandServiceActions.PAIR.name -> {
+                    currentIntent = intent
                     actionConnect(intent)
                 }
-                DataGatheringServiceActions.START.name -> {
-                    currentIntent = DataGatheringServiceActions.START.name
+                MiBandServiceActions.START.name -> {
+                    currentIntent = intent
                     actionConnect(intent)
                 }
-                DataGatheringServiceActions.STOP.name -> stopService()
+                MiBandServiceActions.STOP.name -> stopService()
                 else -> Timber.e("This should never happen. No action in the received intent")
             }
         } else {
@@ -106,6 +139,8 @@ class MiBandService : Service(), SensorEventListener {
             )
         }
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+        registerReceiver(reconnectReceiver, reconnectIntentFilter)
+        registerReceiver(btReceiver,btIntentFilter)
         // restarted if the system kills the service
         return START_STICKY
     }
@@ -162,9 +197,8 @@ class MiBandService : Service(), SensorEventListener {
                 }
             }
 
-        //Register BroadcastReceivers for battery update and vibrating alerts
+        //Register BroadcastReceiver for battery update
         registerReceiver(batteryReceiver, batteryIntentFilter)
-        registerReceiver(alertReceiver, alertIntentFilter)
 
 
         //set up listeners for band data scans
@@ -195,7 +229,8 @@ class MiBandService : Service(), SensorEventListener {
             }
 
             unregisterReceiver(batteryReceiver)
-            unregisterReceiver(alertReceiver)
+            unregisterReceiver(reconnectReceiver)
+            unregisterReceiver(btReceiver)
 
             disposables.clear()
 
@@ -277,6 +312,7 @@ class MiBandService : Service(), SensorEventListener {
             delay(OP_TIMEOUT)
             startService()
         }
+        currentIntent.action = MiBandServiceActions.START.name
     }
 
     private fun handleAuthentication() {
@@ -320,18 +356,23 @@ class MiBandService : Service(), SensorEventListener {
     )
 
 
-    private fun handleAlert() {
-        GlobalScope.launch(Dispatchers.IO) {
-            actionStartVibration()
-            actionStopVibration()
-        }
-
-        Intent(this, LockingService::class.java).also {
-            it.action = LockingServiceActions.START.name
-            startForegroundService(it)
-        }
-
-        stopService()
+    private fun handleReconnection() {
+        val d = miBand.reconnect().subscribe({ result ->
+            Timber.d("Reconnect onNext: $result")
+            if (!result) {
+                handleReconnection()
+            } else {
+                actionSetAuthenticationListener()
+                GlobalScope.launch(Dispatchers.IO) {
+                    delay(DEFAULT_TIMEOUT/2)
+                    miBand.requestRandomNumber()
+                }
+            }
+        }, { throwable ->
+            throwable.printStackTrace()
+            Timber.e(throwable)
+        })
+        disposables.add(d)
     }
 
     private fun actionConnect(intent: Intent?) {
@@ -343,10 +384,16 @@ class MiBandService : Service(), SensorEventListener {
                 Timber.d("Connect onNext: $result")
                 if (!result) {
                     actionConnect(intent)
-                } else {
+                } else if (intent.action == MiBandServiceActions.PAIR.name) {
                     actionRequestMtu(512)
                     actionSetAuthenticationListener()
                     handleAuthentication()
+                } else {
+                    actionSetAuthenticationListener()
+                    GlobalScope.launch {
+                        delay(DEFAULT_TIMEOUT/2)
+                        miBand.requestRandomNumber()
+                    }
                 }
             }, { throwable ->
                 throwable.printStackTrace()
@@ -390,7 +437,9 @@ class MiBandService : Service(), SensorEventListener {
                 val randomNumber = data.sliceArray(3 until 19)
                 //send encrypted random number
                 miBand.sendEncryptedNumber(randomNumber)
-                setTime()
+                if (currentIntent.action != MiBandServiceActions.START.name) {
+                    setTime()
+                }
             }
             //Error in receiving random number from band
             data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x02, 0x04)) -> {
@@ -400,6 +449,7 @@ class MiBandService : Service(), SensorEventListener {
             data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x03, 0x01)) -> {
                 Timber.d("Authentication successful")
                 //set paired and move on to next stage of setup
+
                 setMiBandPaired(this, true)
                 handleDeviceSetup()
             }
@@ -418,10 +468,10 @@ class MiBandService : Service(), SensorEventListener {
         Timber.d("Band control characteristic received response")
         when {
             data.first() == 0x10.toByte() && data.last() == 0x01.toByte() -> {
-                Timber.d("Success -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex - 1)]}")
+                Timber.d("Success -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex)]}")
             }
             data.first() == 0x10.toByte() && data.last() != 0x01.toByte() -> {
-                Timber.d("Other response -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex - 1)]}")
+                Timber.d("Other response -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex)]}")
             }
             else -> {
                 Timber.e("Communication error -> response: $data")
@@ -451,11 +501,9 @@ class MiBandService : Service(), SensorEventListener {
     }
 
     private fun setBatteryInfoListener() = miBand.setBatteryInfoListener { data ->
-        Timber.d("HHuuj hhuj hhehhe")
         val batteryInfo = BatteryInfo.fromByteData(data)
         setMiBandBatteryInfo(this, batteryInfo)
         Timber.d(batteryInfo.toString())
-        Timber.d(batteryInfo.level.toString())
     }
 
     /**

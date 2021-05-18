@@ -12,7 +12,7 @@ import android.content.Intent
 import android.os.Handler
 import androidx.core.content.ContextCompat.startForegroundService
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.miband3.BluetoothIO.Companion.disconnectCounter
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.miband3.listeners.HeartRateNotifyListener
 import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
 import com.example.lockband.miband3.model.*
@@ -33,15 +33,13 @@ class MiBand(private val context: Context) : BluetoothListener {
     private val bluetoothIo: BluetoothIO = BluetoothIO(this)
 
     private var connectionSubject: PublishSubject<Boolean> = PublishSubject.create()
+    private var reconnectionSubject: PublishSubject<Boolean> = PublishSubject.create()
     private var rssiSubject: PublishSubject<Int> = PublishSubject.create()
     private var batteryInfoSubject: PublishSubject<BatteryInfo> = PublishSubject.create()
     private var pairInitSubject: PublishSubject<Void> = PublishSubject.create()
     private var pairRequested: Boolean = false
     private var startVibrationSubject: PublishSubject<Void> = PublishSubject.create()
     private var stopVibrationSubject: PublishSubject<Void> = PublishSubject.create()
-    private var sensorNotificationSubject: PublishSubject<Boolean> = PublishSubject.create()
-    private var sensorDataSubject: PublishSubject<Void> = PublishSubject.create()
-    private var realtimeNotificationSubject: PublishSubject<Boolean> = PublishSubject.create()
     private var ledColorSubject: PublishSubject<LedColor> = PublishSubject.create()
     private var userInfoSubject: PublishSubject<Void> = PublishSubject.create()
     private var heartRateSubject: PublishSubject<Void> = PublishSubject.create()
@@ -139,10 +137,22 @@ class MiBand(private val context: Context) : BluetoothListener {
      * @param device Device to connect
      */
     fun connect(device: BluetoothDevice): Observable<Boolean> {
+        setDisconnectsNumber(context,0)
         return Observable.create<Boolean> { subscriber ->
             Timber.d("MiBand connect() invoked")
             connectionSubject.subscribe(ObserverWrapper(subscriber))
             bluetoothIo.connect(context, device)
+        }
+    }
+
+    /**
+     * Starts reconnection process to the device
+     */
+    fun reconnect(): Observable<Boolean> {
+        return Observable.create<Boolean> { subscriber ->
+            Timber.d("MiBand reconnect() invoked")
+            reconnectionSubject.subscribe(ObserverWrapper(subscriber))
+            bluetoothIo.reconnect()
         }
     }
 
@@ -699,25 +709,42 @@ class MiBand(private val context: Context) : BluetoothListener {
      * @param result True, if connected. False if disconnected
      */
     private fun notifyConnectionResult(result: Boolean) {
-        connectionSubject.onNext(result)
-        connectionSubject.onComplete()
+        val disconnectCounter = getDisconnectsNumber(context)
+        Timber.d("disconnects prior: $disconnectCounter")
+        if (disconnectCounter != 0) {
+            Timber.d("Reconnection result (notifier): $result")
+            reconnectionSubject.onNext(result)
+            reconnectionSubject.onComplete()
 
-        // create new connection subject
-        connectionSubject = PublishSubject.create<Boolean>()
+            // create new reconnection subject
+            reconnectionSubject = PublishSubject.create<Boolean>()
+            setDisconnectsNumber(context, 0)
+        } else {
+            Timber.d("Connection result (notifier): $result")
+            connectionSubject.onNext(result)
+            connectionSubject.onComplete()
+
+            // create new connection subject
+            connectionSubject = PublishSubject.create<Boolean>()
+        }
     }
 
     override fun onConnectionEstablished() {
-        disconnectCounter = 0
         notifyConnectionResult(true)
     }
 
     override fun onDisconnected() {
         notifyConnectionResult(false)
 
-        disconnectCounter += 1
+        val disconnectCounter = getDisconnectsNumber(context) + 1
+        setDisconnectsNumber(context, disconnectCounter)
 
         if (disconnectCounter <= MAX_RECONNECTIONS) {
             Timber.d("MiBand disconnected... Attempting to reconnect")
+            Intent().also { intent ->
+                intent.action = MiBandServiceActions.RECONNECT.name
+                context.sendBroadcast(intent)
+            }
         } else {
             //start locking service and show toast Band disconnected
             Intent(context, LockingService::class.java).also {
@@ -885,6 +912,10 @@ class MiBand(private val context: Context) : BluetoothListener {
         Timber.d(String.format("onFail: errorCode %d, message %s", errorCode, msg))
         when (errorCode) {
             ERROR_CONNECTION_FAILED -> {
+                if (getDisconnectsNumber(context) != 0) {
+                    reconnectionSubject.onError(Exception("Establishing reconnection failed"))
+                    reconnectionSubject = PublishSubject.create()
+                }
                 connectionSubject.onError(Exception("Establishing connection failed"))
                 connectionSubject = PublishSubject.create()
             }

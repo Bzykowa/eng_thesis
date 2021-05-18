@@ -1,9 +1,9 @@
 package com.example.lockband.data
 
-enum class DataGatheringServiceActions {
+enum class MiBandServiceActions {
     PAIR,
     BATTERY,
-    ALERT,
+    RECONNECT,
     START,
     STOP
 }

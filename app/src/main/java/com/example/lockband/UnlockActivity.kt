@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.ActivityUnlockBinding
 import com.example.lockband.services.MiBandService
@@ -36,7 +36,7 @@ class UnlockActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
         Intent(this, MiBandService::class.java).also {
-            it.action = DataGatheringServiceActions.START.name
+            it.action = MiBandServiceActions.START.name
             it.putExtra(
                 "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
                     getMiBandAddress(this)

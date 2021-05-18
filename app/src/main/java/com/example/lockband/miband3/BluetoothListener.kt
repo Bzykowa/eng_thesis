@@ -5,8 +5,6 @@ import java.util.*
 
 /**
  * Bluetooth listener
- *
- * @author Dmytro Khmelenko
  */
 interface BluetoothListener {
 

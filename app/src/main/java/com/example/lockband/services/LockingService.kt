@@ -11,7 +11,7 @@ import android.widget.Toast
 import com.example.lockband.R
 import com.example.lockband.UnlockActivity
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.data.room.repos.AppStateRepository
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,7 +43,7 @@ class LockingService : Service() {
             when (intent.action) {
                 LockingServiceActions.START.name -> {
                     Intent(this, MiBandService::class.java).also {
-                        it.action = DataGatheringServiceActions.STOP.name
+                        it.action = MiBandServiceActions.STOP.name
                         startForegroundService(it)
                     }
                     startService()

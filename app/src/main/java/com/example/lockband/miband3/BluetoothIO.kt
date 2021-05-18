@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice.TRANSPORT_LE
 import android.content.Context
 import com.example.lockband.miband3.model.Profile
 import com.example.lockband.utils.MAX_RECONNECTIONS
+import com.example.lockband.utils.getDisconnectsNumber
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.HashMap
@@ -22,26 +23,26 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     private var notifyListeners: HashMap<UUID, (ByteArray) -> Unit> = HashMap()
 
+    private var context : Context? = null
+
     /**
      * Connects to the Bluetooth device
-
+     *
      * @param context Context
-     * *
+     *
      * @param device  Device to connect
      */
     fun connect(context: Context, device: BluetoothDevice) {
+        this.context = context
         device.connectGatt(context, true, this, TRANSPORT_LE)
     }
 
     /**
      * Reconnects to the Bluetooth device
-
-     * @param gatt Context
-     * *
-     * @param device  Device to connect
+     *
      */
-    fun reconnect(gatt: BluetoothGatt) {
-        gatt.connect()
+    fun reconnect() {
+        bluetoothGatt!!.connect()
     }
 
     /**
@@ -249,13 +250,14 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
         super.onConnectionStateChange(gatt, status, newState)
+        val disconnectCounter = getDisconnectsNumber(context!!)
 
         when {
             newState == BluetoothProfile.STATE_CONNECTED -> {
                 gatt.discoverServices()
             }
             disconnectCounter < MAX_RECONNECTIONS -> {
-                reconnect(gatt)
+                bluetoothGatt = gatt
                 listener?.onDisconnected()
             }
             else -> {
@@ -403,8 +405,6 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         listener?.onFail(errorCode, msg)
     }
 
-    companion object{
-        public var disconnectCounter = 0
-    }
+
 
 }

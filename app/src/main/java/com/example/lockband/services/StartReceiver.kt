@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.lockband.data.LockingServiceActions
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -25,7 +25,7 @@ class StartReceiver : BroadcastReceiver() {
             }
             else {
                 Intent(context, MiBandService::class.java).also {
-                    it.action = DataGatheringServiceActions.START.name
+                    it.action = MiBandServiceActions.START.name
                     it.putExtra(
                         "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
                             getMiBandAddress(context)

@@ -47,6 +47,9 @@ const val OP_TIMEOUT = 100L
 //Device scan duration
 const val SCAN_TIMEOUT: Long = 10000L
 
+//Bt time out
+const val BT_TIMEOUT: Long = 30000L
+
 //Mi Band authentication key
 val KEY = byteArrayOf(
     0x30,
@@ -74,6 +77,6 @@ val user = UserInfo("miband3".hashCode(), 2000, 1, 1, 0, 175, 65)
 val stepGoal = 10000
 
 //Max amount of consequent failures to connect
-val MAX_RECONNECTIONS = 6
+val MAX_RECONNECTIONS = 2
 
 

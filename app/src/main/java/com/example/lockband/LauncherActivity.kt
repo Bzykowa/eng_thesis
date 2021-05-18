@@ -11,7 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.example.lockband.data.DataGatheringServiceActions
+import com.example.lockband.data.MiBandServiceActions
 import com.example.lockband.data.room.entities.BandStep
 import com.example.lockband.data.room.entities.HeartRate
 import com.example.lockband.data.room.entities.PhoneStep
@@ -107,7 +107,7 @@ class LauncherActivity : AppCompatActivity() {
 
         } else if (getServiceState(this) == ServiceState.STOPPED) {
             Intent(this, MiBandService::class.java).also {
-                it.action = DataGatheringServiceActions.START.name
+                it.action = MiBandServiceActions.START.name
                 it.putExtra(
                     "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
                         getMiBandAddress(this)

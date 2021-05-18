@@ -2,8 +2,6 @@ package com.example.lockband.miband3.listeners
 
 /**
  * Action callback
-
- * @author Dmytro Khmelenko
  */
 interface ActionCallback {
 
