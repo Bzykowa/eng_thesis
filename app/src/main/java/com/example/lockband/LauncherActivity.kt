@@ -94,7 +94,7 @@ class LauncherActivity : AppCompatActivity() {
             GlobalScope.launch(Dispatchers.IO) {
                 heartRateRepository.insertHeartRateSample(HeartRate(0, Calendar.getInstance(), 0))
                 stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), 0))
-                stepRepository.insertPhoneStepSample(PhoneStep(0, Calendar.getInstance(), 0))
+                stepRepository.insertPhoneStepSample(PhoneStep(0, Calendar.getInstance(), 0, 0))
             }
 
             Intent(this, SetupPasswordActivity::class.java).also {

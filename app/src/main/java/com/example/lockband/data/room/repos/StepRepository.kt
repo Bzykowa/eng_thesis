@@ -21,6 +21,8 @@ class StepRepository @Inject constructor(private val bandStepDao: BandStepDao, p
     fun getPhoneStepSamplesBetween(startDate: Calendar, endDate: Calendar) =
         phoneStepDao.getSamplesBetween(startDate, endDate)
 
+    fun getLatestPhoneStepSampleLive() = phoneStepDao.getLatestSampleLive()
+
     fun getLatestPhoneStepSample() = phoneStepDao.getLatestSample()
 
     @WorkerThread
@@ -31,6 +33,8 @@ class StepRepository @Inject constructor(private val bandStepDao: BandStepDao, p
 
     fun getBandStepSamplesBetween(startDate: Calendar, endDate: Calendar) =
         bandStepDao.getSamplesBetween(startDate, endDate)
+
+    fun getLatestBandStepSampleLive() = bandStepDao.getLatestSampleLive()
 
     fun getLatestBandStepSample() = bandStepDao.getLatestSample()
 }

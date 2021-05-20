@@ -13,8 +13,8 @@ class StatsViewModel @ViewModelInject internal constructor(
 ) : ViewModel() {
 
     private var hr = hrRepository.getLatestHeartRateSample()
-    private var phoneSteps = stepRepository.getLatestPhoneStepSample()
-    private var bandSteps = stepRepository.getLatestBandStepSample()
+    private var phoneSteps = stepRepository.getLatestPhoneStepSampleLive()
+    private var bandSteps = stepRepository.getLatestBandStepSampleLive()
     var hrStr = Transformations.map(hr){ hr -> hr.heartRate.toString()}
     var bandStepsStr = Transformations.map(bandSteps){ bandSteps -> bandSteps.stepCount.toString()}
     var phoneStepsStr = Transformations.map(phoneSteps){ phoneSteps -> phoneSteps.stepCount.toString()}

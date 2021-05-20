@@ -30,7 +30,6 @@ import com.example.lockband.miband3.listeners.HeartRateNotifyListener
 import com.example.lockband.miband3.listeners.RealtimeStepsNotifyListener
 import com.example.lockband.miband3.model.BatteryInfo
 import com.example.lockband.miband3.model.Protocol
-import com.example.lockband.miband3.model.VibrationMode
 import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
@@ -321,6 +320,7 @@ class MiBandService : Service(), SensorEventListener {
             actionSetHeartRateNotifyListener()
             delay(OP_TIMEOUT)
             actionSetRealtimeStepsNotifyListener()
+            delay(HR_TIMEOUT)
             startService()
         }
         currentIntent.action = MiBandServiceActions.START.name
@@ -601,7 +601,10 @@ class MiBandService : Service(), SensorEventListener {
                 Timber.d("RealtimeStepsNotifyListener: $steps")
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))
+                    val latest = stepRepository.getLatestBandStepSample()
+                    if(steps != latest!!.stepCount){
+                        stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))
+                    }
                 }
             }
         })
@@ -630,19 +633,6 @@ class MiBandService : Service(), SensorEventListener {
                 })
         )
 
-
-    private fun actionStartVibration() = disposables.add(
-        miBand.startVibration(VibrationMode.VIBRATION_WITHOUT_LED)
-            .subscribe { Timber.d("Vibration started") }
-    )
-
-
-    private fun actionStopVibration() {
-        val d = miBand.stopVibration()
-            .subscribe { Timber.d("Vibration stopped") }
-        disposables.add(d)
-    }
-
     /**
      * Step sensor data callbacks   ****************************************************************
      */
@@ -650,55 +640,28 @@ class MiBandService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event != null) {
             if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-                var sensorSteps = event.values[0].toInt()
-                var currentOffset = getStepsOffset(this)
-
-                //Configure offset on first recording (step counter counts steps from last reboot)
-                if (currentOffset == -1) {
-                    setStepsOffset(this, sensorSteps)
-                    currentOffset = sensorSteps
-                }
+                val sensorSteps = event.values[0].toInt()
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    delay(100)
-                    val latest: PhoneStep? = stepRepository.getLatestPhoneStepSample().value
+                    delay(OP_TIMEOUT)
+                    val latest = stepRepository.getLatestPhoneStepSample()
                     val newTimestamp = Calendar.getInstance()
-
-                    //reboot -> clear offset and record latest sample to fix current steps
-                    if (currentOffset > sensorSteps) {
-                        setStepsOffset(
-                            this@MiBandService,
+                    val newStepCount = when {
+                        //First time -> record only offset
+                        latest.offset == 0 && latest.stepCount == 0 -> {
                             0
-                        )
-
-                        setStepsOffsetFix(
-                            this@MiBandService,
-                            latest?.stepCount ?: 0
-                        )
-
-                    }
-
-                    //Day changed -> start counting steps from zero
-                    if (latest != null) {
-                        if (latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH)) {
-
-                            //increase offset by yesterday stepCount or stepCount - offsetFix if we're still fixing reboot
-                            val offsetFix =
-                                if (sensorSteps < latest.stepCount) latest.stepCount - getStepsOffsetFix(
-                                    this@MiBandService
-                                ) else latest.stepCount
-
-                            setStepsOffset(
-                                this@MiBandService,
-                                offsetFix + currentOffset
-                            )
-
-                        } else {
-
-                            //fix step number -> add steps from sample before reboot
-                            if (sensorSteps < latest.stepCount) {
-                                sensorSteps += getStepsOffsetFix(this@MiBandService)
-                            }
+                        }
+                        //reboot -> Offset was zeroed just add new value to old one -> offset = sensorSteps, stepCount = latest.stepCount + sensorSteps
+                        latest.offset > sensorSteps -> {
+                            latest.stepCount + sensorSteps
+                        }
+                        //Day changed -> start counting steps from zero -> offset = sensorSteps, stepCount = sensorSteps - latest.offset
+                        latest.timestamp.get(Calendar.DAY_OF_MONTH) != newTimestamp.get(Calendar.DAY_OF_MONTH) -> {
+                            sensorSteps - latest.offset
+                        }
+                        //Normal assignment -> last value + offset difference
+                        else -> {
+                            latest.stepCount + (sensorSteps - latest.offset)
                         }
                     }
 
@@ -706,7 +669,8 @@ class MiBandService : Service(), SensorEventListener {
                         PhoneStep(
                             0,
                             newTimestamp,
-                            sensorSteps - getStepsOffset(this@MiBandService)
+                            newStepCount,
+                            sensorSteps
                         )
                     )
 

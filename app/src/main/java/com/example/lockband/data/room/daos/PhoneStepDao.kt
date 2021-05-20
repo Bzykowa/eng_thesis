@@ -21,6 +21,9 @@ interface PhoneStepDao {
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<PhoneStep>
 
     @Query("SELECT * FROM steps_phone WHERE timestamp = (SELECT MAX(timestamp) FROM steps_phone)")
-    fun getLatestSample() : LiveData<PhoneStep>
+    fun getLatestSampleLive() : LiveData<PhoneStep>
+
+    @Query("SELECT * FROM steps_phone WHERE timestamp = (SELECT MAX(timestamp) FROM steps_phone)")
+    fun getLatestSample() : PhoneStep
 
 }

@@ -9,5 +9,6 @@ import java.util.*
 data class PhoneStep(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id : Int = 0,
     @ColumnInfo(name = "timestamp") val timestamp: Calendar,
-    @ColumnInfo(name = "step_count") val stepCount: Int
+    @ColumnInfo(name = "step_count") val stepCount: Int,
+    @ColumnInfo(name = "offset") val offset: Int
 )
