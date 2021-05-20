@@ -1,6 +1,7 @@
 package com.example.lockband.services
 
 import android.app.*
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -41,13 +42,7 @@ class LockingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
-                LockingServiceActions.START.name -> {
-                    Intent(this, MiBandService::class.java).also {
-                        it.action = MiBandServiceActions.STOP.name
-                        startForegroundService(it)
-                    }
-                    startService()
-                }
+                LockingServiceActions.START.name -> startService()
                 LockingServiceActions.STOP.name -> stopService()
                 else -> Timber.e("This should never happen. No action in the received intent")
             }
@@ -70,7 +65,15 @@ class LockingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Timber.d("The locking service has been destroyed")
-        Toast.makeText(this, "LockingService destroyed", Toast.LENGTH_SHORT).show()
+        Intent(this, MiBandService::class.java).also {
+            it.action = MiBandServiceActions.START.name
+            it.putExtra(
+                "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
+                    getMiBandAddress(this)
+                )
+            )
+            startForegroundService(it)
+        }
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {

@@ -157,6 +157,14 @@ class MiBand(private val context: Context) : BluetoothListener {
     }
 
     /**
+     * Disconnects MiBand and closes GATT
+     */
+    fun disconnectCompletely(){
+        Timber.d("Kill connection to MiBand")
+        bluetoothIo.disconnect()
+    }
+
+    /**
      * Initializes device pairing (sends key to MiBand)
      */
     fun initializePairing(): Observable<Void> {

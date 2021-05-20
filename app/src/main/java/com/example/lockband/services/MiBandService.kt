@@ -88,7 +88,7 @@ class MiBandService : Service(), SensorEventListener {
                     btTurnedOff = true
                     GlobalScope.launch(Dispatchers.Default) {
                         delay(BT_TIMEOUT)
-                        if(btTurnedOff){
+                        if (btTurnedOff) {
                             stopService()
                         }
                     }
@@ -140,7 +140,7 @@ class MiBandService : Service(), SensorEventListener {
         }
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
         registerReceiver(reconnectReceiver, reconnectIntentFilter)
-        registerReceiver(btReceiver,btIntentFilter)
+        registerReceiver(btReceiver, btIntentFilter)
         // restarted if the system kills the service
         return START_STICKY
     }
@@ -156,9 +156,10 @@ class MiBandService : Service(), SensorEventListener {
     }
 
     override fun onDestroy() {
+        unregisterReceiver(btReceiver)
+        unregisterReceiver(reconnectReceiver)
         super.onDestroy()
         Timber.d("The Mi Band communication service has been destroyed")
-        Toast.makeText(this, "MiBandService destroyed", Toast.LENGTH_SHORT).show()
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -197,19 +198,24 @@ class MiBandService : Service(), SensorEventListener {
                 }
             }
 
-        //Register BroadcastReceiver for battery update
-        registerReceiver(batteryReceiver, batteryIntentFilter)
-
-
-        //set up listeners for band data scans
-        actionSetHeartRateNotifyListener()
-        pauseBetweenOperations()
-        actionSetRealtimeStepsNotifyListener()
-
+        var beforeDate = Calendar.getInstance()
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
-                delay(60000)
+                delay(90000)
                 Timber.d("Mi Band Service working...")
+                val nowDate = Calendar.getInstance()
+                val hrs = heartRateRepository.getHeartRateSamplesBetween(beforeDate,nowDate)
+
+                if(hrs.isEmpty()){
+                    Timber.d("No hr registered in last 90 seconds. Band off hand. Lock the phone!")
+                    Intent(this@MiBandService, LockingService::class.java).also {
+                        it.action = LockingServiceActions.START.name
+                        startForegroundService(it)
+                    }
+                    stopService()
+                } else {
+                    beforeDate = nowDate
+                }
             }
 
         }
@@ -218,7 +224,6 @@ class MiBandService : Service(), SensorEventListener {
 
     private fun stopService() {
         Timber.d("Stopping the mi band foreground service")
-        Toast.makeText(this, "Mi Band Service stopping", Toast.LENGTH_SHORT).show()
         isServiceStarted = false
 
         try {
@@ -228,9 +233,9 @@ class MiBandService : Service(), SensorEventListener {
                 }
             }
 
+            miBand.disconnectCompletely()
+
             unregisterReceiver(batteryReceiver)
-            unregisterReceiver(reconnectReceiver)
-            unregisterReceiver(btReceiver)
 
             disposables.clear()
 
@@ -310,6 +315,12 @@ class MiBandService : Service(), SensorEventListener {
             delay(OP_TIMEOUT)
             miBand.requestAlarms()
             delay(OP_TIMEOUT)
+            //Register BroadcastReceiver for battery update
+            registerReceiver(batteryReceiver, batteryIntentFilter)
+            //set up listeners for band data scans
+            actionSetHeartRateNotifyListener()
+            delay(OP_TIMEOUT)
+            actionSetRealtimeStepsNotifyListener()
             startService()
         }
         currentIntent.action = MiBandServiceActions.START.name
@@ -364,7 +375,7 @@ class MiBandService : Service(), SensorEventListener {
             } else {
                 actionSetAuthenticationListener()
                 GlobalScope.launch(Dispatchers.IO) {
-                    delay(DEFAULT_TIMEOUT/2)
+                    delay(DEFAULT_TIMEOUT / 2)
                     miBand.requestRandomNumber()
                 }
             }
@@ -391,7 +402,7 @@ class MiBandService : Service(), SensorEventListener {
                 } else {
                     actionSetAuthenticationListener()
                     GlobalScope.launch {
-                        delay(DEFAULT_TIMEOUT/2)
+                        delay(DEFAULT_TIMEOUT / 2)
                         miBand.requestRandomNumber()
                     }
                 }
@@ -563,14 +574,23 @@ class MiBandService : Service(), SensorEventListener {
             override fun onNotify(heartRate: Int) {
                 Timber.d("heart rate: $heartRate")
 
-                GlobalScope.launch(Dispatchers.IO) {
-                    heartRateRepository.insertHeartRateSample(
-                        HeartRate(
-                            0,
-                            Calendar.getInstance(),
-                            heartRate
+                if (heartRate == 0) {
+                    Timber.d("MiBand not on hand! Lockdown tim!")
+                    Intent(this@MiBandService, LockingService::class.java).also {
+                        it.action = LockingServiceActions.START.name
+                        startForegroundService(it)
+                    }
+                    stopService()
+                } else {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        heartRateRepository.insertHeartRateSample(
+                            HeartRate(
+                                0,
+                                Calendar.getInstance(),
+                                heartRate
+                            )
                         )
-                    )
+                    }
                 }
             }
         })

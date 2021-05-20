@@ -38,6 +38,14 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
     }
 
     /**
+     * Closes connection to Mi Band
+     */
+    fun disconnect(){
+        bluetoothGatt!!.close()
+        bluetoothGatt = null
+    }
+
+    /**
      * Reconnects to the Bluetooth device
      *
      */

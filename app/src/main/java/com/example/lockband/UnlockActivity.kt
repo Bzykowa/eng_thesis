@@ -35,15 +35,6 @@ class UnlockActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
-        Intent(this, MiBandService::class.java).also {
-            it.action = MiBandServiceActions.START.name
-            it.putExtra(
-                "device", BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
-                    getMiBandAddress(this)
-                )
-            )
-            startForegroundService(it)
-        }
 
         unlock_button.setOnClickListener {
 
