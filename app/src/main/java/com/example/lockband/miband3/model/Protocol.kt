@@ -2,16 +2,13 @@ package com.example.lockband.miband3.model
 
 import com.example.lockband.utils.KEY
 import com.example.lockband.utils.parseHexBinary
+import com.example.lockband.utils.printHexBinary
 
 /**
  * Defines values for accessing data and controlling band
  *
  */
 object Protocol {
-
-    //Notification setup
-    val NOTIFY_ENABLE = byteArrayOf(1, 0)
-    val NOTIFY_DISABLE = byteArrayOf(0, 0)
 
     //Authentication protocol
     val SEND_KEY = byteArrayOf(1, 0) + KEY
@@ -29,26 +26,8 @@ object Protocol {
     const val START_NONWEAR: Byte = 0x06
 
     //Heart Rate Protocol
-    val PING_HR_MONITOR = parseHexBinary("16")!!
-    val ENABLE_HR_SCAN_AUTO: ByteArray = byteArrayOf(21, 1, 1)
-    val DISABLE_HEART_RATE_SCAN_AUTO = byteArrayOf(21, 1, 0)
-    val START_HR_SCAN_MANUAL: ByteArray = byteArrayOf(21, 2, 1)
     val SET_HR_SLEEP_SUPPORT = byteArrayOf(21, 0, 1)
     val SET_HR_MEASURE_INTERVAL = byteArrayOf(20, 1)
-
-    //Steps protocol (fix)
-    val ENABLE_REALTIME_STEPS_NOTIFY = byteArrayOf(3, 1)
-    val DISABLE_REALTIME_STEPS_NOTIFY = byteArrayOf(3, 0)
-
-    //Sensor protocol (fix or del)
-    val ENABLE_SENSOR_DATA_NOTIFY = parseHexBinary("010319")!!
-    val DISABLE_SENSOR_DATA_NOTIFY = byteArrayOf(18, 0)
-
-    //Alert LED colors protocol
-    val SET_COLOR_RED = byteArrayOf(14, 6, 1, 2, 1)
-    val SET_COLOR_BLUE = byteArrayOf(14, 0, 6, 6, 1)
-    val SET_COLOR_ORANGE = byteArrayOf(14, 6, 2, 0, 1)
-    val SET_COLOR_GREEN = byteArrayOf(14, 4, 5, 0, 1)
 
     //Band settings
     private const val ENDPOINT_DISPLAY: Byte = 6
@@ -72,7 +51,6 @@ object Protocol {
         'y'.toByte()
     )
     val DATEFORMAT_DATE_TIME = byteArrayOf(ENDPOINT_DISPLAY, 0x0a, 0, 3)
-    val DATEFORMAT_TIME = byteArrayOf(ENDPOINT_DISPLAY, 0x0a, 0, 0)
     val DATEFORMAT_TIME_24_HOURS = byteArrayOf(ENDPOINT_DISPLAY, 2, 0, 1)
     val COMMAND_DISTANCE_UNIT_METRIC = byteArrayOf(ENDPOINT_DISPLAY, 3, 0, 0)
     const val COMMAND_SET_USERINFO: Byte = 0x4f
@@ -92,31 +70,25 @@ object Protocol {
         byteArrayOf(ENDPOINT_DISPLAY, 0x0c, 0x00, 0x01, 0, 0, 0, 0)
     val COMMAND_ENABLE_BT_CONNECTED_ADVERTISEMENT = byteArrayOf(ENDPOINT_DISPLAY, 0x01, 0x00, 0x01)
 
-
-    val REBOOT = byteArrayOf(12)
-    val REMOTE_DISCONNECT = byteArrayOf(1)
-    val FACTORY_RESET = byteArrayOf(9)
-    val SELF_TEST = byteArrayOf(2)
-
     //Map of band config actions
-    val actions: Map<ByteArray, String> =
+    val actions: Map<String, String> =
         mapOf(
-            SET_ENGLISH_LANGUAGE.sliceArray(0..2) to "Set language",
-            COMMAND_DISABLE_BAND_SCREEN_UNLOCK.sliceArray(0..2) to "Disabled screen unlock",
-            COMMAND_NIGHT_MODE_OFF to "Disabled night mode",
-            DATEFORMAT_DATE_DD_MM_YYYY.sliceArray(0..2) to "Set date format",
-            DATEFORMAT_DATE_TIME.sliceArray(0..2) to "Set date display",
-            DATEFORMAT_TIME_24_HOURS.sliceArray(0..2) to "Set 24h time format",
-            COMMAND_DISTANCE_UNIT_METRIC.sliceArray(0..2) to "Set metric units",
-            DISPLAY_ITEMS_DEFAULT.sliceArray(0..0) to "Set display items",
-            COMMAND_DO_NOT_DISTURB_OFF to "Disable DND",
-            COMMAND_DISABLE_ROTATE_WRIST_TO_SWITCH_INFO.sliceArray(0..2) to "Disable rotate wrist to switch info",
-            COMMAND_DISABLE_DISPLAY_ON_LIFT_WRIST.sliceArray(0..2) to "Disable enabling display on lifting wrist",
-            COMMAND_ENABLE_DISPLAY_CALLER.sliceArray(0..2) to "Enable display caller",
-            COMMAND_DISABLE_GOAL_NOTIFICATION.sliceArray(0..2) to "Disable goal notification",
-            COMMAND_DISABLE_INACTIVITY_WARNINGS.sliceArray(0..0) to "Disable inactivity warnings",
-            COMMAND_ENABLE_DISCONNECT_NOTIFCATION.sliceArray(0..2) to "Enable disconnect notification",
-            COMMAND_ENABLE_BT_CONNECTED_ADVERTISEMENT.sliceArray(0..2) to "Enable BT connected advertisement",
-            COMMAND_REQUEST_ALARMS to "Requested alarms"
+            printHexBinary(SET_ENGLISH_LANGUAGE.sliceArray(0..2)) to "Set language",
+            printHexBinary(COMMAND_DISABLE_BAND_SCREEN_UNLOCK.sliceArray(0..2)) to "Disabled screen unlock",
+            printHexBinary(COMMAND_NIGHT_MODE_OFF) to "Disabled night mode",
+            printHexBinary(DATEFORMAT_DATE_DD_MM_YYYY.sliceArray(0..2)) to "Set date format",
+            printHexBinary(DATEFORMAT_DATE_TIME.sliceArray(0..2)) to "Set date display",
+            printHexBinary(DATEFORMAT_TIME_24_HOURS.sliceArray(0..2)) to "Set 24h time format",
+            printHexBinary(COMMAND_DISTANCE_UNIT_METRIC.sliceArray(0..2)) to "Set metric units",
+            printHexBinary(DISPLAY_ITEMS_DEFAULT.sliceArray(0..0)) to "Set display items",
+            printHexBinary(COMMAND_DO_NOT_DISTURB_OFF) to "Disable DND",
+            printHexBinary(COMMAND_DISABLE_ROTATE_WRIST_TO_SWITCH_INFO.sliceArray(0..2)) to "Disable rotate wrist to switch info",
+            printHexBinary(COMMAND_DISABLE_DISPLAY_ON_LIFT_WRIST.sliceArray(0..2)) to "Disable enabling display on lifting wrist",
+            printHexBinary(COMMAND_ENABLE_DISPLAY_CALLER.sliceArray(0..2)) to "Enable display caller",
+            printHexBinary(COMMAND_DISABLE_GOAL_NOTIFICATION.sliceArray(0..2)) to "Disable goal notification",
+            printHexBinary(COMMAND_DISABLE_INACTIVITY_WARNINGS.sliceArray(0..0)) to "Disable inactivity warnings",
+            printHexBinary(COMMAND_ENABLE_DISCONNECT_NOTIFCATION.sliceArray(0..2)) to "Enable disconnect notification",
+            printHexBinary(COMMAND_ENABLE_BT_CONNECTED_ADVERTISEMENT.sliceArray(0..2)) to "Enable BT connected advertisement",
+            printHexBinary(COMMAND_REQUEST_ALARMS) to "Requested alarms"
         )
 }

@@ -25,7 +25,7 @@ private fun hexToBin(ch: Char): Int {
 
 private val hexCode = "0123456789ABCDEF".toCharArray()
 
-fun printHexBinary(data: ByteArray): String? {
+fun printHexBinary(data: ByteArray): String {
     val r = StringBuilder(data.size * 2)
     for (b in data) {
         r.append(hexCode[b.toInt() shr 4 and 0xF])

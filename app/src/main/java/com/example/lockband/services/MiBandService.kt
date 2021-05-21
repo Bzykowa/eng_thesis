@@ -479,10 +479,10 @@ class MiBandService : Service(), SensorEventListener {
         Timber.d("Band control characteristic received response")
         when {
             data.first() == 0x10.toByte() && data.last() == 0x01.toByte() -> {
-                Timber.d("Success -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex)]}")
+                Timber.d("Success -> ${Protocol.actions[printHexBinary(data.sliceArray(1 until data.lastIndex))]}")
             }
             data.first() == 0x10.toByte() && data.last() != 0x01.toByte() -> {
-                Timber.d("Other response -> ${Protocol.actions[data.sliceArray(1 until data.lastIndex)]}")
+                Timber.d("Other response -> ${Protocol.actions[printHexBinary(data.sliceArray(1 until data.lastIndex))]}")
             }
             else -> {
                 Timber.e("Communication error -> response: $data")
@@ -602,7 +602,7 @@ class MiBandService : Service(), SensorEventListener {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     val latest = stepRepository.getLatestBandStepSample()
-                    if(steps != latest!!.stepCount){
+                    if(steps != latest.stepCount){
                         stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))
                     }
                 }
