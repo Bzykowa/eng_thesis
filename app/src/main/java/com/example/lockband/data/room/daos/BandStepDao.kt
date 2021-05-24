@@ -17,7 +17,7 @@ interface BandStepDao {
     @Delete
     suspend fun delete(stepSample: BandStep)
 
-    @Query("SELECT * FROM steps_band WHERE timestamp BETWEEN :startDate AND :endDate")
+    @Query("SELECT * FROM steps_band WHERE timestamp BETWEEN :startDate AND :endDate ORDER BY timestamp")
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<BandStep>
 
     @Query("SELECT * FROM steps_band WHERE timestamp = (SELECT MAX(timestamp) FROM steps_band)")

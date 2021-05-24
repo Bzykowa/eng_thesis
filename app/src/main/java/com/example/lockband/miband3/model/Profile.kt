@@ -27,20 +27,9 @@ object Profile {
     val UUID_SERVICE_HEARTRATE: UUID = UUID.fromString("0000180d-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Notification service (correct)
-     */
-    val UUID_SERVICE_NOTIFICATION: UUID = UUID.fromString("00001811-0000-1000-8000-00805f9b34fb")
-
-    /**
      * Device information service (correct)
      */
     val UUID_SERVICE_DEVICE_INFORMATION: UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
-
-    /**
-     * Unknown services
-     */
-    val UUID_SERVICE_UNKNOWN1: UUID = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
-    val UUID_SERVICE_UNKNOWN2: UUID = UUID.fromString("00001801-0000-1000-8000-00805f9b34fb")
 
 
     // DESCRIPTORS (correct)
@@ -82,10 +71,6 @@ object Profile {
      */
     val UUID_CHAR_BATTERY: UUID = UUID.fromString("00000006-0000-3512-2118-0009af100700")
 
-    /**
-     * Used for fetching sensor data (correct)
-     */
-    val UUID_CHAR_SENSOR_DATA: UUID = UUID.fromString("00000001-0000-3512-2118-0009af100700")
 
     /**
      * Used for pairing device (correct)

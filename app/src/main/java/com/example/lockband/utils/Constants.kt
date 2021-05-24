@@ -74,9 +74,12 @@ val KEY = byteArrayOf(
 val user = UserInfo("miband3".hashCode(), 2000, 1, 1, 0, 175, 65)
 
 //Placeholder fitness goal
-val stepGoal = 10000
+const val stepGoal = 10000
 
 //Max amount of consequent failures to connect
-val MAX_RECONNECTIONS = 2
+const val MAX_RECONNECTIONS = 2
+
+//Max difference between steps amplitudes
+const val MAX_STEPS_DIFF = 30
 
 

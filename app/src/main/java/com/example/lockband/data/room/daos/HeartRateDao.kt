@@ -18,7 +18,7 @@ interface HeartRateDao {
     @Delete
     suspend fun delete(heartRateSample: HeartRate)
 
-    @Query("SELECT * FROM heart_rate WHERE timestamp BETWEEN :startDate AND :endDate")
+    @Query("SELECT * FROM heart_rate WHERE timestamp BETWEEN :startDate AND :endDate ORDER BY timestamp")
     fun getSamplesBetween(startDate : Calendar, endDate : Calendar) : List<HeartRate>
 
     @Query("SELECT * FROM heart_rate WHERE timestamp = (SELECT MAX(timestamp) FROM heart_rate)")

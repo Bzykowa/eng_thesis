@@ -41,6 +41,7 @@ import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.abs
 
 
 @AndroidEntryPoint
@@ -63,12 +64,18 @@ class MiBandService : Service(), SensorEventListener {
     private lateinit var sensor: Sensor
     private var btTurnedOff = false
 
+    /**
+     * BroadcastReceiver responsible for refreshing Battery data
+     */
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             handleBatteryUpdate()
         }
     }
 
+    /**
+     * BroadcastReceiver responsible for initiating reconnection
+     */
     private val reconnectReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Timber.d("Reconnection attempt received")
@@ -76,6 +83,10 @@ class MiBandService : Service(), SensorEventListener {
         }
     }
 
+    /**
+     * BroadcastReceiver responsible for monitoring state of BTAdapter. Reconnects if BTAdapter is
+     * turned on again after period of time shorter than BT_TIMEOUT, otherwise it stops MiBandService
+     */
     private val btReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val state = intent.getIntExtra(
@@ -118,6 +129,10 @@ class MiBandService : Service(), SensorEventListener {
      * Service control  ****************************************************************************
      */
 
+    /**
+     * Parses intents and launches appropriate functions based on them. Also registers necessary
+     * BroadcastReceivers
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
@@ -144,7 +159,9 @@ class MiBandService : Service(), SensorEventListener {
         return START_STICKY
     }
 
-
+    /**
+     * Registers Step Counter Sensor and creates notification
+     */
     override fun onCreate() {
         super.onCreate()
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -154,6 +171,9 @@ class MiBandService : Service(), SensorEventListener {
         startForeground(2, notification)
     }
 
+    /**
+     * Unregisters Bluetooth BroadcastReceivers
+     */
     override fun onDestroy() {
         unregisterReceiver(btReceiver)
         unregisterReceiver(reconnectReceiver)
@@ -161,6 +181,9 @@ class MiBandService : Service(), SensorEventListener {
         Timber.d("The Mi Band communication service has been destroyed")
     }
 
+    /**
+     * Restarts Service if it is killed by something
+     */
     override fun onTaskRemoved(rootIntent: Intent?) {
         val restartServiceIntent =
             Intent(applicationContext, MiBandService::class.java).also {
@@ -181,8 +204,9 @@ class MiBandService : Service(), SensorEventListener {
         )
     }
 
-    //Intent action handlers
-
+    /**
+     * Keeps MiBandService alive and periodically checks for inconsistencies in gathered data
+     */
     private fun startService() {
         if (isServiceStarted) return
         Timber.d("Starting the foreground service task")
@@ -203,17 +227,39 @@ class MiBandService : Service(), SensorEventListener {
                 delay(90000)
                 Timber.d("Mi Band Service working...")
                 val nowDate = Calendar.getInstance()
-                val hrs = heartRateRepository.getHeartRateSamplesBetween(beforeDate,nowDate)
+                val stepPhoneSamples = stepRepository.getPhoneStepSamplesBetween(beforeDate, nowDate)
+                val stepBandSamples = stepRepository.getBandStepSamplesBetween(beforeDate, nowDate)
+                val stepPhoneAmplitude = when{
+                    stepPhoneSamples.last().offset > stepPhoneSamples.first().offset -> stepPhoneSamples.last().offset - stepPhoneSamples.first().offset
+                    stepPhoneSamples.last().offset < stepPhoneSamples.first().offset && stepPhoneSamples.last().stepCount > stepPhoneSamples.first().stepCount -> stepPhoneSamples.last().stepCount - stepPhoneSamples.first().stepCount
+                    else -> stepPhoneSamples.first().offset
+                }
 
-                if(hrs.isEmpty()){
-                    Timber.d("No hr registered in last 90 seconds. Band off hand. Lock the phone!")
-                    Intent(this@MiBandService, LockingService::class.java).also {
-                        it.action = LockingServiceActions.START.name
-                        startForegroundService(it)
+                val stepBandAmplitude = when {
+                    stepBandSamples.last().stepCount > stepBandSamples.first().stepCount -> stepBandSamples.last().stepCount - stepBandSamples.first().stepCount
+                    else -> stepBandSamples.last().stepCount + stepBandSamples.first().stepCount
+                }
+
+
+                when {
+                    heartRateRepository.getHeartRateSamplesBetween(beforeDate, nowDate).isEmpty() -> {
+                        Timber.d("No hr registered in last 90 seconds. Band off hand. Lock the phone!")
+                        Intent(this@MiBandService, LockingService::class.java).also {
+                            it.action = LockingServiceActions.START.name
+                            startForegroundService(it)
+                        }
+                        stopService()
                     }
-                    stopService()
-                } else {
-                    beforeDate = nowDate
+                    abs(stepPhoneAmplitude-stepBandAmplitude) > MAX_STEPS_DIFF -> {
+                        Timber.d("Steps growth isn't similar between MiBand and phone. Lockdown!")
+                        Intent(this@MiBandService, LockingService::class.java).also {
+                            it.action = LockingServiceActions.START.name
+                            startForegroundService(it)
+                        }
+                    }
+                    else -> {
+                        beforeDate = nowDate
+                    }
                 }
             }
 
@@ -221,6 +267,10 @@ class MiBandService : Service(), SensorEventListener {
 
     }
 
+    /**
+     * Closes MiBandService when suspicious situations are recorded. Releases all Disposables and unregisters
+     * Step Counter Sensor and BroadcastReceiver responsible for Battery updates
+     */
     private fun stopService() {
         Timber.d("Stopping the mi band foreground service")
         isServiceStarted = false
@@ -253,7 +303,10 @@ class MiBandService : Service(), SensorEventListener {
      * Communication methods    ********************************************************************
      */
 
-    //Sets up band settings and gets basic info
+    /**
+     * Launches "After connection" sequence which updates MiBand settings and then starts monitoring
+     * data based on samples from last 90 seconds
+     */
     private fun handleDeviceSetup() {
         miBand.removeAuthenticationListener()
         enableDataNotifications()
@@ -326,6 +379,9 @@ class MiBandService : Service(), SensorEventListener {
         currentIntent.action = MiBandServiceActions.START.name
     }
 
+    /**
+     * Starts pairing sequence
+     */
     private fun handleAuthentication() {
         Timber.d("Starting to authenticate")
 
@@ -341,6 +397,9 @@ class MiBandService : Service(), SensorEventListener {
 
     }
 
+    /**
+     * Requests Battery data update from MiBand
+     */
     private fun handleBatteryUpdate() = disposables.add(
         miBand.batteryInfo
             .subscribe({ batteryInfo ->
@@ -350,6 +409,9 @@ class MiBandService : Service(), SensorEventListener {
             )
     )
 
+    /**
+     * Sets placeholder information about user
+     */
     private fun setUserInfo() = disposables.add(
         miBand.setUserInfo(user).subscribe({
             Timber.d("User info set")
@@ -358,6 +420,9 @@ class MiBandService : Service(), SensorEventListener {
         })
     )
 
+    /**
+     * Sets placeholder steps goal of stepGoal steps
+     */
     private fun setFitnessGoal() = disposables.add(
         miBand.setFitnessGoal().subscribe({
             Timber.d("Set fitness goal to $stepGoal")
@@ -367,6 +432,9 @@ class MiBandService : Service(), SensorEventListener {
     )
 
 
+    /**
+     * Attempts reconnection when connection drops (MAX_RECONNECTIONS tries allowed before locking phone)
+     */
     private fun handleReconnection() {
         val d = miBand.reconnect().subscribe({ result ->
             Timber.d("Reconnect onNext: $result")
@@ -386,6 +454,10 @@ class MiBandService : Service(), SensorEventListener {
         disposables.add(d)
     }
 
+    /**
+     * Initiates connection and authentication sequence
+     * @param intent Gives information about device and if it's pairing time
+     */
     private fun actionConnect(intent: Intent?) {
 
         val device = intent!!.getParcelableExtra<BluetoothDevice>("device")
@@ -393,17 +465,23 @@ class MiBandService : Service(), SensorEventListener {
         val d = miBand.connect(device!!)
             .subscribe({ result ->
                 Timber.d("Connect onNext: $result")
-                if (!result) {
-                    actionConnect(intent)
-                } else if (intent.action == MiBandServiceActions.PAIR.name) {
-                    actionRequestMtu(512)
-                    actionSetAuthenticationListener()
-                    handleAuthentication()
-                } else {
-                    actionSetAuthenticationListener()
-                    GlobalScope.launch {
-                        delay(DEFAULT_TIMEOUT / 2)
-                        miBand.requestRandomNumber()
+                when {
+                    !result -> {
+                        actionConnect(intent)
+                    }
+                    //Pairing so we need to send auth key to Mi Band
+                    intent.action == MiBandServiceActions.PAIR.name -> {
+                        actionRequestMtu(512)
+                        actionSetAuthenticationListener()
+                        handleAuthentication()
+                    }
+                    //Mi Band paired. Skip sending key.
+                    else -> {
+                        actionSetAuthenticationListener()
+                        GlobalScope.launch {
+                            delay(DEFAULT_TIMEOUT / 2)
+                            miBand.requestRandomNumber()
+                        }
                     }
                 }
             }, { throwable ->
@@ -413,6 +491,10 @@ class MiBandService : Service(), SensorEventListener {
         disposables.add(d)
     }
 
+    /**
+     * Request special MTU value
+     * @param mtu MTU to set
+     */
     private fun actionRequestMtu(mtu: Int) {
         val d = miBand.requestMtu(mtu).delaySubscription(1, TimeUnit.SECONDS).subscribe({
             Timber.d("mtu :$it")
@@ -422,6 +504,9 @@ class MiBandService : Service(), SensorEventListener {
         disposables.add(d)
     }
 
+    /**
+     * Sets up listener to receive response from UUID_CHAR_USER_INFO characteristic
+     */
     private fun setUserInfoListener() = miBand.setUserInfoListener { data ->
         Timber.d("Received response from UserInfo characteristic")
         if (data.isEmpty()) {
@@ -431,6 +516,9 @@ class MiBandService : Service(), SensorEventListener {
     }
 
 
+    /**
+     * Sets up listener for authentication sequence on UUID_CHAR_PAIR characteristic
+     */
     private fun actionSetAuthenticationListener() = miBand.setAuthenticationListener { data ->
         Timber.d("Pairing listener received response")
         when {
@@ -460,7 +548,6 @@ class MiBandService : Service(), SensorEventListener {
             data.sliceArray(0..2).contentEquals(byteArrayOf(0x10, 0x03, 0x01)) -> {
                 Timber.d("Authentication successful")
                 //set paired and move on to next stage of setup
-
                 setMiBandPaired(this, true)
                 handleDeviceSetup()
             }
@@ -475,6 +562,9 @@ class MiBandService : Service(), SensorEventListener {
         }
     }
 
+    /**
+     * Sets up listener for MiBand settings on UUID_CHAR_CONTROL_POINT characteristic
+     */
     private fun setBandControlListener() = miBand.setBandControlListener { data ->
         Timber.d("Band control characteristic received response")
         when {
@@ -490,6 +580,9 @@ class MiBandService : Service(), SensorEventListener {
         }
     }
 
+    /**
+     * Sets up current date and time on MiBand
+     */
     private fun setTime() = disposables.add(
         miBand.setCurrentTime().subscribe(
             {
@@ -501,6 +594,9 @@ class MiBandService : Service(), SensorEventListener {
         )
     )
 
+    /**
+     * Sets up listeners for MiBand settings, battery information and registered events
+     */
     private fun enableDataNotifications() {
         GlobalScope.launch(Dispatchers.IO) {
             setBandControlListener()
@@ -511,6 +607,9 @@ class MiBandService : Service(), SensorEventListener {
         }
     }
 
+    /**
+     * Sets up listener for battery information update on UUID_CHAR_BATTERY characteristic
+     */
     private fun setBatteryInfoListener() = miBand.setBatteryInfoListener { data ->
         val batteryInfo = BatteryInfo.fromByteData(data)
         setMiBandBatteryInfo(this, batteryInfo)
@@ -518,7 +617,9 @@ class MiBandService : Service(), SensorEventListener {
     }
 
     /**
-     * Catching falling asleep and taking off band
+     * Sets up listener for catching falling asleep and taking off band on UUID_CHAR_DEVICEEVENT
+     * characteristic. Registering events takes sometimes a lot of time so taking off band is also
+     * caught by lack of or wrong HR data.
      */
     private fun setBandEventsListener() = miBand.setBandEventsListener { data ->
         when (data.first()) {
@@ -542,6 +643,9 @@ class MiBandService : Service(), SensorEventListener {
         Timber.d(printHexBinary(data))
     }
 
+    /**
+     * Requests serial number from MiBand
+     */
     private fun actionReadSerialNumber() = disposables.add(
         miBand.readSerialNumber().delaySubscription(1, TimeUnit.SECONDS).subscribe({
             setMiBandSerialNumber(this@MiBandService, it)
@@ -551,6 +655,9 @@ class MiBandService : Service(), SensorEventListener {
         })
     )
 
+    /**
+     * Requests hardware version from MiBand
+     */
     private fun actionReadHardwareRevision() = disposables.add(
         miBand.readHardwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
             setMiBandHardwareRevision(this@MiBandService, it)
@@ -560,6 +667,9 @@ class MiBandService : Service(), SensorEventListener {
         })
     )
 
+    /**
+     * Requests software verison form MiBand
+     */
     private fun actionReadSoftwareRevision() = disposables.add(
         miBand.readSoftwareRevision().delaySubscription(1, TimeUnit.SECONDS).subscribe({
             setMiBandSoftwareRevision(this@MiBandService, it)
@@ -569,6 +679,9 @@ class MiBandService : Service(), SensorEventListener {
         })
     )
 
+    /**
+     * Sets up listener for heart rate on UUID_CHAR_HEARTRATE characteristic
+     */
     private fun actionSetHeartRateNotifyListener() =
         miBand.setHeartRateScanListenerMiBand2(object : HeartRateNotifyListener {
             override fun onNotify(heartRate: Int) {
@@ -595,6 +708,9 @@ class MiBandService : Service(), SensorEventListener {
             }
         })
 
+    /**
+     * Sets up listener for steps from MiBand on UUID_CHAR_REALTIME_STEPS characteristic
+     */
     private fun actionSetRealtimeStepsNotifyListener() =
         miBand.setRealtimeStepsNotifyListener(object : RealtimeStepsNotifyListener {
             override fun onNotify(steps: Int) {
@@ -602,14 +718,22 @@ class MiBandService : Service(), SensorEventListener {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     val latest = stepRepository.getLatestBandStepSample()
-                    if(steps != latest.stepCount){
-                        stepRepository.insertBandStepSample(BandStep(0, Calendar.getInstance(), steps))
+                    if (steps != latest.stepCount) {
+                        stepRepository.insertBandStepSample(
+                            BandStep(
+                                0,
+                                Calendar.getInstance(),
+                                steps
+                            )
+                        )
                     }
                 }
             }
         })
 
-
+    /**
+     * Requests better sleep recognition from MiBand
+     */
     private fun setEnableHeartRateSleepSupport() =
         disposables.add(miBand.enableHeartRateSleepSupport().delaySubscription(1, TimeUnit.SECONDS)
             .subscribe(
@@ -622,6 +746,9 @@ class MiBandService : Service(), SensorEventListener {
         )
 
 
+    /**
+     * Requests lowest possible heart rate measurement interval from MiBand
+     */
     private fun setHeartRateMeasureInterval() =
         disposables.add(miBand.setHeartRateMeasureInterval().delaySubscription(1, TimeUnit.SECONDS)
             .subscribe(
