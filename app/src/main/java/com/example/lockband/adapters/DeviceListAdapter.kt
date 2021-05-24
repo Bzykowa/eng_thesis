@@ -10,6 +10,9 @@ import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
 import timber.log.Timber
 
+/**
+ * Adapter for list of found devices during scanning
+ */
 class DeviceListAdapter(
     context: Context,
     @LayoutRes private val layoutResource: Int,

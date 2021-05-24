@@ -23,6 +23,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * Service responsible for blocking access to specific apps defined by users
+ */
 @AndroidEntryPoint
 class LockingService : Service() {
 
@@ -39,6 +42,9 @@ class LockingService : Service() {
         return null
     }
 
+    /**
+     * Parses intents and launches appropriate functions based on them.
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
@@ -55,6 +61,9 @@ class LockingService : Service() {
         return START_STICKY
     }
 
+    /**
+     * Creates notification for LockingService
+     */
     override fun onCreate() {
         super.onCreate()
         Timber.d("The locking service has been created")
@@ -62,6 +71,9 @@ class LockingService : Service() {
         startForeground(1, notification)
     }
 
+    /**
+     * On closing start MiBandService and pass info about paired MiBand
+     */
     override fun onDestroy() {
         super.onDestroy()
         Timber.d("The locking service has been destroyed")
@@ -76,6 +88,9 @@ class LockingService : Service() {
         }
     }
 
+    /**
+     * Restart LockingService if killed by something
+     */
     override fun onTaskRemoved(rootIntent: Intent) {
         val restartServiceIntent = Intent(applicationContext, LockingService::class.java).also {
             it.setPackage(packageName)
@@ -92,12 +107,15 @@ class LockingService : Service() {
         )
     }
 
+    /**
+     * Monitoring foreground apps in DEFAULT_TIMEOUT intervals
+     */
     private fun startService() {
         if (isServiceStarted) return
         Timber.d("Starting the foreground service task")
         Toast.makeText(this, "Lockdown started", Toast.LENGTH_SHORT).show()
         isServiceStarted = true
-        setServiceState(this, ServiceState.STARTED)
+        setLockingServiceState(this, LockingServiceState.STARTED)
 
         // lock to avoid being affected by Doze Mode
         wakeLock =
@@ -120,6 +138,9 @@ class LockingService : Service() {
 
     }
 
+    /**
+     * Closes LockingService, stops monitoring apps
+     */
     private fun stopService() {
         Timber.d("Stopping the locking foreground service")
         Toast.makeText(this, "Locking Service stopping", Toast.LENGTH_SHORT).show()
@@ -139,6 +160,11 @@ class LockingService : Service() {
         setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
+    /**
+     * Create notification for LockingService
+     *
+     * @return Lasting notification informing user that LockingService is running
+     */
     private fun createNotification(): Notification {
         val notificationChannelId = "LOCKING SERVICE CHANNEL"
 
@@ -177,6 +203,9 @@ class LockingService : Service() {
             .build()
     }
 
+    /**
+     * Sets up AppMonitor listeners for each blocked app which remove them from foreground
+     */
     private fun buildAppMonitor(): AppMonitor {
 
         GlobalScope.launch(Dispatchers.IO) {

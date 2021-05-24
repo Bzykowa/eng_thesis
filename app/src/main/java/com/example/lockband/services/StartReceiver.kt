@@ -10,12 +10,15 @@ import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+/**
+ * BroadcastReceiver responsible for restarting Services after device reboot
+ */
 @AndroidEntryPoint
 class StartReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            if (getServiceState(context) == ServiceState.STARTED) {
+            if (getLockingServiceState(context) == LockingServiceState.STARTED) {
                 Intent(context, LockingService::class.java).also {
                     it.action = LockingServiceActions.START.name
                     Timber.d("Starting the locking service from a BroadcastReceiver")

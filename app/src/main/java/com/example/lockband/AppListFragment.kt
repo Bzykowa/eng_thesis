@@ -16,7 +16,9 @@ import com.example.lockband.databinding.FragmentAppListBinding
 import com.example.lockband.viewmodels.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
-
+/**
+ * Fragment containing list of installed apps and allowing to mark them for locking
+ */
 @AndroidEntryPoint
 class AppListFragment : Fragment() {
 

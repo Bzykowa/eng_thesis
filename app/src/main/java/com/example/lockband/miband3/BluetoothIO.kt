@@ -23,7 +23,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     private var notifyListeners: HashMap<UUID, (ByteArray) -> Unit> = HashMap()
 
-    private var context : Context? = null
+    private var context: Context? = null
 
     /**
      * Connects to the Bluetooth device
@@ -40,14 +40,13 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
     /**
      * Closes connection to Mi Band
      */
-    fun disconnect(){
+    fun disconnect() {
         bluetoothGatt!!.close()
         bluetoothGatt = null
     }
 
     /**
      * Reconnects to the Bluetooth device
-     *
      */
     fun reconnect() {
         bluetoothGatt!!.connect()
@@ -93,7 +92,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
                 } else {
                     Timber.d("Written to characteristic: ${characteristic.uuid}")
                 }
-                
+
             } else {
                 notifyWithFail(
                     serviceUUID,
@@ -154,21 +153,15 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
     }
 
     /**
-     * Reads Received Signal Strength Indication (RSSI)
+     * Requests MTU from MiBand
+     * *
+     * @param mtu   Requested value
      */
-    fun readRssi() {
-        checkConnectionState()
-        val readResult = bluetoothGatt?.readRemoteRssi() ?: false
-        if (!readResult) {
-            notifyWithFail(ERROR_READ_RSSI_FAILED, "Request RSSI value failed")
-        }
-    }
-
-    fun requestMtu(mtu : Int){
+    fun requestMtu(mtu: Int) {
         checkConnectionState()
         val result = bluetoothGatt?.requestMtu(mtu) ?: false
-        if(!result) {
-            notifyWithFail(3,"MTU request failed")
+        if (!result) {
+            notifyWithFail(3, "MTU request failed")
         }
     }
 
@@ -220,7 +213,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     /**
      * Removes notification listener for the service and characteristic
-
+     *
      * @param serviceUUID      Service UUID
      * *
      * @param characteristicId Characteristic UUID
@@ -298,7 +291,12 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
         } else {
             val serviceId = characteristic.service.uuid
             val characteristicId = characteristic.uuid
-            notifyWithFail(serviceId, characteristicId, "onCharacteristicRead fail", characteristic.value)
+            notifyWithFail(
+                serviceId,
+                characteristicId,
+                "onCharacteristicRead fail",
+                characteristic.value
+            )
         }
     }
 
@@ -340,7 +338,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     /**
      * Checks connection state.
-
+     *
      * @throws IllegalStateException if device is not connected
      */
     @Throws(IllegalStateException::class)
@@ -360,10 +358,10 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
             Timber.d("onServicesDiscovered: ${service.uuid}")
 
             for (characteristic in service.characteristics) {
-                Timber.d("  char: ${characteristic.uuid}")
+                Timber.d("--char: ${characteristic.uuid}")
 
                 for (descriptor in characteristic.descriptors) {
-                    Timber.d("    descriptor: ${descriptor.uuid}")
+                    Timber.d("----descriptor: ${descriptor.uuid}")
                 }
             }
         }
@@ -382,7 +380,7 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     /**
      * Notifies with success result
-
+     *
      * @param data Result data
      */
     private fun notifyWithResult(data: Int) {
@@ -391,20 +389,25 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
 
     /**
      * Notifies with failed result
-
+     *
      * @param serviceUUID      Service UUID
      * *
      * @param characteristicId Characteristic ID
      * *
      * @param msg              Message
      */
-    private fun notifyWithFail(serviceUUID: UUID, characteristicId: UUID, msg: String, data: ByteArray) {
+    private fun notifyWithFail(
+        serviceUUID: UUID,
+        characteristicId: UUID,
+        msg: String,
+        data: ByteArray
+    ) {
         listener?.onFail(serviceUUID, characteristicId, msg, data)
     }
 
     /**
      * Notifies with failed result
-
+     *
      * @param errorCode Error code
      * *
      * @param msg       Message
@@ -412,7 +415,6 @@ internal class BluetoothIO(private val listener: BluetoothListener?) : Bluetooth
     private fun notifyWithFail(errorCode: Int, msg: String) {
         listener?.onFail(errorCode, msg)
     }
-
 
 
 }

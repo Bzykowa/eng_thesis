@@ -2,7 +2,10 @@ package com.example.lockband.utils
 
 import android.content.Context
 
-enum class ServiceState {
+/**
+ * State of LockingService
+ */
+enum class LockingServiceState {
     STARTED,
     STOPPED,
 }
@@ -10,17 +13,28 @@ enum class ServiceState {
 private const val name = "LOCKED_KEY"
 private const val key = "LOCKED_STATE"
 
-fun setServiceState(context: Context, state: ServiceState) =
+/**
+ * Sets state of LockingService in SharedPreferences
+ *
+ * @param context Context needed for accessing SharedPreferences
+ * @param state New state of LockingService
+ */
+fun setLockingServiceState(context: Context, state: LockingServiceState) =
     getPreferences(context, name).edit().let {
         it.putString(key, state.name)
         it.apply()
     }
 
-
-fun getServiceState(context: Context): ServiceState = ServiceState.valueOf(
+/**
+ * Returns current state of LockingService stored in SharedPreferences
+ *
+ * @param context Context needed for accessing SharedPreferences
+ * @return Current state of LockingService
+ */
+fun getLockingServiceState(context: Context): LockingServiceState = LockingServiceState.valueOf(
     getPreferences(context, name).getString(
         key,
-        ServiceState.STOPPED.name
+        LockingServiceState.STOPPED.name
     )!!
 )
 

@@ -6,7 +6,6 @@ import com.example.lockband.utils.printHexBinary
 
 /**
  * Defines values for accessing data and controlling band
- *
  */
 object Protocol {
 
@@ -14,12 +13,6 @@ object Protocol {
     val SEND_KEY = byteArrayOf(1, 0) + KEY
     val REQ_RAND_NUMBER = byteArrayOf(2, 0)
     val SEND_ENC_NUMBER = byteArrayOf(3, 0)
-
-    //Vibration protocol
-    val VIBRATION_WITH_LED = byteArrayOf(1)
-    val VIBRATION_10_TIMES_WITH_LED = byteArrayOf(2)
-    val VIBRATION_WITHOUT_LED = byteArrayOf(4)
-    val STOP_VIBRATION = byteArrayOf(0)
 
     //Device Events
     const val FELL_ASLEEP: Byte = 0x01
@@ -57,7 +50,7 @@ object Protocol {
     val WEAR_LOCATION_LEFT_WRIST = byteArrayOf(0x20, 0x00, 0x00, 0x02)
     val COMMAND_SET_FITNESS_GOAL_START = byteArrayOf(0x10, 0x0, 0x0)
     val COMMAND_SET_FITNESS_GOAL_END = byteArrayOf(0, 0)
-    val DISPLAY_ITEMS_DEFAULT = parseHexBinary("0a7f30000102030405060708")!!
+    val DISPLAY_ITEMS_DEFAULT = parseHexBinary("0a7f30000102030405060708")
     val COMMAND_DO_NOT_DISTURB_OFF = byteArrayOf(0x09, 0x82.toByte())
     val COMMAND_DISABLE_ROTATE_WRIST_TO_SWITCH_INFO =
         byteArrayOf(ENDPOINT_DISPLAY, 0x0d, 0x00, 0x00)

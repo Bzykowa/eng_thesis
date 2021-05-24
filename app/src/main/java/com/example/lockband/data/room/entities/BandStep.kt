@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
 
+/**
+ * Entity containing samples of user's steps from MiBand
+ */
 @Entity(tableName = "steps_band")
 data class BandStep(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id : Int = 0,

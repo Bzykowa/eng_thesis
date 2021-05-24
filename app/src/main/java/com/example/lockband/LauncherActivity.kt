@@ -105,7 +105,7 @@ class LauncherActivity : AppCompatActivity() {
                 startActivity(it)
             }
 
-        } else if (getServiceState(this) == ServiceState.STOPPED) {
+        } else if (getLockingServiceState(this) == LockingServiceState.STOPPED) {
             Intent(this, MiBandService::class.java).also {
                 it.action = MiBandServiceActions.START.name
                 it.putExtra(

@@ -5,21 +5,30 @@ import com.example.lockband.data.SettingsItem
 import com.example.lockband.miband3.model.Protocol
 import com.example.lockband.miband3.model.UserInfo
 
-//encrypted files names
+/**
+ * Names
+ */
+
+//encrypted file name
 const val PASS_FILE = "pass.txt"
 
-//navigation
+const val DATABASE_NAME = "lockband_db"
+
+/**
+ * Navigation
+ */
+
+//Main pages
 const val BAND_PAGE_INDEX = 0
 const val STATS_PAGE_INDEX = 1
 const val SETTINGS_PAGE_INDEX = 2
 
-//settings subpages
+//Settings subpages
 const val BLOCKED_APPS_LIST_PAGE_INDEX = 3
 const val CHANGE_PASS_PAGE_INDEX = 4
 const val ABOUT_PAGE_INDEX = 5
 
-const val DATABASE_NAME = "lockband_db"
-
+//Settings page content
 val SETTINGS: List<SettingsItem> = listOf(
     SettingsItem(
         R.drawable.outline_playlist_add_check_black_18dp,
@@ -33,13 +42,15 @@ val SETTINGS: List<SettingsItem> = listOf(
     )
 )
 
-//Delays and timeouts
+/**
+ * Delays and timeouts
+ */
 
 //foreground scanning timeout
 const val DEFAULT_TIMEOUT = 5000L
 
-//heart rate scanning timeout
-const val HR_TIMEOUT = 12000L
+//Delay for starting MiBandService
+const val MONITORING_TIMEOUT = 12000L
 
 //BLE operation delay
 const val OP_TIMEOUT = 100L
@@ -47,8 +58,12 @@ const val OP_TIMEOUT = 100L
 //Device scan duration
 const val SCAN_TIMEOUT: Long = 10000L
 
-//Bt time out
+//Bluetooth time out
 const val BT_TIMEOUT: Long = 30000L
+
+/**
+ * MiBand placeholders and constraints
+ */
 
 //Mi Band authentication key
 val KEY = byteArrayOf(

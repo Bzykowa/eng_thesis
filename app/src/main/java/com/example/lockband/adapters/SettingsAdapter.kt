@@ -12,6 +12,9 @@ import com.example.lockband.SettingsFragmentDirections
 import com.example.lockband.data.SettingsItem
 import com.example.lockband.databinding.SettingsItemBinding
 
+/**
+ * Adapter for RecyclerView in SettingsFragment. Handles navigation when clicking on specific item.
+ */
 class SettingsAdapter : ListAdapter<SettingsItem, RecyclerView.ViewHolder>(SettingsDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return SettingsViewHolder(

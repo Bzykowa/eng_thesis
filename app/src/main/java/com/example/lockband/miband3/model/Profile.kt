@@ -4,42 +4,46 @@ import java.util.*
 
 /**
  * Defines keys for services, descriptors and characteristics
- *
  */
 object Profile {
 
-    // SERVICES
+    /**
+     * SERVICES
+     */
 
     /**
-     * Data service (correct)
+     * Device specific services
      */
     val UUID_SERVICE_MILI: UUID = UUID.fromString("0000fee0-0000-1000-8000-00805f9b34fb")
     val UUID_SERVICE_MIBAND2: UUID = UUID.fromString("0000fee1-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Vibration service (correct)
-     */
-    val UUID_SERVICE_VIBRATION: UUID = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb")
-
-    /**
-     * Heart rate service (correct)
+     * Heart rate service
      */
     val UUID_SERVICE_HEARTRATE: UUID = UUID.fromString("0000180d-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Device information service (correct)
+     * Device information service
      */
     val UUID_SERVICE_DEVICE_INFORMATION: UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
 
 
-    // DESCRIPTORS (correct)
+    /**
+     * DESCRIPTORS
+     */
 
     val UUID_DESCRIPTOR_UPDATE_NOTIFICATION: UUID =
         UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 
-    // CHARACTERISTICS
+    /**
+     * CHARACTERISTICS
+     */
 
+
+    /**
+     * UUID_SERVICE_DEVICE_INFORMATION
+     */
     val UUID_CHAR_SERIAL_NUMBER: UUID = UUID.fromString("00002a25-0000-1000-8000-00805f9b34fb")
 
     val UUID_CHAR_HARDWARE_REVISION: UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
@@ -47,54 +51,44 @@ object Profile {
     val UUID_CHAR_SOFTWARE_REVISION: UUID = UUID.fromString("00002a28-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Notification (correct)
-     */
-    val UUID_CHAR_NOTIFICATION: UUID = UUID.fromString("00002a46-0000-1000-8000-00805f9b34fb")
-
-    /**
-     * User info (correct)
+     * User info (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_USER_INFO: UUID = UUID.fromString("00000008-0000-3512-2118-0009af100700")
 
     /**
-     * Used for manipulations with service control (correct)
+     * Used for manipulations with service control (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_CONTROL_POINT: UUID = UUID.fromString("00000003-0000-3512-2118-0009af100700")
 
     /**
-     * Used for steps measurement (correct)
+     * Used for steps measurement (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_REALTIME_STEPS: UUID = UUID.fromString("00000007-0000-3512-2118-0009af100700")
 
     /**
-     * Used for getting battery info (correct)
+     * Used for getting battery info (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_BATTERY: UUID = UUID.fromString("00000006-0000-3512-2118-0009af100700")
 
 
     /**
-     * Used for pairing device (correct)
+     * Used for pairing device (UUID_SERVICE_MIBAND2)
      */
     val UUID_CHAR_PAIR: UUID = UUID.fromString("00000009-0000-3512-2118-0009af100700")
 
     /**
-     * Used for enabling/disabling vibration (correct)
-     */
-    val UUID_CHAR_VIBRATION: UUID = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb")
-
-    /**
-     * Used for reading heart rate data (correct)
+     * Used for reading heart rate data (UUID_SERVICE_HEARTRATE)
      */
     val UUID_CHAR_HEARTRATE: UUID = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
     val UUID_CONTROL_HEARTRATE: UUID = UUID.fromString("00002a39-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Used for setting time (correct)
+     * Used for setting time (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_DATA_TIME: UUID = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb")
 
     /**
-     * Used for getting events recorded by band (correct)
+     * Used for getting events recorded by band (UUID_SERVICE_MILI)
      */
     val UUID_CHAR_DEVICEEVENT: UUID = UUID.fromString("00000010-0000-3512-2118-0009af100700")
 

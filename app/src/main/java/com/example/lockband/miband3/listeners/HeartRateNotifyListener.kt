@@ -1,14 +1,14 @@
 package com.example.lockband.miband3.listeners
 
 /**
- * Listener for hear rate notifications
+ * Listener for heart rate notifications
  */
 interface HeartRateNotifyListener {
 
     /**
      * Called when new hear rate data received
      *
-     * @param heartRate Hear rate
+     * @param heartRate Heart rate
      */
     fun onNotify(heartRate: Int)
 }

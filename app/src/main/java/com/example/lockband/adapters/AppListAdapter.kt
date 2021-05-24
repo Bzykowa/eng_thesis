@@ -9,6 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lockband.data.room.entities.AppState
 import com.example.lockband.databinding.AppListElementBinding
 
+/**
+ * Adapter for RecyclerView containing list of all installed apps
+ */
 class AppListAdapter(val listener: (Any) -> Unit, private val icons : MutableList<Drawable>) : ListAdapter<AppState, RecyclerView.ViewHolder>(AppStateDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {

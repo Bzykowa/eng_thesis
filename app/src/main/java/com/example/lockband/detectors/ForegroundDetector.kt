@@ -8,7 +8,9 @@ import com.example.lockband.utils.DEFAULT_TIMEOUT
 import com.example.lockband.utils.hasUsageStatsPermission
 import timber.log.Timber
 
-
+/**
+ * Class which scans UsageEvents to register current foreground app in specified amount of time
+ */
 class ForegroundDetector {
 
     fun getForegroundApp(context: Context): String? {

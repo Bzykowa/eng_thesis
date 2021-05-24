@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
 
+/**
+ * Entity containing user's step samples measured by phone's step counter sensor
+ */
 @Entity(tableName = "steps_phone")
 data class PhoneStep(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id : Int = 0,

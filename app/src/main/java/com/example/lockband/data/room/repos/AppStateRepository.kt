@@ -9,13 +9,9 @@ import javax.inject.Singleton
 @Singleton
 class AppStateRepository @Inject constructor(private val appStateDao: AppStateDao) {
 
-    fun getAppState(appName: String) = appStateDao.getAppState(appName)
-
     fun getAppStates() = appStateDao.getAppStates()
 
     fun getLockedApps() = appStateDao.getLockedApps()
-
-    fun isLocked(appName: String) = appStateDao.isLocked(appName)
 
     @WorkerThread
     suspend fun upsertAppState(app: AppState) = appStateDao.upsert(app)

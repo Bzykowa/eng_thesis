@@ -21,6 +21,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
+/**
+ * Room Database class. Prepopulates app_states during onCreate()
+ */
 @Database(
     entities = [AppState::class, BandStep::class, PhoneStep::class, HeartRate::class],
     version = 1,

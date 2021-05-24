@@ -5,6 +5,9 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.lockband.*
 import com.example.lockband.utils.*
 
+/**
+ * Adapter that handles navigation to fragments in app
+ */
 class PagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
     private val fragmentsCreators: Map<Int, () -> Fragment> = mapOf(

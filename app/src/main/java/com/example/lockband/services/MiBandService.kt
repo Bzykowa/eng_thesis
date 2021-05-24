@@ -43,7 +43,9 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.abs
 
-
+/**
+ * Service that is responsible for communicating with MiBand 3
+ */
 @AndroidEntryPoint
 class MiBandService : Service(), SensorEventListener {
 
@@ -222,10 +224,14 @@ class MiBandService : Service(), SensorEventListener {
             }
 
         var beforeDate = Calendar.getInstance()
+
         GlobalScope.launch(Dispatchers.IO) {
+
             while (isServiceStarted) {
+
                 delay(90000)
                 Timber.d("Mi Band Service working...")
+
                 val nowDate = Calendar.getInstance()
                 val stepPhoneSamples = stepRepository.getPhoneStepSamplesBetween(beforeDate, nowDate)
                 val stepBandSamples = stepRepository.getBandStepSamplesBetween(beforeDate, nowDate)
@@ -234,12 +240,10 @@ class MiBandService : Service(), SensorEventListener {
                     stepPhoneSamples.last().offset < stepPhoneSamples.first().offset && stepPhoneSamples.last().stepCount > stepPhoneSamples.first().stepCount -> stepPhoneSamples.last().stepCount - stepPhoneSamples.first().stepCount
                     else -> stepPhoneSamples.first().offset
                 }
-
                 val stepBandAmplitude = when {
                     stepBandSamples.last().stepCount > stepBandSamples.first().stepCount -> stepBandSamples.last().stepCount - stepBandSamples.first().stepCount
                     else -> stepBandSamples.last().stepCount + stepBandSamples.first().stepCount
                 }
-
 
                 when {
                     heartRateRepository.getHeartRateSamplesBetween(beforeDate, nowDate).isEmpty() -> {
@@ -373,7 +377,7 @@ class MiBandService : Service(), SensorEventListener {
             actionSetHeartRateNotifyListener()
             delay(OP_TIMEOUT)
             actionSetRealtimeStepsNotifyListener()
-            delay(HR_TIMEOUT)
+            delay(MONITORING_TIMEOUT)
             startService()
         }
         currentIntent.action = MiBandServiceActions.START.name
@@ -456,6 +460,7 @@ class MiBandService : Service(), SensorEventListener {
 
     /**
      * Initiates connection and authentication sequence
+     *
      * @param intent Gives information about device and if it's pairing time
      */
     private fun actionConnect(intent: Intent?) {
@@ -493,6 +498,7 @@ class MiBandService : Service(), SensorEventListener {
 
     /**
      * Request special MTU value
+     *
      * @param mtu MTU to set
      */
     private fun actionRequestMtu(mtu: Int) {

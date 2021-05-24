@@ -10,8 +10,14 @@ import java.security.MessageDigest
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
-//Encrypted password file
 
+/**
+ * Extracts info from an encrypted file
+ *
+ * @param applicationContext Context of app
+ * @param name Name of the file
+ * @return Content of the file in String
+ */
 fun readEncryptedFile(applicationContext: Context, name: String): String {
 
     val encryptedFile = referenceEncryptedFile(applicationContext, name)
@@ -27,6 +33,14 @@ fun readEncryptedFile(applicationContext: Context, name: String): String {
     return String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8)
 }
 
+/**
+ * Writes to an encrypted file
+ *
+ * @param applicationContext Context of the app
+ * @param name Name of the file
+ * @param data Information to write
+ * @return Content of the file in String
+ */
 fun writeEncryptedFile(applicationContext: Context, name: String, data: String) {
 
     val encryptedFile = referenceEncryptedFile(applicationContext, name)
@@ -38,6 +52,13 @@ fun writeEncryptedFile(applicationContext: Context, name: String, data: String) 
     }
 }
 
+/**
+ * Access encrypted file
+ *
+ * @param applicationContext Context of the app
+ * @param name Name of the file
+ * @return EncryptedFile object
+ */
 fun referenceEncryptedFile(applicationContext: Context, name: String): EncryptedFile {
     val mainKey = MasterKey.Builder(applicationContext)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -51,12 +72,25 @@ fun referenceEncryptedFile(applicationContext: Context, name: String): Encrypted
     ).build()
 }
 
+/**
+ * Hashes password for storing in the file using SHA-512
+ *
+ * @param pass Password to hash
+ * @return Hashed Password
+ */
 fun hashPassword(pass: String): String {
     val message: ByteArray = pass.toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-512")
     return String(md.digest(message), StandardCharsets.UTF_8)
 }
 
+/**
+ * Encrypts number from MiBand to authenticate connection using AES/ECB/No Padding
+ *
+ * @param number ByteArray received from MiBand
+ * @param secretKey Key for encrypting number
+ * @return Encrypted ByteArray to send back to MiBand
+ */
 fun encryptAES(number: ByteArray, secretKey: ByteArray): ByteArray {
     val ecipher: Cipher = Cipher.getInstance("AES/ECB/NoPadding")
     val newKey = SecretKeySpec(secretKey, "AES")

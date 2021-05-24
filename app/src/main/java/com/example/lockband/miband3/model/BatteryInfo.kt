@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Battery info
+ * Battery info model
  */
 class BatteryInfo constructor(
     val level: Int,

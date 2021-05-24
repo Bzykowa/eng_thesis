@@ -38,9 +38,6 @@ class MiBand(private val context: Context) : BluetoothListener {
     private var batteryInfoSubject: PublishSubject<BatteryInfo> = PublishSubject.create()
     private var pairInitSubject: PublishSubject<Void> = PublishSubject.create()
     private var pairRequested: Boolean = false
-    private var startVibrationSubject: PublishSubject<Void> = PublishSubject.create()
-    private var stopVibrationSubject: PublishSubject<Void> = PublishSubject.create()
-    private var ledColorSubject: PublishSubject<LedColor> = PublishSubject.create()
     private var userInfoSubject: PublishSubject<Void> = PublishSubject.create()
     private var heartRateSubject: PublishSubject<Void> = PublishSubject.create()
     private var mtuSubject: PublishSubject<Int> = PublishSubject.create()
@@ -212,17 +209,9 @@ class MiBand(private val context: Context) : BluetoothListener {
 
     }
 
-
     /**
-     * Reads Received Signal Strength Indication (RSSI)
+     * Requests MTU
      */
-    fun readRssi(): Observable<Int> {
-        return Observable.create<Int> { subscriber ->
-            rssiSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.readRssi()
-        }
-    }
-
     fun requestMtu(mtu: Int): Observable<Int> = Observable.create<Int> {
         mtuSubject.subscribe(ObserverWrapper(it))
         bluetoothIo.requestMtu(mtu)
@@ -365,7 +354,7 @@ class MiBand(private val context: Context) : BluetoothListener {
     )
 
     /**
-     * Disable Do Not Distrurb mode
+     * Disable Do Not Disturb mode
      */
     fun disableDND() = bluetoothIo.writeCharacteristic(
         Profile.UUID_SERVICE_MILI,
@@ -477,6 +466,8 @@ class MiBand(private val context: Context) : BluetoothListener {
 
     /**
      * Set listener for UserInfo characteristic
+     *
+     * @param listener UserInfo listener
      */
     fun setUserInfoListener(listener: (ByteArray) -> Unit) {
         Timber.d("Setting up listener on User Info characteristic")
@@ -556,7 +547,6 @@ class MiBand(private val context: Context) : BluetoothListener {
 
     /**
      * Disable notifications on initial authentication
-     *
      */
     fun removeAuthenticationListener() {
         Timber.d("Removing pairing listener")
@@ -601,19 +591,6 @@ class MiBand(private val context: Context) : BluetoothListener {
                 listener.onNotify(heartRate)
             }
         }
-    }
-
-    /**
-     * Sets notification listener
-
-     * @param listener Listener
-     */
-    fun setNormalNotifyListener(listener: (ByteArray) -> Unit) {
-        bluetoothIo.setNotifyListener(
-            Profile.UUID_SERVICE_MILI,
-            Profile.UUID_CHAR_NOTIFICATION,
-            listener
-        )
     }
 
     /**
@@ -671,41 +648,6 @@ class MiBand(private val context: Context) : BluetoothListener {
         }
     }
 
-    /**
-     * Vibration methods   *************************************************************************
-     */
-
-    /**
-     * Requests starting vibration
-     */
-    fun startVibration(mode: VibrationMode): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            val protocol = when (mode) {
-                VibrationMode.VIBRATION_WITH_LED -> Protocol.VIBRATION_WITH_LED
-                VibrationMode.VIBRATION_10_TIMES_WITH_LED -> Protocol.VIBRATION_10_TIMES_WITH_LED
-                VibrationMode.VIBRATION_WITHOUT_LED -> Protocol.VIBRATION_WITHOUT_LED
-            }
-            startVibrationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_VIBRATION,
-                Profile.UUID_CHAR_VIBRATION,
-                protocol
-            )
-        }
-    }
-
-    /**
-     * Requests stopping vibration
-     */
-    fun stopVibration(): Observable<Void> {
-        return Observable.create<Void> { subscriber ->
-            stopVibrationSubject.subscribe(ObserverWrapper(subscriber))
-            bluetoothIo.writeCharacteristic(
-                Profile.UUID_SERVICE_VIBRATION, Profile.UUID_CHAR_VIBRATION,
-                Protocol.STOP_VIBRATION
-            )
-        }
-    }
 
     /**
      * BT methods   ********************************************************************************
@@ -754,7 +696,7 @@ class MiBand(private val context: Context) : BluetoothListener {
                 context.sendBroadcast(intent)
             }
         } else {
-            //start locking service and show toast Band disconnected
+            //start locking service
             Intent(context, LockingService::class.java).also {
                 it.action = LockingServiceActions.START.name
                 startForegroundService(context, it)
@@ -793,24 +735,11 @@ class MiBand(private val context: Context) : BluetoothListener {
                     }
                 }
             }
-            // heart rate (fix this crap)
+            // heart rate
             Profile.UUID_SERVICE_HEARTRATE -> {
                 if (characteristicId == Profile.UUID_CHAR_HEARTRATE) {
                     heartRateSubject.onComplete()
                     heartRateSubject = PublishSubject.create()
-                }
-            }
-            // vibration service
-            Profile.UUID_SERVICE_VIBRATION -> {
-                if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
-                    val changedValue = data.value
-                    if (Arrays.equals(changedValue, Protocol.STOP_VIBRATION)) {
-                        stopVibrationSubject.onComplete()
-                        stopVibrationSubject = PublishSubject.create()
-                    } else {
-                        startVibrationSubject.onComplete()
-                        startVibrationSubject = PublishSubject.create()
-                    }
                 }
             }
             Profile.UUID_SERVICE_MIBAND2 -> {
@@ -895,14 +824,6 @@ class MiBand(private val context: Context) : BluetoothListener {
                         pairInitSubject.onError(Exception("Pairing failed"))
                         pairInitSubject = PublishSubject.create()
                     }
-                }
-            }
-            // vibration service
-            Profile.UUID_SERVICE_VIBRATION -> {
-                if (characteristicId == Profile.UUID_CHAR_VIBRATION) {
-                    Timber.d("Enable/disable vibration failed")
-                    stopVibrationSubject.onError(Exception("Enable/disable vibration failed"))
-                    stopVibrationSubject = PublishSubject.create()
                 }
             }
             // heart rate

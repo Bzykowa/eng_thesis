@@ -8,7 +8,12 @@ import timber.log.Timber
 import java.lang.Thread.sleep
 
 
-//check for usage stats permission (needed to monitor apps)
+/**
+ * Check for usage stats permission (needed to monitor apps)
+ *
+ * @param context Context needed for checking if permission is granted
+ * @return True if granted, False otherwise
+ */
 fun hasUsageStatsPermission(context: Context): Boolean {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     val mode = appOps.checkOpNoThrow(
@@ -18,13 +23,21 @@ fun hasUsageStatsPermission(context: Context): Boolean {
     return mode == AppOpsManager.MODE_ALLOWED
 }
 
-//function used for referencing SharedPrefs
+/**
+ * Function used for referencing SharedPreferences
+ *
+ * @param context Context needed to access SharedPreferences
+ * @param name Name of SharedPreferences to reference
+ * @return SharedPreferences of specified name
+ */
 fun getPreferences(context: Context, name: String): SharedPreferences {
     return context.getSharedPreferences(name, 0)
 }
 
 
-//Add delay between BLE operations while not in coroutine
+/**
+ * Add delay between BLE operations while not in coroutine
+ */
 fun pauseBetweenOperations(time: Long = OP_TIMEOUT) {
     try {
         sleep(time)

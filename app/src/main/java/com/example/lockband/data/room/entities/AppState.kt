@@ -4,6 +4,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/**
+ * Entity containing information about locked state of the app
+ */
 @Entity(tableName = "app_states")
 data class AppState(
     @PrimaryKey @ColumnInfo(name = "package_name") val packageName : String,

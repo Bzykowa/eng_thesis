@@ -8,17 +8,14 @@ import com.example.lockband.data.room.repos.AppStateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel managing data about AppStates in Database and updates of it
+ */
 class AppListViewModel @ViewModelInject internal constructor(
     private val appStateRepository: AppStateRepository
 ) : ViewModel() {
 
     val appStates = appStateRepository.getAppStates()
-
-    fun upsertAppState(packageName: String, label: String, locked: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            appStateRepository.upsertAppState(AppState(packageName, label, locked))
-        }
-    }
 
     fun insertAppState(packageName: String, label: String, locked: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {

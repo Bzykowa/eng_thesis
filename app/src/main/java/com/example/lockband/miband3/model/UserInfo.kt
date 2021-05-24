@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 
 /**
- * User information
+ * User information model
  */
 class UserInfo constructor(
     private val uid: Int,

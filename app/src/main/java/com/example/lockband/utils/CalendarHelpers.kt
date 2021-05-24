@@ -3,6 +3,13 @@ package com.example.lockband.utils
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/**
+ * Translate Calendar date to ByteArray for MiBand
+ *
+ * @param calendar Calendar to parse
+ * @param precision Precision of time units
+ * @return ByteArray recognisable by MiBand
+ */
 fun getTimeBytes(calendar: Calendar, precision: TimeUnit): ByteArray? {
     val bytes: ByteArray = when {
         precision === TimeUnit.MINUTES -> {
@@ -22,7 +29,6 @@ fun getTimeBytes(calendar: Calendar, precision: TimeUnit): ByteArray? {
             Conversions.TZ_FLAG_INCLUDE_DST_IN_TZ
         )
     )
-    // 0 = adjust reason bitflags? or DST offset?? , timezone
-    //        byte[] tail = new byte[] { 0x2 }; // reason
+
     return Conversions.join(bytes, tail)
 }

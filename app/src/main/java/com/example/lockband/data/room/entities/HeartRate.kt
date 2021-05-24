@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
 
+/**
+ * Entity containing user's heart rate samples from MiBand
+ */
 @Entity(tableName = "heart_rate")
 data class HeartRate(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id : Int = 0,
