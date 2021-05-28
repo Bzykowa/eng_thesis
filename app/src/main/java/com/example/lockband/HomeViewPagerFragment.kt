@@ -9,7 +9,9 @@ import com.example.lockband.adapters.PagerAdapter
 import com.example.lockband.databinding.FragmentViewPagerBinding
 import dagger.hilt.android.AndroidEntryPoint
 
-
+/**
+ * Fragment which hosts all app fragments and allows easy switching between them
+ */
 @AndroidEntryPoint
 class HomeViewPagerFragment : Fragment(){
 

@@ -28,6 +28,9 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
+/**
+ * Activity responsible for pairing MiBand with smartphone
+ */
 @AndroidEntryPoint
 class PairingActivity : AppCompatActivity() {
 

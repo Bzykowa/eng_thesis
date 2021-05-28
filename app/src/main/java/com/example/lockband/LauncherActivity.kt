@@ -28,7 +28,9 @@ import java.io.File
 import java.util.*
 import javax.inject.Inject
 
-
+/**
+ * Launcher activity which asks for permissions, initiates database and starts either MainActivity or one of set up ones
+ */
 @AndroidEntryPoint
 class LauncherActivity : AppCompatActivity() {
 

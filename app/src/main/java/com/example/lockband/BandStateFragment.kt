@@ -16,6 +16,9 @@ import com.example.lockband.utils.getMiBandSerialNumber
 import com.example.lockband.utils.getMiBandSoftwareRevision
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Fragment containing basic information about MiBand and current battery levels
+ */
 @AndroidEntryPoint
 class BandStateFragment : Fragment() {
     override fun onCreateView(

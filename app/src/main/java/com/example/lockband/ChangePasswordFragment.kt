@@ -11,8 +11,13 @@ import com.example.lockband.utils.PASS_FILE
 import com.example.lockband.utils.hashPassword
 import com.example.lockband.utils.readEncryptedFile
 import com.example.lockband.utils.writeEncryptedFile
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
+/**
+ * Fragment allowing to change password
+ */
+@AndroidEntryPoint
 class ChangePasswordFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,

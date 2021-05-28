@@ -11,6 +11,9 @@ import com.example.lockband.databinding.FragmentStatsBinding
 import com.example.lockband.viewmodels.StatsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Fragment containing data from latest step and hr samples
+ */
 @AndroidEntryPoint
 class EventsStatsFragment : Fragment() {
 

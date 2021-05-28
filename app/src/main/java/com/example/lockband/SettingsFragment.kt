@@ -10,6 +10,9 @@ import com.example.lockband.databinding.FragmentSettingsBinding
 import com.example.lockband.utils.SETTINGS
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Fragment containing list of app settings
+ */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
     override fun onCreateView(

@@ -13,6 +13,9 @@ import com.example.lockband.utils.writeEncryptedFile
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_setup_password.*
 
+/**
+ * Set up activity in which user configures password for unlocking apps
+ */
 @AndroidEntryPoint
 class SetupPasswordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
