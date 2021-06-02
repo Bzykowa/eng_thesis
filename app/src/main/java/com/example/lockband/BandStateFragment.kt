@@ -35,21 +35,6 @@ class BandStateFragment : Fragment() {
         val binding = FragmentBandStateBinding.inflate(inflater, container, false)
         context ?: return binding.root
 
-        binding.switch1.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                Intent(requireContext(), LockingService::class.java).also {
-                    it.action = LockingServiceActions.START.name
-                    requireActivity().startForegroundService(it)
-                }
-            } else {
-                Intent(requireContext(), LockingService::class.java).also {
-                    it.action = LockingServiceActions.STOP.name
-                    requireActivity().startForegroundService(it)
-                }
-            }
-
-        }
-
         binding.serialNum.text = getMiBandSerialNumber(requireContext())
         binding.hardwareRev.text = getMiBandHardwareRevision(requireContext())
         binding.softwareRev.text = getMiBandSoftwareRevision(requireContext())
