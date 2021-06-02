@@ -9,6 +9,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.lockband.databinding.ActivityMainBinding
 import com.example.lockband.utils.LockingServiceState
 import com.example.lockband.utils.getLockingServiceState
+import com.example.lockband.utils.pauseBetweenOperations
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -25,7 +26,10 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
         val navController = navHostFragment.navController
         bottom_nav.setupWithNavController(navController)
+    }
 
+    override fun onResume() {
+        super.onResume()
         if (getLockingServiceState(this) == LockingServiceState.STARTED){
             Intent(this, UnlockActivity::class.java).also {
                 startActivity(it)

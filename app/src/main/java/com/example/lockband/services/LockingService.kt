@@ -49,7 +49,11 @@ class LockingService : Service() {
         if (intent != null) {
             when (intent.action) {
                 LockingServiceActions.START.name -> startService()
-                LockingServiceActions.STOP.name -> stopService()
+                LockingServiceActions.STOP.name -> {
+                    isServiceStarted = false
+                    setLockingServiceState(this, LockingServiceState.STOPPED)
+                    stopService()
+                }
                 else -> Timber.e("This should never happen. No action in the received intent")
             }
         } else {
@@ -156,8 +160,6 @@ class LockingService : Service() {
         } catch (e: Exception) {
             Timber.d("Locking Service stopped without being started: ${e.message}")
         }
-        isServiceStarted = false
-        setMiBandServiceState(this, MiBandServiceState.STOPPED)
     }
 
     /**

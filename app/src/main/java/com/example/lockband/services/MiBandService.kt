@@ -233,20 +233,45 @@ class MiBandService : Service(), SensorEventListener {
                 Timber.d("Mi Band Service working...")
 
                 val nowDate = Calendar.getInstance()
-                val stepPhoneSamples = stepRepository.getPhoneStepSamplesBetween(beforeDate, nowDate)
-                val stepBandSamples = stepRepository.getBandStepSamplesBetween(beforeDate, nowDate)
-                val stepPhoneAmplitude = when{
+                var stepPhoneSamples =
+                    stepRepository.getPhoneStepSamplesBetween(beforeDate, nowDate)
+                var stepBandSamples = stepRepository.getBandStepSamplesBetween(beforeDate, nowDate)
+
+                //When one of mediums didn't registered any new samples while other one did check amplitude between
+                //now and the time of last registered sample
+                when {
+                    stepBandSamples.isEmpty() and stepPhoneSamples.isNotEmpty() -> {
+                        beforeDate = stepRepository.getLatestBandStepSample().timestamp
+                        stepPhoneSamples =
+                            stepRepository.getPhoneStepSamplesBetween(beforeDate, nowDate)
+                    }
+                    stepBandSamples.isNotEmpty() and stepPhoneSamples.isEmpty() -> {
+                        beforeDate = stepRepository.getLatestPhoneStepSample().timestamp
+                        stepBandSamples =
+                            stepRepository.getBandStepSamplesBetween(beforeDate, nowDate)
+                    }
+                }
+
+                //Adjusted for restart and day change
+                val stepPhoneAmplitude = when {
+                    stepPhoneSamples.isEmpty() -> 0
                     stepPhoneSamples.last().offset > stepPhoneSamples.first().offset -> stepPhoneSamples.last().offset - stepPhoneSamples.first().offset
                     stepPhoneSamples.last().offset < stepPhoneSamples.first().offset && stepPhoneSamples.last().stepCount > stepPhoneSamples.first().stepCount -> stepPhoneSamples.last().stepCount - stepPhoneSamples.first().stepCount
                     else -> stepPhoneSamples.first().offset
                 }
+
+                //Adjusted for day change
                 val stepBandAmplitude = when {
+                    stepBandSamples.isEmpty() -> 0
                     stepBandSamples.last().stepCount > stepBandSamples.first().stepCount -> stepBandSamples.last().stepCount - stepBandSamples.first().stepCount
-                    else -> stepBandSamples.last().stepCount + stepBandSamples.first().stepCount
+                    else -> stepBandSamples.last().stepCount
                 }
 
+                Timber.d("${abs(stepPhoneAmplitude - stepBandAmplitude)}; phone - $stepPhoneAmplitude; band - $stepBandAmplitude")
+
                 when {
-                    heartRateRepository.getHeartRateSamplesBetween(beforeDate, nowDate).isEmpty() -> {
+                    heartRateRepository.getHeartRateSamplesBetween(beforeDate, nowDate)
+                        .isEmpty() -> {
                         Timber.d("No hr registered in last 90 seconds. Band off hand. Lock the phone!")
                         Intent(this@MiBandService, LockingService::class.java).also {
                             it.action = LockingServiceActions.START.name
@@ -254,12 +279,13 @@ class MiBandService : Service(), SensorEventListener {
                         }
                         stopService()
                     }
-                    abs(stepPhoneAmplitude-stepBandAmplitude) > MAX_STEPS_DIFF -> {
+                    abs(stepPhoneAmplitude - stepBandAmplitude) > MAX_STEPS_DIFF -> {
                         Timber.d("Steps growth isn't similar between MiBand and phone. Lockdown!")
                         Intent(this@MiBandService, LockingService::class.java).also {
                             it.action = LockingServiceActions.START.name
                             startForegroundService(it)
                         }
+                        stopService()
                     }
                     else -> {
                         beforeDate = nowDate

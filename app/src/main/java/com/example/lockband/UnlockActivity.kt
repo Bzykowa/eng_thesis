@@ -9,10 +9,7 @@ import androidx.databinding.DataBindingUtil
 import com.example.lockband.data.LockingServiceActions
 import com.example.lockband.databinding.ActivityUnlockBinding
 import com.example.lockband.services.LockingService
-import com.example.lockband.utils.PASS_FILE
-import com.example.lockband.utils.getMiBandAddress
-import com.example.lockband.utils.hashPassword
-import com.example.lockband.utils.readEncryptedFile
+import com.example.lockband.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_unlock.*
 
