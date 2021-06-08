@@ -17,9 +17,11 @@ import com.example.lockband.data.room.entities.BandStep
 import com.example.lockband.data.room.entities.HeartRate
 import com.example.lockband.data.room.entities.PhoneStep
 import com.example.lockband.utils.DATABASE_NAME
+import com.example.lockband.utils.KEY
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.*
+import net.sqlcipher.database.SupportFactory
+
 
 /**
  * Room Database class. Prepopulates app_states during onCreate()
@@ -48,6 +50,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun buildDatabase(context: Context): AppDatabase {
             return Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
+                .openHelperFactory(SupportFactory(KEY))
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {

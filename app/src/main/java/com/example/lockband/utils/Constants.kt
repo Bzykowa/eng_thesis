@@ -65,7 +65,7 @@ const val BT_TIMEOUT: Long = 30000L
  * MiBand placeholders and constraints
  */
 
-//Mi Band authentication key
+//Mi Band authentication key and DB password
 val KEY = byteArrayOf(
     0x30,
     0x31,

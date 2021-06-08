@@ -25,7 +25,7 @@ object Protocol {
     //Band settings
     private const val ENDPOINT_DISPLAY: Byte = 6
     val COMMAND_REQUEST_ALARMS = byteArrayOf(0x0d)
-    val SET_ENGLISH_LANGUAGE: ByteArray = parseHexBinary("061700656e5f5553")!!
+    val SET_ENGLISH_LANGUAGE: ByteArray = parseHexBinary("061700656e5f5553")
     val COMMAND_DISABLE_BAND_SCREEN_UNLOCK = byteArrayOf(ENDPOINT_DISPLAY, 0x16, 0, 0)
     val COMMAND_NIGHT_MODE_OFF = byteArrayOf(0x1a, 0x00)
     val DATEFORMAT_DATE_DD_MM_YYYY = byteArrayOf(

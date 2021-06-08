@@ -1,16 +1,18 @@
 package com.example.lockband.viewmodels
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.example.lockband.data.room.repos.HeartRateRepository
 
 import com.example.lockband.data.room.repos.StepRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel allowing real-time updates of values in EventsStatsFragment
  */
-class StatsViewModel @ViewModelInject internal constructor(
+@HiltViewModel
+class StatsViewModel @Inject internal constructor(
     private val stepRepository: StepRepository,
     private val hrRepository: HeartRateRepository
 ) : ViewModel() {
