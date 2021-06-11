@@ -1,0 +1,182 @@
+\chapter{Analiza zagadnienia}
+\thispagestyle{chapterBeginStyle}
+\label{rozdzial1}
+W niniejszym rozdziale omówiono mankamenty związane z uwierzytelnianiem na urządzeniach mobilnych oraz kwestie prywatności wrażliwych danych
+pochodzących z urządzeń typu smartband. Przedstawiono zarys systemu oraz jego założenia funkcjonalne. Określono, jakie dane będą rejestrowane
+przez aplikację oraz cel ich gromadzenia. Określono sposoby analizy danych pod kątem wykrywania sytuacji, w których smartfon jest pozostawiony
+bez nadzoru. Opisano mechanizmy podjęte w celu zabezpieczenia systemu oraz przechowywanych danych. Porównano istniejące rozwiązania z proponowanym w pracy,
+wskazując na innowacje oraz różnice.
+
+\section{Przedstawienie problemu}
+Kwestia bezpieczeństwa smartfonów jest w dzisiejszych czasach niezwykle ważną sprawą. Powszechnie stosowane metody ograniczenia dostępu, takie
+jak uwierzytelnienie przy użyciu hasła bądź odcisku palca, są niewystaraczające. Szczególnie jest to widoczne przy atakach fizycznych, gdzie na
+przykład można:
+\begin{itemize}
+    \item wykorzystać nieprzytomność użytkownika, by użyć jego odcisku palca;
+    \item poznać hasło w postaci symbolu na podstawie śladów palców na ekranie dotykowym;
+    \item uzyskać dostęp, gdy użytkownik pozostawi odblokowane urządzenie bez opieki.
+\end{itemize}
+
+\indent Zważywszy na fakt, iż telefony komórkowe stają się coraz bardziej powszechne\cite{Smartphone-Users-W-wide} oraz zastępują komputery jako urządzenia wykorzystywane do łączenia się z
+siecią (około połowa ruchu sieciowego pochodzi z urządzeń mobilnych \cite{Share-Of-Internet-Traffic-Mobile}), przechowują one wiele wrażliwych danych
+o swoich użytkownikach. Dlatego koniecznością jest wprowadzenie dodatkowego systemu zabezpieczeń, w
+szczególności wykorzystanie uwierzytelnienia wielopoziomowego, w celu zabezpieczenia urządzenia przed dostępem osób niepowołanych. Często można
+spotkać się z wykorzystaniem smartfonów jako autentykatorów (kody SMS oraz dedykowane aplikacje) do innych systemów informatycznych.
+Natomiast do autoryzacji dostępu do smartfona nie wykorzystywane są żadne dodatkowe autentykatory. Głównymi przeszkodami do ich implementacji są:
+\begin{itemize}
+    \item niepraktyczność;
+    \item monofunkcyjność.
+\end{itemize}
+
+\indent Nieporęczność fizycznych kluczy bezpieczeństwa objawia się szczególnie w ich formie - są to niewielkie urządzenia przypominające pamięć USB
+lub kartę płatniczą. Dzięki temu łatwo je zgubić lub o nich zapomnieć, co uniemożliwia użytkownikowi dostęp do systemu. Często też w smartfonie
+brakuje niezbędnej do odczytania klucza infrastruktury, na przykład czytnika smart cardów czy modułu NFC. \cite{Usability-Two-Factor}.
+Do niepraktyczności tego rozwiązania przyczynia się także wyżej wynieniona monofunkcyjność kluczy. Oferują one jedynie autoryzację użytkownika przy
+użyciu kluczy kryptograficznych bądź jednorazowych kodów i służą do logowania na stronach internetowych oraz przy autoryzacji w niektórych aplikacjach,
+co znacznie ogranicza pole ich zastosowania. Dlatego potrzebne jest świeże spojrzenie na tą technologię, które pozwoli stworzyć
+przystępne systemy stałej autoryzacji bazujące na wielu czynnikach środowiskowych oraz wykorzystujące powszechnie używane urządzenia
+by skutecznie zabezpieczyć dane szerokiej bazy użytkowników smartfonów.
+\newline\newline
+\indent Platformy mobilne jako dynamicznie rozwijające się technologie wspierają wachlarz urządzeń peryferyjnych, które mogły by zostać użyte jako klucz
+bezpieczeństwa. Jednym z nich jest \textbf{inteligentna opaska}, potocznie zwana ``smartband'' bądź ``fitness tracker''. Jest to urządzenie o
+kształcie zegarka na rękę monitorujące aktywność użytkownika taką, jak: ilość wykonanych kroków, puls czy sen. Dane gromadzone przez opaski są
+przesyłane protokołem Bluetooth do aplikacji towarzyszącej udostępnionej przez producenta, skąd zostają przesłane na zewnętrzne serwery. Nie
+jest to bezpieczne rozwiązanie, zważywszy na: wrażliwość powyższych informacji, powiązanie ich z danymi osobowymi użytkownika oraz fakt,
+że mogą zostać udostępnione osobom trzecim \cite{Fitness-Tracker-Security}. Z tego powodu konieczny jest rozwój systemów przechowywania informacji o aktywności pochodzących z
+inteligentnych opasek, które zapewnią użytkownikowi prywatność i nie będą bezpośrednio powiązane z producentem danego urządzenia.
+
+\section{Opis systemu}
+Zniwelowanie słabych punktów autentykacji przy użyciu kluczy sprzętowych jest niezwykle ważne przy implementacji tego rozwiązania w urządzeniach
+mobilnych. W pracy skupiono się na usprawnieniu poniższych niedoskonałości tej technologii:
+\begin{itemize}
+    \item prawdopodobieństwo utraty urządzenia autoryzującego;
+    \item niska powszechność kluczy sprzętowych;
+    \item ograniczona możliwość stałej autoryzacji.
+\end{itemize}
+
+\indent Proponowany system opiera się na wykorzystaniu smartbanda jako inteligentnego klucza sprzętowego. Autoryzacja odbywa się poprzez analizę danych o
+aktywności pobieranych z opaski w krótkich odstępach czasu. Po wykryciu sytuacji, gdzie smartfon jest prawdopodobnie poza nadzorem użytkownika,
+następuje uruchomienie blokady wybranych aplikacji do momentu wprowadzenia poprawnego hasła w systemie. Uniemożliwienie dostępu dokonuje się poprzez
+monitorowanie, która aplikacja znajduje się na pierwszym planie systemu Android. W przypadku wykrycia niedozwolonego programu użytkownik zostaje
+przeniesiony do aktywności odpowiedzialnej za autoryzację.
+\newline\newline
+\indent Wybór smartbanda do pełnienia funkcji klucza został podyktowany dużą popularnością urządzeń tego typu. Na rynku dostępnych jest wiele niskobudżetowych
+modeli, które gromadzą dane wystarczające do dość dokładnego określenia aktywności użytkownika. Z tego powodu inteligentne opaski są idealne, by oprzeć
+o nie system stałej autoryzacji. Dużą zaletą smartbanda jest jego niepozorna forma, czyli zegarek na rękę. Użytkownicy noszą go przez dużą
+część dnia, a nawet w nocy, przez co znacznie zmniejsza się ryzyko jego utraty bądź kradzieży. Kolejnym atutem tego urządzenia jest fakt, iż pełni ono znacznie więcej funkcji niż klucz sprzętowy. Dzięki temu smartband jest znacznie bardziej praktyczny dla użytkownika.
+
+\subsection{Założenia funkcjonalne}
+Wymagania postawione w niniejszej pracy, to:
+\begin{itemize}
+    \item implementacja systemu blokującego dostęp do aplikacji;
+    \item zapewnienie komunikacji z inteligentną opaską przy wykorzystaniu protokołu Bluetooth Low Energy;
+    \item lokalne przechowywanie danych o aktywności użytkownika;
+    \item zabezpieczenie aplikacji przed najczęstszymi atakami;
+    \item wdrożenie prostej analizy zachowania użytkownika w czasie rzeczywistym.
+\end{itemize}
+
+\subsection{Charakterystyka gromadzonych danych}
+System opiera się w głównej mierze o informacje rejestrowane przez inteligentną opaskę. Zaliczają się do nich:
+\begin{itemize}
+    \item liczba wykonanych kroków danego dnia;
+    \item aktualna wartość pulsu;
+    \item moment zaśnięcia;
+    \item moment zdjęcia opaski.
+\end{itemize}
+
+\indent Powyższe informacje pozwalają określić stan fizyczny użytkownika, co jest kluczowe dla działania systemu. Dodatkowo dane o aktywności są uzupełniane
+o wartość sensora liczącego kroki w telefonie. Dzięki temu możliwa jest detekcja sytuacji, w których osoba eksploatująca może nie być w stanie
+nadzorować swojego telefonu, na przykład podczas snu bądź po pozostawieniu go na biurku w pracy. Przechowywane są także podstawowe informacje o opasce takie, jak: adres MAC oraz stan baterii. Umożliwia to ponowne połączenie z opaską oraz monitorowanie stanu urządzenia w aplikacji.
+\newline\newline
+\indent Oprócz informacji o aktywności system przechowuje listę zainstalowanych aplikacji. Pozwala to użytkownikowi dostosować działanie systemu do własnej preferencji. Najważniejszą przechowywaną informacją jest hasz hasła użytkownika, które jest wymagane do odblokowania dostępu do wybranych wcześniej aplikacji.
+
+\subsection{Analiza aktywności}
+Ważną częścią pracy jest wykrywanie sytuacji, w których smartfon jest poza nadzorem. Aby było to możliwe
+system bada aktywność użytkownika, korzystając z określonych w powyższym podrozdziale danych, pod kątem czterech zdarzeń:
+\begin{itemize}
+    \item opaska traci połączenie ze smartfonem;
+    \item użytkownik zasypia;
+    \item występują znaczne rozbieżności pomiędzy zarejestrowanymi krokami;
+    \item użytkownik zdejmuje opaskę.
+\end{itemize}
+
+\indent Utrata połączenia wykrywana jest na podstawie metod nasłuchujących zmiany w statusie połączenia Bluetooth. Sen wykrywany jest poprzez
+otrzymanie powiadomienia z opaski o zarejestrowaniu odpowiedniego zdarzenia. Rozbieżności
+w rejestrowanych krokach monitorowane są przez porównanie tempa wzrostu kroków mierzonych przez smartbanda oraz telefon, a zdjęcie opaski rozpoznaje się
+poprzez brak wykrywanego pulsu, bądź poprzez otrzymanie powiadomienia ze smartbanda. W przypadku wykrycia jednej z powyższych sytuacji następuje
+automatyczne uruchomienie blokady aplikacji.
+
+\subsection{Zabezpieczenie systemu}
+Aby proponowany system zapewniał ochronę przed dostępem przez osoby niepowołane musi działać nieprzerwanie i być odporny na wyłączenie go przez atakującego. W tym celu usługi systemu są zaimplementowane jako \textit{Foreground Service}, by
+działać stale w tle w zgodzie z limitami obowiązującymi od Androida Oreo\cite{BGLimitsOreo}. Wykorzystano technologię \textit{Wake Lock}\cite{WakeLock} w celu umożliwienia aplikacji pozostania w stanie pełnej sprawności
+w przypadku, gdy telefon przechodzi w \textit{Doze Mode}\cite{DozeMode}. Wdrożono także \textit{BroadcastReceiver}, który jest
+odpowiedzialny za monitorowanie restartów urządzenia. Po wykryciu ukończonego uruchomienia smartfona, usługa blokująca oraz gromadząca dane
+są restartowane według stanu sprzed wyłączenia urządzenia.
+\newline\newline
+\indent System jest także odporny na najpopularniejsze podatności w aplikacjach mobilnych związanych z danymi medycznymi\cite{Security-Mobile-Health-Apps}. Dzięki lokalnemu przechowywaniu informacji zapewniona jest odporność na ataki za pośrednictwem sieci. System zabezpieczono przed \textit{Intent spoofing}, dzięki wykorzystaniu jedynie dokładnie sprecyzowanych Intentów oraz zabezpieczeniu komponentów przed exportem do innych aplikacji. By zapewnić bezpieczeństwo gromadzonych danych baza danych oraz plik przechowujący hasło zostały zaszyfrowane przy użyciu algorytmu szyfrowania AES. Natomiast mniej ważne informacje są przechowywane w \textit{SharedPreferences}, do których dostęp ma tylko projektowany system.
+\section{Analiza porównawcza istniejących systemów}
+Na rynku znajduje się wąskie grono rozwiązań o podobnych funkcjonalnościach. Poniżej zaprezentowano najciekawsze z nich. Określono ich zalety oraz
+wady, a także porównano je z systemem zaprezentowanym w pracy.
+\subsection{Yubikey}
+Yubikey to nowoczesne klucze sprzętowe produkowane przez Yubico, wykorzystywane jako część wieloskładnikowej autoryzacji bądź autentykacji
+bazowanej na jednorazowych hasłach w szerokim gronie serwisów internetowych oraz systemów operacyjnych. Wspierają wiele protokołów kryptograficznych
+i autentykacyjnych, w tym: WebAuthn, FIDO2, U2F, smart cardy kompatybilne z PIV oraz Yubico OTP. Modele dedykowane urządzeniom mobilnym
+do komunikacji ze smartfonem wykorzystują moduł NFC, USB-C oraz złącze Lightning. Autoryzacja odbywa się poprzez umieszczenie klucza w złączu USB-C
+bądź przystawienie go do tyłu telefonu dla urządzeń z włączonym NFC\cite{Yubikey}.
+\newline\newline
+\indent Yubikey posiada wiele zalet. Jest wspierany przez dużą liczbę serwisów i systemów, dzięki czemu wachlarz aplikacji autentykacyjnych oraz kodów SMS
+czy wiadomości e-mail można zastąpić jednym urządzeniem. Pomaga uniknąć wykradnięcia haseł poprzez phishing czy przechwycenie SMSa. Jest prosty w
+użyciu dla użytkownika i nie wymaga ładowania. Jest również odporny na wodę oraz zgniecenie.
+\newline\newline
+\indent Dużą wadą Yubikey jest jego cena. Modele zapewniające autoryzację na smartfonach kosztują na tą chwilę minimum 45€ bez podatku VAT\cite{Yubi-Price}, czyli około 200 zł.
+Dla zwykłego użytkownika może być to zbyt duża kwota, gdy może skorzystać z darmowych wariantów dwuskładnikowej autoryzacji. Forma klucza
+(małe urządenie przypominające pendrive) sprzyja jego łatwemu zgubieniu, co uniemożliwia dostęp do serwisów, które z niego korzystały. By temu
+zaradzić producent zaleca posiadać zapasowy klucz, co wiąże się z dodatkowym wydatkiem rzędu 200 zł. Nie należy także zapominać o tym, że nie wszystkie
+telefony wspierają NFC oraz USB-C. Podczas, gdy rynek smartfonów dąży do wdrożenia powszechnie standardu USB-C, w przypadku NFC nie wszędzie jest on
+potrzebny. Ów moduł służy głównie do płatności mobilnych, dlatego na przykład w Chinach, gdzie powszechny jest system płatności przez kody QR\cite{Mobile-Payments-China}, jest po prostu zbędny. Zważając na popularność chińskich telefonów na światowym rynku prawdopodobnym jest, iż nawet nowe modele nie będą wspierać technologii NFC, przez co utrudnią, a nawet uniemożliwią korzystanie z kluczy Yubikey.
+\newline\newline
+\indent W proponowanym rozwiązaniu jako klucz sprzętowy zostało wykorzystane urządzenie, które eliminuje wymienione wyżej wady Yubikey. Inteligentna opaska
+jest przeznaczona do noszenia na ręce, dzięki czemu ciężej ją zgubić lub ukraść. Smartband komunikuje się ze smartfonem poprzez wykorzystywany
+powszechnie moduł Bluetooth, co pozwoli wdrożyć system w znacznie szerszym gronie urządzeń. Kolejnym atutem wybranego urządzenia jest jego cena.
+Inteligentną opaskę można nabyć za mniej niż 100 zł, co sprawia, że jest przystępna dla wielu użytkowników. Najważniejszą różnicą między Yubikey a
+proponowanym systemem jest sposób autentykacji. Dzięki zastosowaniu opaski można stale autoryzować użytkownika bazując na wielu zmiennych czynnikach w
+przeciwieństwie do Yubikey, które jest jedynie nośnikiem przechowującym klucz, który jest wykorzystywany przy pojedynczych logowaniach bądź
+jako dodatkowa autoryzacja przy wrażliwych czynnościach.
+\subsection{Haven}
+Haven jest darmową aplikacją open-source dla urządzeń działających pod systemem Android zaprojektowaną w celu monitorowania aktywności wokół urządzenia,
+korzystając z jego wbudowanych sensorów. Przy wykryciu zmian w środowisku aplikacja gromadzi zdjęcia oraz nagrania dźwięku, po czym wysyła je poprzez
+Signala bądź Tora do użytkownika. Aplikacja została stworzona z myślą o dziennikarzach śledczych, którzy są narażeni na ataki ze strony policji bądź innych
+intruzów\cite{Haven}.
+\newline\newline
+\indent Główną zaletą Haven jest to, iż potrafi zastąpić drogie fizyczne systemy bezpieczeństwa. Do korzystania z tego rozwiązania wystarczy stary telefon z Androidem oraz opcjonalnie karta SIM, by zapewnić dostęp do mobilnego Internetu. Zapewnia to użytkownikowi tani, a także łatwy w przenoszeniu system pozwalający monitorować na przykład pokój w hotelu. Pozwala to zdobyć dowody w przypadku ataku typu ``evil maid", czyli gdy osoba trzecia uzyskuje fizyczny dostęp do urządzenia, wykorzystując nieobecność właściciela, w celu wykradnięcia danych bądź zainstalowaniu szpiegującego oprogramowania \cite{Evil-Maid}.
+\newline\newline
+\indent Wadą Haven jest zdecydowanie fakt, że nie zapobiega ona atakom, tylko zdobywa dowody ich wystąpienia. Kolejnym mankamentem aplikacji jest jej nadmierna czułość. Wykrywane są mikroruchy smartfona oraz drobne dźwięki, przez co korzystanie z Haven w głośniejszych środowiskach, jak na przykład w biurze może wiązać się z setkami fałszywie wykrytych zdarzeń.
+\newline\newline
+\indent Zaproponowany w pracy system również skupia się na atakach wykonywanych poprzez fizyczny dostęp do urządzenia, lecz w zupełnie inny sposób. Proponowana aplikacja ma na celu wykorzystanie danych ze smartbanda w celu zabezpieczenia smartfona, gdy użytkownik nie jest w stanie nadzorować go samodzielnie. W
+przeciwieństwie do Haven, które wykorzystuje telefon do zbierania informacji, ale w żadnym stopniu nie korzysta z nich żeby uniemożliwić dostęp do
+urządzenia. Oba rozwiązania monitorują przeróżne wydarzenia rejestrowane przez dostępne sensory. Podczas, gdy Haven skupia się na środowisku,
+proponowana aplikacja skupia się na samym użytkowniku. Haven również w żadnym stopniu nie analizuje zbieranych danych, gdyż jego głównym zadaniem jest
+jedynie raportowanie tego, co dzieje się wokoło. Z kolei proponowane rozwiązanie w pewnym stopniu bierze pod lupę gromadzone dane i na ich podstawie
+określa, kiedy uruchomić blokadę urządzenia.
+\subsection{Android Management API}
+Android Management API jest częścią Android Enterprise, inicjatywy dostarczającej deweloperom narzędzi pozwalających budować rozwiązania dla przedsiębiorstw w celu zarządzania flotą mobilnych urządzeń\cite{AM-API}. Program ten jest dedykowany dostawcom usług zarządzania mobilnością w przedsiębiorstwie (EMM). Deweloperzy zapewniają swoim klientom lokalną bądź opartą na chmurze konsolę EMM. Wewnątrz konsoli klienci generują tokeny rejestracji urządzeń oraz tworzą zasady zarządzania (policies). Zasada zarządzania reprezentuje grupę ustawień rządzących zachowaniem zarządzanego urządzenia oraz zainstalowanymi aplikacjami. Następnie urządzenia są zapisywane do systemu przy użyciu wcześniej stworzonych tokenów. Podczas rejestracji, każde urządzenie instaluje aplikację towarzyszącą API, Android Device Policy. Kiedy do danego urządzenia są przyporządkowane zasady, powyższa aplikacja automatycznie wdraża je.
+\newline\newline
+\indent Android Management API daje niespotykane poza aplikacjami systemowymi możliwości
+zarządzania urządzeniem. Pozwala między innymi na:
+\begin{itemize}
+    \item wyłączenie określonych modułów komunikacji takich, jak Bluetooth, Wi-Fi, SMS, rozmowy czy USB;
+    \item blokadę instalacji bądź dezinstalacji aplikacji;
+    \item dostosowanie aplikacji dostępnych w sklepie Play;
+    \item wymuszenie określonych ustawień sieci;
+    \item masowe nadanie pozwoleń aplikacjom;
+    \item określenie sposobów autoryzacji oraz wymogów hasła;
+    \item włączenie aplikacji w trybie Kiosk;
+    \item zdalne wymazanie danych z urządzenia\cite{AM-Policies}.
+\end{itemize}
+
+Główną wadą tego API jest brak możliwości zastosowania go poza przedsiębiorstwami. Urządzeniom korzystającym z tego rozwiązania zasady narzucane są odgórnie przez administratora, więc przy ogromnej liczbie smartfonów, gdzie każdy wymagałby innego zestawu zasad oraz ich aktualizacji na bieżąco, zarządzanie byłoby kłopotliwe. Jest to fundamentalny problem, przez który proponowany system nie może wykorzystać możliwości zabezpieczających Android Management API.
+\newline\newline
+\indent Porównując oba rozwiązania można zauważyć, iż są swoimi przeciwieństwami. Tworzony system jest z założenia czysto lokalny oraz tworzony z myślą o zwykłych użytkownikach, dlatego wszystkie mechanizmy zabezpieczające również muszą być aplikowalne bez udziału zewnętrznych serwisów, a także konfigurowalne przez użytkownika. Z kolei przy wykorzystaniu tego API konieczna jest rejestracja urządzenia w systemie EMM danego przedsiębiorstwa, a zasady dotyczące bezpieczeństwa są narzucane z góry.
+
+
+

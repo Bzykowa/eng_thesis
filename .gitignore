@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 /app/src/main/java/com/example/lockband/bt/
+/thesis text/*.png
+/thesis text/*.toc
+/thesis text/Makefile
+/thesis text/*.aux
+/thesis text/*.bbl
+/thesis text/aktyw.pdf
+/thesis text/*.out
+/thesis text/*.blg
+/thesis text/praca.fdb_latexmk
+/thesis text/*.log
+/thesis text/*.synctex.gz
+/thesis text/*.fls

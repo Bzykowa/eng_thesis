@@ -1,0 +1,16 @@
+\chapter{Implementacja aplikacji}
+\thispagestyle{chapterBeginStyle}
+
+\section{Opis technologii}
+
+Do implementacji systemu został użyty język Kotlin w wersji 1.3.61. Interfejs graficzny zaprojektowano w oparciu o komponenty pochodzące z
+biblioteki AndroidX oraz Material. Do nawigacji w głównej aktywności aplikacji wykorzystano NavigationUI. Do implementacji bazy danych użyto biblioteki
+Room zapewniającej poziom abstrakcji nad SQLite. Wykorzystano bibliotekę Hilt/Dagger w celu wstrzykiwania dependencji w obrębie aplikacji w celu zredukowania
+tak zwanego ``boilerplate code''.
+\newline\newline
+W systemie wykorzystano inteligentną opaskę Xiaomi MiBand 3. Komunikacja z nią została zaimplementowana na podstawie nieoficjalnego SDK opartego o bibliotekę
+RxAndroid pozwalającą tworzyć asynchroniczne programy bazujące na wydarzeniach korzystając z obserwowalnych sekwencji.
+
+
+\section{Omówienie wybranych kodów źródłowych}
+

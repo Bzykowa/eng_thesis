@@ -1,0 +1,132 @@
+\chapter{Projekt aplikacji}
+\thispagestyle{chapterBeginStyle}
+W tym rozdziale przedstawiono szczegółowy projekt systemu korzystając z notacji UML oraz uwzględniając założenia funkcjonalne z rozdziału \ref{rozdzial1}.
+Scharakteryzowano przypadki użycia oraz towarzyszące im scenariusze.
+
+\section{Przypadki użycia}
+Poniżej przedstawiono ogólny diagram przypadków użycia \ref{use_case}. Szczegółowe scenariusze zostały zdefiniowane w odpowiednich podsekcjach tego podrozdziału.
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.85\textwidth]{UseCaseDiagram.png}
+    \end{center}
+    \caption{{\color{dgray}Diagram przypadków użycia w systemie.}} \label{use_case}
+\end{figure}
+
+\subsection{Ustal hasło}
+W tym przypadku użytkownik systemu ustala hasło, które jest potrzebne przy odblokowywaniu dostępu do zablokowanych aplikacji. Aktorami są Użytkownik oraz System. Obecny przypadek użycia jest inicjowany przy pierwszym uruchomieniu aplikacji, kiedy nie istnieje jeszcze zaszyfrowany plik, w którym będzie przechowywane hasło. Po wykonaniu przypadku w systemie zostaje zarejestrowane hasło użytkownika, które będzie później wykorzystane w celu dezaktywacji blokady aplikacji. Scenariusz składa się z następującego przepływu głównego:
+\begin{enumerate}
+    \item Aplikacja wyświetla formularz zawierający pola Hasło oraz Powtórz hasło.
+    \item Użytkownik wprowadza identyczne hasła do podanych pól oraz zatwierdza wprowadzone dane przyciskiem znajdującym się poniżej.
+    \item System sprawdza zgodność haseł oraz czy spełniają wymagane kryteria.
+    \item System tworzy zaszyfrowany plik i zapisuje w nim hasz hasła.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 3. Jeśli wprowadzone hasła nie są zgodne:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Zostaje wyświetlony komunikat o błędzie.
+    \item Następuje powrót do kroku numer 2 w głównym przepływie.
+\end{enumerate}
+
+\subsection{Parowanie urządzenia}
+W tym przypadku użytkownik systemu skanuje otoczenie, korzystając z modułu Bluetooth w poszukiwaniu najbliższej opaski MiBand, a następnie nawiązuje z nią pierwsze połączenie. Aktorami są Użytkownik, System oraz Opaska. Przypadek ten występuje przy pierwszym uruchomieniu systemu, kiedy zostało już ustalone hasło odblokowujące. Po zakończeniu system jest sparowany z opaską MiBand, z którą komunikacja jest kluczowym punktem działania systemu. W systemie zostaje także zapisany adres MAC opaski, dzięki czemu będzie można z łatwością ponownie połączyć się z nią. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Użytkownik naciska przycisk ``Skan''.
+    \item System rozpoczyna skanowanie urządzeń Bluetooth Low Energy w celu znalezienia Opaski.
+    \item System wyświetla znalezione Opaski w formie listy. 
+    \item Użytkownik wybiera Opaskę, do której się podłączy poprzez naciśnięcie na jej nazwę.
+    \item System tworzy więź z wybraną Opaską i inicjuje pierwsze połączenie.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 3. Jeśli nie znaleziono żadnej Opaski:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Zostaje wyświetlony komunikat o błędzie.
+    \item Następuje powrót do kroku numer 1 w głównym przepływie.
+\end{enumerate}
+\quad\newline
+\indent 5. Jeśli wystąpi błąd połączenia z Opaską:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Następuje powrót do kroku numer 4 w głównym przepływie.
+\end{enumerate}
+
+\subsection{Wybierz aplikacje do zablokowania}
+
+\subsection{Zmień hasło}
+
+\subsection{Sprawdź stan opaski}
+
+\subsection{Sprawdź statystyki aktywności}
+
+\subsection{Uruchomienie zablokowanej aplikacji}
+
+\subsection{Wprowadzenie hasła}
+
+\subsection{Zaktualizuj inne zdarzenia}
+
+\subsection{Zaktualizuj puls}
+
+\subsection{Zaktualizuj ilość kroków z opaski}
+
+\subsection{Zaktualizuj stan baterii}
+
+\subsection{Zaktualizuj ilość kroków z telefonu}
+
+\section{Diagramy klas}
+
+W tej sekcji należy przedstawić diagramy klas dla odpowiednich elementów systemu zidentyfikowane na podstawie wcześniejszych rozważań
+
+\section{Diagramy aktywności}
+
+W tej sekcji należy przedstawić diagramy aktywności dla elementów systemu i odpowiednich procesów wynikające z wcześniejszej analizy.
+
+
+\section{Diagramy sekwencji}
+
+W tej sekcji należy przedstawić diagramy sekwencji dla obiektów systemu zidentyfikowanych na podstawie wcześniejszych rozważań. Należy wykorzystać nazewnictwo wprowadzone w poprzednich rozdziałach, w szczególności odpowiadające definicjom wprowadzonych klas.
+
+\section{Diagramy stanów}
+
+W tej sekcji należy przedstawić diagramy stanów w których może znaleźć się system. Diagramy te są szczególnie istotne przy projektowaniu systemów czasu rzeczywistego.
+
+\section{Projekt bazy danych}
+
+W tej sekcji należy przedstawić projekt bazy danych. Należy omówić wycinek rzeczywistości i odpowiadające mu zidentyfikowane elementy systemu, których wartości będą podlegać utrwalaniu. Należy przedyskutować wybór typów danych dla atrybutów poszczególnych obiektów. Należy uzasadnić wybór platformy DBMS. Dla relacyjnych baz danych należy przedyskutować jej normalizację.
+
+\section{Opis protokołów}
+\begin{itemize}
+    \item inicjalizacja komunikacji z opaską
+\end{itemize}
+
+W projektowanym systemie główną rolę gra inteligentna opaska. Komunikuje się ona ze smartfonem przy użyciu technologii Bluetooth Low Energy oraz protokołu ATT. BLE w porównaniu
+do klasycznego połączenia Bluetooth wykorzystuje znacznie niższe zasoby energii zachowując podobny zasięg, dzięki czemu znalazło
+szerokie zastosowanie w urządzeniach peryferyjnych.
+\subsection{Protokół ATT}
+Protokół Attribute pozwala urządzeniom odczytywać i zapisywać drobne dane przechowywane na serwerze.
+Przechowywane wartości są nazywane atrybutami. Atrybuty identyfikowane są poprzez
+UUID, aby określić typ przechowywanych w nich danych. UUID mogą być powszechnie znanymi
+numerami zdefiniowanymi w oficjalnej specyfikacji Bluetooth albo być
+określone przez producenta jako 128-bitowa liczba. Wiadomości w tym
+protokole są przesyłane przez kanały L2CAP, znanymi jako nośniki ATT. W ATT
+występują dwie role: Klienta oraz Serwera. Urządzenie może pełnić obie te role
+jednocześnie. Serwer przechowuje atrybuty oraz akceptuje żądania, komendy
+oraz potwierdzenia pochodzące od klienta. Serwer wysyła także odpowiedzi na
+żądania, a gdy zostanie skonfigurowany przez wyższą warstwę, wysyła asynchronicznie powiadomienia
+do klienta, kiedy występują na nim określone zdarzenia.
+\subsection{GATT}
+Komunikacja aplikacji z opaską odbywa się przy wykorzystaniu GATT (Generic Attribute Profile). Jest to technologia zbudowana na protokole Attribute (ATT), która
+ustala przebieg powszechnych operacji oraz framework dla danych transportowanych przez ATT.
+GATT określa format danych przesyłanych przez protokół Attribute. Atrybuty są
+formatowane jako Usługi oraz Charakterystyki. Usługi są zbiorem danych oraz
+przypisanych im zachowań niezbędnych do zapewnienia określonej funkcji urządzenia.
+Z kolei Charakterystyki są wartościami użytymi w Usłudze wraz z ich właściwościami
+oraz informacjami o tym jak są wyświetlane bądź reprezentowane. Dzięki
+wykorzystaniu określonej struktury danych przez GATT możliwe jest przeglądanie
+dostępnych Usług oraz Charakterystyk, nawet gdy klient nie jest wyspecjalizowany
+pod dany serwer.
+\subsection{Komunikacja z MiBand 3}
+
+
+\section{Opis algorytmów}
+
+W tej sekcji należy wymienić i przedyskutować algorytmy wykorzystywane w systemie. Algorytmy należy przedstawić w pseudokodzie (wykorzystać pakiet \texttt{algorithm2e}). Omówienia poszczególnych kroków algorytmów powinny zawierać odwołania do odpowiednich linii pseudokodu. Dla zaproponowanych autorskich algorytmów należy przeprowadzić analizę ich złożoności czasowej i pamięciowej.
