@@ -61,9 +61,9 @@ W tym przypadku użytkownik aplikacji wybiera z listy zainstalowanych aplikacji 
 \end{enumerate}
 
 \subsection{Zmień hasło}
-W tym przypadku użytkownik aplikacji zmienia hasło odblokowujące dostęp do zablokowanych aplikacji. Aktorami są Użytkownik oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana, nie ma uruchomionej blokady oraz Użytkownik uruchomił aplikację. Po zakończeniu system posiada informację o nowym haśle, które będzie wykorzystywane od tej pory do odblokowywania dostępu. Główny przepływ składa się z następujących kroków:
+W tym przypadku użytkownik aplikacji zmienia hasło odblokowujące dostęp do zablokowanych aplikacji. Aktorami są Użytkownik oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana, nie ma uruchomionej blokady oraz Użytkownik uruchomił aplikację. Po zakończeniu System posiada informację o nowym haśle, które będzie wykorzystywane od tej pory do odblokowywania dostępu. Główny przepływ składa się z następujących kroków:
 \begin{enumerate}
-    \item Użytkownik z poziomu głównego ekranu aplikacji przechodzi do Ustawień.
+    \item Użytkownik z poziomu głównego ekranu aplikacji wybiera opcję Ustawienia w dolnej nawigacji.
     \item Użytkownik wybiera opcję Zmień hasło.
     \item Użytkownik wpisuje odpowiednie wartości do pól Stare hasło, Nowe hasło oraz Powtórz nowe hasło oraz zatwierdza wprowadzone dane.
     \item System zapisuje hasz nowego hasła w zaszyfrowanym pliku.
@@ -83,11 +83,49 @@ Alternatywnie:
 \end{enumerate}
 
 \subsection{Sprawdź stan opaski}
-W tym przypadku użytkownik aplikacji sprawdza podstawowe informacje na temat opaski oraz jej stan baterii.
+W tym przypadku użytkownik aplikacji sprawdza podstawowe informacje na temat opaski oraz jej stan baterii. Aktorami są Użytkownik, System oraz Opaska. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana, nie ma uruchomionej blokady oraz Użytkownik uruchomił aplikację. Po zakończeniu Użytkownik zna stan baterii oraz inne informacje o Opasce, a System zyskuje odświeżony stan baterii Opaski. Głowny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Użytkownik z poziomu głównego ekranu aplikacji wybiera opcję Opaska w dolnej nawigacji.
+    \item System wyświetla zapisane wcześniej informacje o Opasce.
+    \item Przejdź do przypadku Zaktualizuj stan baterii
+    \item System aktualizuje wartość baterii na ekranie.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 2. Jeśli nie zapisano wcześniej informacji o Opasce:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System wyświetla w brakujących polach wartość Nieznane.
+    \item Następuje przejście do kroku numer 3 w głównym przepływie.
+\end{enumerate}
+\quad\newline
+\indent 3. Jeśli nastąpi nagła utrata połączenia z Opaską:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Pomiń następny krok w głównym przepływie.
+\end{enumerate}
 
 \subsection{Sprawdź statystyki aktywności}
+W tym przypadku użytkownik aplikacji sprawdza proste statystyki zarejestrowanej dziennej aktywności. Aktorami są Użytkownik oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana, nie ma uruchomionej blokady oraz Użytkownik uruchomił aplikację. Po zakończeniu Użytkownik zna ilość zarejestrowanych kroków oraz ostatnią zarejestrowaną wartość pulsu. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Użytkownik z poziomu głównego ekranu aplikacji wybiera opcję Statystyki w dolnej nawigacji.
+    \item System wyświetla ostatnie zapisane wartości dziennych kroków oraz pulsu.
+    \item System aktualizuje wyświetlane wartości, gdy zostaną zapisane nowe.
+\end{enumerate}
 
 \subsection{Uruchomienie zablokowanej aplikacji}
+W tym przypadku użytkownik aplikacji próbuje uruchomić aplikację z listy zablokowanych podczas, gdy uruchomiona jest blokada. Aktorami są Użytkownik i System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana oraz aplikacja pracuje w trybie blokady. Po zakończeniu Użytkownik posiada autoryzację do interakcji z blokowanymi aplikacjami, a System przechodzi w tryb monitorowania. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Użytkownik uruchamia aplikację z listy zablokowanych.
+    \item System przenosi Użytkownika w ekran wprowadzania hasła.
+    \item Użytkownik wprowadza hasło i zatwierdza.
+    \item System wyłącza blokadę i uruchamia usługę monitorującą.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 3. Jeśli Użytkownik wprowadził błędne hasło:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System wyświetla komunikat o błędnym haśle.
+    \item Następuje ponowne wykonanie kroku 3 z głównego przepływu.
+\end{enumerate}
 
 \subsection{Zaktualizuj inne zdarzenia}
 
