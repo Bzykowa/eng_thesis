@@ -1,5 +1,6 @@
 \chapter{Wstęp}
 \thispagestyle{chapterBeginStyle}
+\label{wstep}
 
 Praca swoim zakresem obejmuje projekt systemu stałej autoryzacji wykorzystujący prostą analizę behawioralną w czasie rzeczywistym na 
 podstawie danych gromadzonych przez inteligentną opaskę dla smartfonów działających pod Androidem. Klucze bezpieczeństwa są rzadkim zjawiskiem w 
@@ -8,34 +9,31 @@ zastępowalności innymi metodami wieloskładnikowej autoryzacji.
 \newline\newline
 \indent Celem pracy jest zaprojektowanie i stworzenie aplikacji o następujących założeniach funkcjonalnych: 
 \begin{itemize}
-	\item użycie inteligentnej opaski (pot. smartband) jako klucza bezpieczeństwa,
-	\item zapewnienie prywatności gromadzonych danych,
-	\item monitorowanie zachowań użytkownika w czasie rzeczywistym,
-	\item zabezpieczenie urządzenia mobilnego przed uzyskaniem dostępu przez osoby niepowołane,
-	\item stworzenie praktycznego systemu stałej autoryzacji dedykowanego dla urządzeń mobilnych.
+	\item Aplikacja wykorzystuje inteligentną opaskę (pot. smartband) jako klucz bezpieczeństwa;
+	\item Aplikacja pozwala blokować dostęp do innych aplikacji;
+    \item Aplikacja komunikuje się z inteligentną opaską przy wykorzystaniu protokołu Bluetooth Low Energy;
+    \item Aplikacja analizuje zachowanie użytkownika w czasie rzeczywistym;
+    \item Aplikacja działa w tle;
+    \item Aplikacja pozwala wybrać, które aplikacje obejmie ochroną;
+    \item Wszystkie dane użytkownika są przechowywane lokalnie;
+    \item Aplikacja jest odporna na popularne ataki.
 \end{itemize}
 
-\indent Istnieje garstka systemów o podobnej funkcjonalności: Gadgetbridge, aplikacja open-source zastępująca korzystające z chmury oprogramowanie producentów wybranych opasek, przy czym nie zapewnia 
-żadnych funkcji z zakresu bezpieczeństwa; Haven, aplikacja monitorująca czynniki środowiskowe w celu 
-uzyskania dowodów ataku, jednakże nie zabezpieczająca przed jego skutkami oraz Android Management API, usługa dla przedsiębiorstw umożliwiająca zarządzanie grupą urządzeń oraz zabezpieczenie ich poprzez zdalne wydawanie "polityk", 
-przy czym rozwiązanie to nie jest aplikowalne poza środowiskami biznesowymi.
+\indent Istnieje garstka systemów o podobnej funkcjonalności: Gadgetbridge, aplikacja open-source zastępująca korzystające z chmury oprogramowanie producentów wybranych opasek, przy czym nie zapewnia żadnych funkcji z zakresu bezpieczeństwa; Haven, aplikacja monitorująca czynniki środowiskowe w celu 
+uzyskania dowodów ataku, jednakże nie zabezpieczająca przed jego skutkami oraz Android Management API, usługa dla przedsiębiorstw umożliwiająca zarządzanie grupą urządzeń oraz zabezpieczenie ich poprzez zdalne wydawanie "polityk", przy czym rozwiązanie to nie ma zastosowania poza środowiskami biznesowymi.
 \newline\newline
-\indent Praca składa się z czterech rozdziałów. W rozdziale pierwszym przedstawiono dogłębnie problem autoryzacji przy użyciu sprzętowych kluczy w smartfonach oraz braku prywatności wrażliwych danych gromadzonych przez smartbandy. 
+\indent Praca składa się z sześciu rozdziałów. W rozdziale \ref{rozdzial1} przedstawiono dogłębnie problem autoryzacji przy użyciu sprzętowych kluczy w smartfonach oraz braku prywatności wrażliwych danych gromadzonych przez smartbandy. 
 Omówiono szczegółowo dane pobierane z sensorów w opasce oraz smartfonie. Scharakteryzowano zdarzenia, przy których ograniczany jest dostęp do 
 urządzenia. Opisano rozwiązania podjęte w celu uniemożliwienia sabotażu aplikacji. Przeprowadzono analizę porównawczą istniejących rozwiązań z realizowanym 
 systemem.
-\newline\newline
-\indent W rozdziale drugim przedstawiono szczegółowy projekt aplikacji w notacji UML. Wykorzystano diagramy przypadków użycia, klas, aktywności, sekwencji oraz stanów. 
-Omówiono dokładnie projekt bazy danych. Wyczerpująco opisano protokoły komunikacji z opaską. Opisano w pseudokodzie i omówiono algorytmy blokujące dostęp do aplikacji. 
-\newline\newline
-\indent W rozdziale trzecim określono technologie użyte w implementacji aplikacji: wybrany język 
-programowania, wykorzystywane biblioteki, model opaski oraz typ bazy danych. Przedstawiono dokumentację 
-techniczną wybranych kodów źródłowych. 
-\newline\newline
-\indent W rozdziale czwartym przedstawiono wymagania aplikacji co do środowiska. Określono także sposób instalacji oraz konfiguracji aplikacji. Rozdział zawiera również przykłady działania dla 
-użytkownika.
-\newline\newline
-\indent Końcowy rozdział jest podsumowaniem uzyskanych wyników.
+
+W rozdziale \ref{rozdzial2} przedstawiono szczegółowy projekt aplikacji w notacji UML. Wykorzystano diagramy przypadków użycia, komponentów oraz stanów. Omówiono dokładnie projekt bazy danych. Wyczerpująco opisano protokoły komunikacji z opaską. Opisano w pseudokodzie i omówiono algorytmy blokujące dostęp do aplikacji. 
+
+W rozdziale \ref{rozdzial3} określono technologie użyte w implementacji aplikacji: wybrany język programowania, wykorzystywane biblioteki, model opaski oraz typ bazy danych. Przedstawiono dokumentację techniczną wybranych kodów źródłowych. 
+
+W rozdziale \ref{rozdzial4} przedstawiono wymagania aplikacji co do środowiska. Określono także sposób instalacji oraz konfiguracji aplikacji. Rozdział zawiera również przykłady działania dla użytkownika.
+
+Końcowy rozdział jest podsumowaniem uzyskanych wyników.
 
 
 

@@ -2,7 +2,7 @@
 \thispagestyle{chapterBeginStyle}
 \label{rozdzial1}
 W niniejszym rozdziale omówiono mankamenty związane z uwierzytelnianiem na urządzeniach mobilnych oraz kwestie prywatności wrażliwych danych
-pochodzących z urządzeń typu smartband. Przedstawiono zarys systemu oraz jego założenia funkcjonalne. Określono, jakie dane będą rejestrowane
+pochodzących z urządzeń typu smartband. Przedstawiono zarys systemu. Określono, jakie dane będą rejestrowane
 przez aplikację oraz cel ich gromadzenia. Określono sposoby analizy danych pod kątem wykrywania sytuacji, w których smartfon jest pozostawiony
 bez nadzoru. Opisano mechanizmy podjęte w celu zabezpieczenia systemu oraz przechowywanych danych. Porównano istniejące rozwiązania z proponowanym w pracy,
 wskazując na innowacje oraz różnice.
@@ -45,18 +45,17 @@ jest to bezpieczne rozwiązanie, zważywszy na: wrażliwość powyższych inform
 że mogą zostać udostępnione osobom trzecim \cite{Fitness-Tracker-Security}. Z tego powodu konieczny jest rozwój systemów przechowywania informacji o aktywności pochodzących z
 inteligentnych opasek, które zapewnią użytkownikowi prywatność i nie będą bezpośrednio powiązane z producentem danego urządzenia.
 
-\section{Opis systemu}
+\section{Opis aplikacji}
 Zniwelowanie słabych punktów autentykacji przy użyciu kluczy sprzętowych jest niezwykle ważne przy implementacji tego rozwiązania w urządzeniach
-mobilnych. W pracy skupiono się na usprawnieniu poniższych niedoskonałości tej technologii:
+mobilnych. Dlatego w pracy skupiono się na usprawnieniu poniższych niedoskonałości tej technologii:
 \begin{itemize}
     \item prawdopodobieństwo utraty urządzenia autoryzującego;
     \item niska powszechność kluczy sprzętowych;
     \item ograniczona możliwość stałej autoryzacji.
 \end{itemize}
 
-\indent Proponowany system opiera się na wykorzystaniu smartbanda jako inteligentnego klucza sprzętowego. Autoryzacja odbywa się poprzez analizę danych o
-aktywności pobieranych z opaski w krótkich odstępach czasu. Po wykryciu sytuacji, gdzie smartfon jest prawdopodobnie poza nadzorem użytkownika,
-następuje uruchomienie blokady wybranych aplikacji do momentu wprowadzenia poprawnego hasła w systemie. Uniemożliwienie dostępu dokonuje się poprzez
+\indent Proponowana aplikacja opiera się na wykorzystaniu smartbanda jako inteligentnego klucza sprzętowego. Autoryzacja użytkownika odbywa się poprzez analizę danych o aktywności pobieranych z opaski w krótkich odstępach czasu. Po wykryciu sytuacji, gdzie smartfon jest prawdopodobnie poza nadzorem użytkownika,
+następuje uruchomienie blokady wybranych aplikacji do momentu wprowadzenia poprawnego hasła w aplikacji. Uniemożliwienie dostępu dokonuje się poprzez
 monitorowanie, która aplikacja znajduje się na pierwszym planie systemu Android. W przypadku wykrycia niedozwolonego programu użytkownik zostaje
 przeniesiony do aktywności odpowiedzialnej za autoryzację.
 \newline\newline
@@ -65,18 +64,8 @@ modeli, które gromadzą dane wystarczające do dość dokładnego określenia a
 o nie system stałej autoryzacji. Dużą zaletą smartbanda jest jego niepozorna forma, czyli zegarek na rękę. Użytkownicy noszą go przez dużą
 część dnia, a nawet w nocy, przez co znacznie zmniejsza się ryzyko jego utraty bądź kradzieży. Kolejnym atutem tego urządzenia jest fakt, iż pełni ono znacznie więcej funkcji niż klucz sprzętowy. Dzięki temu smartband jest znacznie bardziej praktyczny dla użytkownika.
 
-\subsection{Założenia funkcjonalne}
-Wymagania postawione w niniejszej pracy, to:
-\begin{itemize}
-    \item implementacja systemu blokującego dostęp do aplikacji;
-    \item zapewnienie komunikacji z inteligentną opaską przy wykorzystaniu protokołu Bluetooth Low Energy;
-    \item lokalne przechowywanie danych o aktywności użytkownika;
-    \item zabezpieczenie aplikacji przed najczęstszymi atakami;
-    \item wdrożenie prostej analizy zachowania użytkownika w czasie rzeczywistym.
-\end{itemize}
-
 \subsection{Charakterystyka gromadzonych danych}
-System opiera się w głównej mierze o informacje rejestrowane przez inteligentną opaskę. Zaliczają się do nich:
+Aplikacja opiera się w głównej mierze o informacje rejestrowane przez inteligentną opaskę. Zaliczają się do nich:
 \begin{itemize}
     \item liczba wykonanych kroków danego dnia;
     \item aktualna wartość pulsu;
@@ -84,15 +73,15 @@ System opiera się w głównej mierze o informacje rejestrowane przez inteligent
     \item moment zdjęcia opaski.
 \end{itemize}
 
-\indent Powyższe informacje pozwalają określić stan fizyczny użytkownika, co jest kluczowe dla działania systemu. Dodatkowo dane o aktywności są uzupełniane
+\indent Powyższe informacje pozwalają określić stan fizyczny użytkownika, co jest kluczowe dla działania aplikacji. Dodatkowo dane o aktywności są uzupełniane
 o wartość sensora liczącego kroki w telefonie. Dzięki temu możliwa jest detekcja sytuacji, w których osoba eksploatująca może nie być w stanie
 nadzorować swojego telefonu, na przykład podczas snu bądź po pozostawieniu go na biurku w pracy. Przechowywane są także podstawowe informacje o opasce takie, jak: adres MAC oraz stan baterii. Umożliwia to ponowne połączenie z opaską oraz monitorowanie stanu urządzenia w aplikacji.
 \newline\newline
-\indent Oprócz informacji o aktywności system przechowuje listę zainstalowanych aplikacji. Pozwala to użytkownikowi dostosować działanie systemu do własnej preferencji. Najważniejszą przechowywaną informacją jest hasz hasła użytkownika, które jest wymagane do odblokowania dostępu do wybranych wcześniej aplikacji.
+\indent Oprócz informacji o aktywności aplikacja przechowuje także listę zainstalowanych aplikacji. Pozwala to użytkownikowi dostosować jej działanie do własnej preferencji. Najważniejszą przechowywaną informacją jest hasz hasła użytkownika, które jest wymagane do odblokowania dostępu do wybranych wcześniej aplikacji.
 
 \subsection{Analiza aktywności}
 Ważną częścią pracy jest wykrywanie sytuacji, w których smartfon jest poza nadzorem. Aby było to możliwe
-system bada aktywność użytkownika, korzystając z określonych w powyższym podrozdziale danych, pod kątem czterech zdarzeń:
+aplikacja bada aktywność użytkownika, korzystając z określonych w powyższej podsekcji danych, pod kątem czterech zdarzeń:
 \begin{itemize}
     \item opaska traci połączenie ze smartfonem;
     \item użytkownik zasypia;
@@ -106,14 +95,14 @@ w rejestrowanych krokach monitorowane są przez porównanie tempa wzrostu krokó
 poprzez brak wykrywanego pulsu, bądź poprzez otrzymanie powiadomienia ze smartbanda. W przypadku wykrycia jednej z powyższych sytuacji następuje
 automatyczne uruchomienie blokady aplikacji.
 
-\subsection{Zabezpieczenie systemu}
-Aby proponowany system zapewniał ochronę przed dostępem przez osoby niepowołane musi działać nieprzerwanie i być odporny na wyłączenie go przez atakującego. W tym celu usługi systemu są zaimplementowane jako \textit{Foreground Service}, by
+\subsection{Zabezpieczenie aplikacji}
+Aby proponowany system zapewniał ochronę przed dostępem przez osoby niepowołane musi działać nieprzerwanie i być odporny na wyłączenie go przez atakującego. W tym celu usługi aplikacji są zaimplementowane jako \textit{Foreground Service}, by
 działać stale w tle w zgodzie z limitami obowiązującymi od Androida Oreo\cite{BGLimitsOreo}. Wykorzystano technologię \textit{Wake Lock}\cite{WakeLock} w celu umożliwienia aplikacji pozostania w stanie pełnej sprawności
 w przypadku, gdy telefon przechodzi w \textit{Doze Mode}\cite{DozeMode}. Wdrożono także \textit{BroadcastReceiver}, który jest
 odpowiedzialny za monitorowanie restartów urządzenia. Po wykryciu ukończonego uruchomienia smartfona, usługa blokująca oraz gromadząca dane
 są restartowane według stanu sprzed wyłączenia urządzenia.
 \newline\newline
-\indent System jest także odporny na najpopularniejsze podatności w aplikacjach mobilnych związanych z danymi medycznymi\cite{Security-Mobile-Health-Apps}. Dzięki lokalnemu przechowywaniu informacji zapewniona jest odporność na ataki za pośrednictwem sieci. System zabezpieczono przed \textit{Intent spoofing}, dzięki wykorzystaniu jedynie dokładnie sprecyzowanych Intentów oraz zabezpieczeniu komponentów przed exportem do innych aplikacji. By zapewnić bezpieczeństwo gromadzonych danych baza danych oraz plik przechowujący hasło zostały zaszyfrowane przy użyciu algorytmu szyfrowania AES. Natomiast mniej ważne informacje są przechowywane w \textit{SharedPreferences}, do których dostęp ma tylko projektowany system.
+\indent System jest także odporny na najpopularniejsze podatności w aplikacjach mobilnych związanych z danymi medycznymi\cite{Security-Mobile-Health-Apps}. Dzięki lokalnemu przechowywaniu informacji zapewniona jest odporność na ataki za pośrednictwem sieci. Aplikację zabezpieczono przed \textit{Intent spoofing}, dzięki wykorzystaniu jedynie dokładnie sprecyzowanych Intentów oraz zabezpieczeniu komponentów przed exportem do innych aplikacji. By zapewnić bezpieczeństwo gromadzonych danych baza danych oraz plik przechowujący hasło zostały zaszyfrowane przy użyciu algorytmu szyfrowania AES. Natomiast mniej ważne informacje są przechowywane w \textit{SharedPreferences}, do których dostęp ma tylko projektowany system.
 \section{Analiza porównawcza istniejących systemów}
 Na rynku znajduje się wąskie grono rozwiązań o podobnych funkcjonalnościach. Poniżej zaprezentowano najciekawsze z nich. Określono ich zalety oraz
 wady, a także porównano je z systemem zaprezentowanym w pracy.

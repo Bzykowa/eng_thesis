@@ -1,26 +1,28 @@
 \chapter{Instrukcja obsługi}
 \thispagestyle{chapterBeginStyle}
+\label{rozdzial4}
 
-W tym rozdziale należy omówić zawartość pakietu instalacyjnego oraz założenia co do środowiska, w którym realizowany system będzie instalowany. Należy przedstawić procedurę instalacji i wdrożenia systemu. Czynności instalacyjne powinny być szczegółowo rozpisane na kroki. Procedura wdrożenia powinna obejmować konfigurację platformy sprzętowej, OS (np. konfiguracje niezbędnych sterowników) oraz konfigurację wdrażanego systemu, m.in.\ tworzenia niezbędnych kont użytkowników. Procedura instalacji powinna prowadzić od stanu, w którym nie są zainstalowane żadne składniki systemu, do stanu w którym system jest gotowy do pracy i oczekuje na akcje typowego użytkownika.
+W tym rozdziale omówniono założenia co do środowiska, w którym realizowana będzie instalowana. Przedstawiono procedurę instalacji i wdrożenia systemu. 
 
 \section{Instalacja i konfiguracja}
 W tej sekcji omówię wymagania środowiskowe aplikacji oraz kwestie konfiguracyjne jak parowanie opaski czy ustawienie hasła.
 \subsection{Wymagania sprzętowe}
 System android 9; moduł BT; opaska MiBand 3; 
+\subsection{Instalacja}
 \subsection{Pierwsze uruchomienie}
 - dodać screeny do punktów
-1. Gdy aplikacja jest uruchamiana po raz pierwszy należy ustawić jej w ustawieniach "Usage stats permission". Jeśli przy uruchomieniu nie ma tego pozwolenia aplikacja przekieruje w odpowiednie miejsce w ustawieniach jednak będzie to wymagało ponownego uruchomienia aplikacji.
-2. Następnie jeśli aplikacja jest uruchamiana z aktywnym "Usage stats permission" to użytkownik jest proszony o pozwolenie na lokalizację. Jest ono niezbędne do poprawnego działania BT.
-3. Kiedy uzyskane zostaną wszystkie potrzebne pozwolenia użytkownik zostaje przeniesiony do aktywności, w której jest tworzone hasło, które będzie wykorzystywane przy odblokowywaniu trybu "Lockdown".
-4. Użytkownik wprowadza dwa razy hasło i dotyka przycisk (drzwi ze strzałką)
-5. Po utworzeniu hasła użytkownik zostaje przekierowany do aktywności odpowiadającej za parowanie opaski MiBand 3. 
-6. Użytkownik klika przycisk scan for devices
-7. Następnie uruchamiany jest skan urządzeń ble z filtrem na mi band 3
-8. Jeśli urządzenie zostanie odnalezione pojawi się na ekranie. Jeżeli nie zostanie odnalezione należy powtórzyć skan dotykając przycisk scan for devices
-9. Po naciśnięciu na odpowiednie urządzenie na liście znalezionych urządzeń zostaje uruchomiona usługa odpowiadająca za komunikację z MiBand i użytkownik przechodzi do głównego widoku aplikacji
-10. Usługa MiBandService łączy się z urządzeniem i uruchamia sekwencję inicjującą urządzenie
-11. Po udanej inicjacji urządzenia opaska zaczyna przesyłać informacje o pulsie, krokach, zaśnięciu oraz zdjęciu opaski.
-
+\begin{enumerate}
+    \item Gdy aplikacja jest uruchamiana po raz pierwszy należy ustawić jej w ustawieniach "Usage stats permission". Jeśli przy uruchomieniu nie ma tego pozwolenia aplikacja przekieruje w odpowiednie miejsce w ustawieniach jednak będzie to wymagało ponownego uruchomienia aplikacji.
+    \item Następnie jeśli aplikacja jest uruchamiana z aktywnym "Usage stats permission" to użytkownik jest proszony o pozwolenie na lokalizację. Jest ono niezbędne do poprawnego działania BT.
+    \item Kiedy uzyskane zostaną wszystkie potrzebne pozwolenia użytkownik zostaje przeniesiony do aktywności, w której jest tworzone hasło, które będzie wykorzystywane przy odblokowywaniu trybu "Lockdown".
+    \item  Użytkownik wprowadza dwa razy hasło i dotyka przycisk (drzwi ze strzałką)
+    \item Po utworzeniu hasła użytkownik zostaje przekierowany do aktywności odpowiadającej za parowanie opaski MiBand 3. 
+    \item Użytkownik klika przycisk scan for devices
+    \item Następnie uruchamiany jest skan urządzeń ble z filtrem na mi band 3
+    \item Jeśli urządzenie zostanie odnalezione pojawi się na ekranie. Jeżeli nie zostanie odnalezione należy powtórzyć skan dotykając przycisk scan for devices
+    \item Po naciśnięciu na odpowiednie urządzenie na liście znalezionych urządzeń zostaje uruchomiona usługa odpowiadająca za komunikację z MiBand i użytkownik przechodzi do głównego widoku aplikacji
+\end{enumerate}
+\subsection{Wybór aplikacji do zablokowania}
 
 \section{Przykłady użycia}
 W tej sekcji przedstawię jak działa aplikacja od strony użytkownika poprzez opis czynności potrzebnych do wykonania określonych zadań, np. sprawdzenie stanu opaski, zmiana blokowanych aplikacji czy sprawdzenie statystyk.

@@ -12,7 +12,6 @@
 /captures
 .externalNativeBuild
 .cxx
-/app/src/main/java/com/example/lockband/bt/
 /thesis text/*.png
 /thesis text/*.toc
 /thesis text/Makefile
