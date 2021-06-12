@@ -17,7 +17,7 @@ przykład można:
     \item uzyskać dostęp, gdy użytkownik pozostawi odblokowane urządzenie bez opieki.
 \end{itemize}
 
-\indent Zważywszy na fakt, iż telefony komórkowe stają się coraz bardziej powszechne\cite{Smartphone-Users-W-wide} oraz zastępują komputery jako urządzenia wykorzystywane do łączenia się z
+\indent Zważywszy na fakt, iż telefony komórkowe stają się coraz bardziej powszechne \cite{Smartphone-Users-W-wide} oraz zastępują komputery jako urządzenia wykorzystywane do łączenia się z
 siecią (około połowa ruchu sieciowego pochodzi z urządzeń mobilnych \cite{Share-Of-Internet-Traffic-Mobile}), przechowują one wiele wrażliwych danych
 o swoich użytkownikach. Dlatego koniecznością jest wprowadzenie dodatkowego systemu zabezpieczeń, w
 szczególności wykorzystanie uwierzytelnienia wielopoziomowego, w celu zabezpieczenia urządzenia przed dostępem osób niepowołanych. Często można
@@ -30,7 +30,7 @@ Natomiast do autoryzacji dostępu do smartfona nie wykorzystywane są żadne dod
 
 \indent Nieporęczność fizycznych kluczy bezpieczeństwa objawia się szczególnie w ich formie - są to niewielkie urządzenia przypominające pamięć USB
 lub kartę płatniczą. Dzięki temu łatwo je zgubić lub o nich zapomnieć, co uniemożliwia użytkownikowi dostęp do systemu. Często też w smartfonie
-brakuje niezbędnej do odczytania klucza infrastruktury, na przykład czytnika smart cardów czy modułu NFC. \cite{Usability-Two-Factor}.
+brakuje niezbędnej do odczytania klucza infrastruktury, na przykład czytnika smart cardów czy modułu NFC \cite{Usability-Two-Factor}.
 Do niepraktyczności tego rozwiązania przyczynia się także wyżej wynieniona monofunkcyjność kluczy. Oferują one jedynie autoryzację użytkownika przy
 użyciu kluczy kryptograficznych bądź jednorazowych kodów i służą do logowania na stronach internetowych oraz przy autoryzacji w niektórych aplikacjach,
 co znacznie ogranicza pole ich zastosowania. Dlatego potrzebne jest świeże spojrzenie na tą technologię, które pozwoli stworzyć
@@ -107,11 +107,11 @@ są restartowane według stanu sprzed wyłączenia urządzenia.
 Na rynku znajduje się wąskie grono rozwiązań o podobnych funkcjonalnościach. Poniżej zaprezentowano najciekawsze z nich. Określono ich zalety oraz
 wady, a także porównano je z systemem zaprezentowanym w pracy.
 \subsection{Yubikey}
-Yubikey to nowoczesne klucze sprzętowe produkowane przez Yubico, wykorzystywane jako część wieloskładnikowej autoryzacji bądź autentykacji
+Yubikey \cite{Yubikey} to seria nowoczesnych kluczy sprzętowych produkowanych przez Yubico, wykorzystywanych jako część wieloskładnikowej autoryzacji bądź autentykacji
 bazowanej na jednorazowych hasłach w szerokim gronie serwisów internetowych oraz systemów operacyjnych. Wspierają wiele protokołów kryptograficznych
-i autentykacyjnych, w tym: WebAuthn, FIDO2, U2F, smart cardy kompatybilne z PIV oraz Yubico OTP. Modele dedykowane urządzeniom mobilnym
+i autentykacyjnych, w tym: WebAuthn, FIDO2, U2F, smart cardy kompatybilne z PIV oraz Yubico OTP. Modele dedykowane urządzeniom mobilnym 
 do komunikacji ze smartfonem wykorzystują moduł NFC, USB-C oraz złącze Lightning. Autoryzacja odbywa się poprzez umieszczenie klucza w złączu USB-C
-bądź przystawienie go do tyłu telefonu dla urządzeń z włączonym NFC\cite{Yubikey}.
+bądź przystawienie go do tyłu telefonu dla urządzeń z włączonym NFC.
 \newline\newline
 \indent Yubikey posiada wiele zalet. Jest wspierany przez dużą liczbę serwisów i systemów, dzięki czemu wachlarz aplikacji autentykacyjnych oraz kodów SMS
 czy wiadomości e-mail można zastąpić jednym urządzeniem. Pomaga uniknąć wykradnięcia haseł poprzez phishing czy przechwycenie SMSa. Jest prosty w
@@ -132,12 +132,12 @@ proponowanym systemem jest sposób autentykacji. Dzięki zastosowaniu opaski mo�
 przeciwieństwie do Yubikey, które jest jedynie nośnikiem przechowującym klucz, który jest wykorzystywany przy pojedynczych logowaniach bądź
 jako dodatkowa autoryzacja przy wrażliwych czynnościach.
 \subsection{Haven}
-Haven jest darmową aplikacją open-source dla urządzeń działających pod systemem Android zaprojektowaną w celu monitorowania aktywności wokół urządzenia,
+Haven \cite{Haven} jest darmową aplikacją open-source dla urządzeń działających pod systemem Android zaprojektowaną w celu monitorowania aktywności wokół urządzenia,
 korzystając z jego wbudowanych sensorów. Przy wykryciu zmian w środowisku aplikacja gromadzi zdjęcia oraz nagrania dźwięku, po czym wysyła je poprzez
 Signala bądź Tora do użytkownika. Aplikacja została stworzona z myślą o dziennikarzach śledczych, którzy są narażeni na ataki ze strony policji bądź innych
-intruzów\cite{Haven}.
+intruzów.
 \newline\newline
-\indent Główną zaletą Haven jest to, iż potrafi zastąpić drogie fizyczne systemy bezpieczeństwa. Do korzystania z tego rozwiązania wystarczy stary telefon z Androidem oraz opcjonalnie karta SIM, by zapewnić dostęp do mobilnego Internetu. Zapewnia to użytkownikowi tani, a także łatwy w przenoszeniu system pozwalający monitorować na przykład pokój w hotelu. Pozwala to zdobyć dowody w przypadku ataku typu ``evil maid", czyli gdy osoba trzecia uzyskuje fizyczny dostęp do urządzenia, wykorzystując nieobecność właściciela, w celu wykradnięcia danych bądź zainstalowaniu szpiegującego oprogramowania \cite{Evil-Maid}.
+\indent Główną zaletą Haven jest to, iż potrafi zastąpić drogie fizyczne systemy bezpieczeństwa. Do korzystania z tego rozwiązania wystarczy stary telefon z Androidem oraz opcjonalnie karta SIM, by zapewnić dostęp do mobilnego Internetu. Zapewnia to użytkownikowi tani, a także łatwy w przenoszeniu system pozwalający monitorować na przykład pokój w hotelu. Pozwala to zdobyć dowody w przypadku ataku typu ``evil maid" \cite{Evil-Maid}, czyli gdy osoba trzecia uzyskuje fizyczny dostęp do urządzenia, wykorzystując nieobecność właściciela, w celu wykradnięcia danych bądź zainstalowaniu szpiegującego oprogramowania.
 \newline\newline
 \indent Wadą Haven jest zdecydowanie fakt, że nie zapobiega ona atakom, tylko zdobywa dowody ich wystąpienia. Kolejnym mankamentem aplikacji jest jej nadmierna czułość. Wykrywane są mikroruchy smartfona oraz drobne dźwięki, przez co korzystanie z Haven w głośniejszych środowiskach, jak na przykład w biurze może wiązać się z setkami fałszywie wykrytych zdarzeń.
 \newline\newline
@@ -148,7 +148,7 @@ proponowana aplikacja skupia się na samym użytkowniku. Haven również w żadn
 jedynie raportowanie tego, co dzieje się wokoło. Z kolei proponowane rozwiązanie w pewnym stopniu bierze pod lupę gromadzone dane i na ich podstawie
 określa, kiedy uruchomić blokadę urządzenia.
 \subsection{Android Management API}
-Android Management API jest częścią Android Enterprise, inicjatywy dostarczającej deweloperom narzędzi pozwalających budować rozwiązania dla przedsiębiorstw w celu zarządzania flotą mobilnych urządzeń\cite{AM-API}. Program ten jest dedykowany dostawcom usług zarządzania mobilnością w przedsiębiorstwie (EMM). Deweloperzy zapewniają swoim klientom lokalną bądź opartą na chmurze konsolę EMM. Wewnątrz konsoli klienci generują tokeny rejestracji urządzeń oraz tworzą zasady zarządzania (policies). Zasada zarządzania reprezentuje grupę ustawień rządzących zachowaniem zarządzanego urządzenia oraz zainstalowanymi aplikacjami. Następnie urządzenia są zapisywane do systemu przy użyciu wcześniej stworzonych tokenów. Podczas rejestracji, każde urządzenie instaluje aplikację towarzyszącą API, Android Device Policy. Kiedy do danego urządzenia są przyporządkowane zasady, powyższa aplikacja automatycznie wdraża je.
+Android Management API \cite{AM-API} jest częścią Android Enterprise, inicjatywy dostarczającej deweloperom narzędzi pozwalających budować rozwiązania dla przedsiębiorstw w celu zarządzania flotą mobilnych urządzeń. Program ten jest dedykowany dostawcom usług zarządzania mobilnością w przedsiębiorstwie (EMM). Deweloperzy zapewniają swoim klientom lokalną bądź opartą na chmurze konsolę EMM. Wewnątrz konsoli klienci generują tokeny rejestracji urządzeń oraz tworzą zasady zarządzania (policies). Zasada zarządzania reprezentuje grupę ustawień rządzących zachowaniem zarządzanego urządzenia oraz zainstalowanymi aplikacjami. Następnie urządzenia są zapisywane do systemu przy użyciu wcześniej stworzonych tokenów. Podczas rejestracji, każde urządzenie instaluje aplikację towarzyszącą API, Android Device Policy. Kiedy do danego urządzenia są przyporządkowane zasady, powyższa aplikacja automatycznie wdraża je.
 \newline\newline
 \indent Android Management API daje niespotykane poza aplikacjami systemowymi możliwości
 zarządzania urządzeniem. Pozwala między innymi na:
@@ -160,10 +160,11 @@ zarządzania urządzeniem. Pozwala między innymi na:
     \item masowe nadanie pozwoleń aplikacjom;
     \item określenie sposobów autoryzacji oraz wymogów hasła;
     \item włączenie aplikacji w trybie Kiosk;
-    \item zdalne wymazanie danych z urządzenia\cite{AM-Policies}.
+    \item zdalne wymazanie danych z urządzenia.
 \end{itemize}
-
-Główną wadą tego API jest brak możliwości zastosowania go poza przedsiębiorstwami. Urządzeniom korzystającym z tego rozwiązania zasady narzucane są odgórnie przez administratora, więc przy ogromnej liczbie smartfonów, gdzie każdy wymagałby innego zestawu zasad oraz ich aktualizacji na bieżąco, zarządzanie byłoby kłopotliwe. Jest to fundamentalny problem, przez który proponowany system nie może wykorzystać możliwości zabezpieczających Android Management API.
+Więcej informacji na temat dostępnych polityk można znaleźć w \cite{AM-Policies}.
+\newline\newline
+\indent Główną wadą tego API jest brak możliwości zastosowania go poza przedsiębiorstwami. Urządzeniom korzystającym z tego rozwiązania zasady narzucane są odgórnie przez administratora, więc przy ogromnej liczbie smartfonów, gdzie każdy wymagałby innego zestawu zasad oraz ich aktualizacji na bieżąco, zarządzanie byłoby kłopotliwe. Jest to fundamentalny problem, przez który proponowany system nie może wykorzystać możliwości zabezpieczających Android Management API.
 \newline\newline
 \indent Porównując oba rozwiązania można zauważyć, iż są swoimi przeciwieństwami. Tworzony system jest z założenia czysto lokalny oraz tworzony z myślą o zwykłych użytkownikach, dlatego wszystkie mechanizmy zabezpieczające również muszą być aplikowalne bez udziału zewnętrznych serwisów, a także konfigurowalne przez użytkownika. Z kolei przy wykorzystaniu tego API konieczna jest rejestracja urządzenia w systemie EMM danego przedsiębiorstwa, a zasady dotyczące bezpieczeństwa są narzucane z góry.
 

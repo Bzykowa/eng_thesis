@@ -128,14 +128,83 @@ Alternatywnie:
 \end{enumerate}
 
 \subsection{Zaktualizuj inne zdarzenia}
-
+W tym przypadku opaska rejestruje jedno z podejrzanych zdarzeń i przesyła informację o tym do aplikacji. Aktorami są Opaska oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana i jest aktywne połączenie między nią a aplikacją. Po zakończeniu System zyskuje sygnał do uruchomienia blokady. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Opaska rejestruje jedno z zaprogramowanych zdarzeń.
+    \item Opaska przesyła kod zdarzenia do Systemu.
+    \item System porównuje otrzymany kod z zapisanymi kodami podejrzanych zdarzeń.
+    \item System uruchamia blokadę.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 2. Jeśli nastąpi nagła utrata połączenia:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Następuje przejście do kroku numer 4 w głównym przepływie.
+\end{enumerate}
+\quad\newline
+\indent 3. Jeśli otrzymany kod nie znajduje się na liście podejrzanych:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item Pomiń następny krok głównego przepływu.
+\end{enumerate}
 \subsection{Zaktualizuj puls}
+W tym przypadku opaska wykonuje automatyczny pomiar pulsu i przesyła jego wartość do aplikacji. Aktorami są Opaska oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana i jest aktywne połączenie między nią a aplikacją. Po zakończeniu System zyskuje aktualne dane na temat pulsu do analizy stanu użytkownika. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Opaska mierzy puls.
+    \item Opaska przesyła zarejestrowaną wartość do Systemu.
+    \item System zapisuje otrzymaną wartość.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 2. Jeśli nastąpi nagła utrata połączenia:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System uruchamia blokadę.
+\end{enumerate}
+\quad\newline
+\indent 3. Jeśli otrzymana wartość wynosi 0:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System uruchamia blokadę.
+\end{enumerate}
 
 \subsection{Zaktualizuj ilość kroków z opaski}
+W tym przypadku opaska rejestruje wykonane kroki oraz przesyła uaktualnioną wartość dziennych wykonanych kroków do aplikacji. Aktorami są Opaska oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana i jest aktywne połączenie między nią a aplikacją. Po zakończeniu System zyskuje aktualne dane na temat wykonanych kroków, które zostaną wykorzystane później do analizy zachowania użytkownika. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item Opaska rejestruje wykonanie kroków.
+    \item Opaska przesyła zaktualizowaną wartość dziennych kroków do Systemu.
+    \item System zapisuje otrzymaną wartość.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 2. Jeśli nastąpi nagła utrata połączenia:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System uruchamia blokadę.
+\end{enumerate}
+\quad\newline
+\indent 3. Jeśli otrzymana wartość jest równa ostatniemu pomiarowi:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System nie zapisuje otrzymanej wartości.
+\end{enumerate}
 
 \subsection{Zaktualizuj stan baterii}
+W tym przypadku aplikacja odczytuje aktualny stan baterii z opaski. Aktorami są Opaska oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana i jest aktywne połączenie między nią a aplikacją. Po zakończeniu System zyskuje aktualną wartość stanu baterii. Główny przepływ składa się z następujących kroków:
+\begin{enumerate}
+    \item System przesyła do Opaski zapytanie o stan baterii.
+    \item Opaska przesyła do Systemu aktualny stan baterii.
+    \item System zapisuje nową wartość stanu baterii.
+\end{enumerate}
+Alternatywnie:
+\newline\newline
+\indent 2. Jeśli nastąpi nagła utrata połączenia:
+\begin{enumerate}[leftmargin=3\parindent]
+    \item System uruchamia blokadę.
+\end{enumerate}
 
 \subsection{Zaktualizuj ilość kroków z telefonu}
+W tym przypadku sensor licznika kroków w smartfonie rejestruje wykonane kroki, a następnie informuje aplikację o aktualizacji swojej wartości. Aktorami są Licznik kroków oraz System. Przypadek ten występuje, gdy istnieje plik z hasłem, opaska została sparowana i jest aktywna usługa monitorująca zachowanie użytkownika. Po zakończeniu System zyskuje informację na temat wykonanych kroków, która zostanie później wykorzystana do analizy zachowania użytkownika.
+\begin{enumerate}
+    \item Licznik kroków rejestruje wykonanie kroków.
+    \item System odczytuje zaktualizowaną liczbę kroków Licznika kroków.
+    \item System zapisuje odczytaną wartość.
+\end{enumerate}
 
 \section{Diagram komponentów}
 
@@ -149,35 +218,47 @@ W tej sekcji należy przedstawić diagramy stanów w których może znaleźć si
 
 W tej sekcji należy przedstawić projekt bazy danych. Należy omówić wycinek rzeczywistości i odpowiadające mu zidentyfikowane elementy systemu, których wartości będą podlegać utrwalaniu. Należy przedyskutować wybór typów danych dla atrybutów poszczególnych obiektów.  
 
-\section{Opis protokołów}
-\begin{itemize}
-    \item inicjalizacja komunikacji z opaską
-\end{itemize}
-
-W projektowanym systemie główną rolę gra inteligentna opaska. Komunikuje się ona ze smartfonem przy użyciu technologii Bluetooth Low Energy oraz protokołu ATT. BLE w porównaniu
-do klasycznego połączenia Bluetooth wykorzystuje znacznie niższe zasoby energii zachowując podobny zasięg, dzięki czemu znalazło
+\section{Komunikacja z MiBand 3}
+W projektowanym systemie główną rolę gra inteligentna opaska. Komunikuje się ona ze smartfonem przy użyciu Bluetooth Low Energy protokołem ATT używając GATT. BLE w porównaniu do klasycznego połączenia Bluetooth wykorzystuje znacznie niższe zasoby energii zachowując podobny zasięg, dzięki czemu znalazło
 szerokie zastosowanie w urządzeniach peryferyjnych.
-\subsection{Protokół ATT}
-Protokół Attribute pozwala urządzeniom odczytywać i zapisywać drobne dane przechowywane na serwerze.
-Przechowywane wartości są nazywane atrybutami. Atrybuty identyfikowane są poprzez
-UUID, aby określić typ przechowywanych w nich danych. UUID mogą być powszechnie znanymi
-numerami zdefiniowanymi w oficjalnej specyfikacji Bluetooth albo być
-określone przez producenta jako 128-bitowa liczba. Wiadomości w tym
-protokole są przesyłane przez kanały L2CAP, znanymi jako nośniki ATT. W ATT
-występują dwie role: Klienta oraz Serwera. Urządzenie może pełnić obie te role
-jednocześnie. Serwer przechowuje atrybuty oraz akceptuje żądania, komendy
-oraz potwierdzenia pochodzące od klienta. Serwer wysyła także odpowiedzi na
-żądania, a gdy zostanie skonfigurowany przez wyższą warstwę, wysyła asynchronicznie powiadomienia
-do klienta, kiedy występują na nim określone zdarzenia.
+\subsection{ATT}
+Protokół Attribute umożliwia urządzeniu, określonemu jako \textit{serwer}, odsłonić zbiór atrybutów i powiązanych z nimi wartości urządzeniu równorzędnemu, określonemu jako \textit{klient}. Atrybuty odsłonięte przez serwer mogą być odkryte, odczytane bądź nadpisane przez klienta, a także mogą być rozgłaszane przez serwer w ramach powiadomienia lub zasygnalizowania. Atrybut jest dyskretną wartością o trzech właściwościach powiązanych ze sobą:
+\begin{itemize}
+    \item typie,
+    \item uchwycie,
+    \item zestawie pozwoleń, które są zdefiniowane przez specyfikację wyższej warstwy wykorzystującą dany atrybut.
+\end{itemize}
+Typ atrybutu określa, co reprezentuje dany atrybut poprzez UUID (Universally Unique Identifier), ktore może zostać utworzone przez każdego, a następnie zostać opublikowane. Pozwala to rozpoznać atrybut niezależnie od nadanego mu przez serwer uchwytu. Uchwyt atrybutu jest unikalną, niezerową, 16-bitową wartością, która jednoznacznie identyfikuje dany atrybut w obrębie serwera, pozwalając klientowi odnieść się do niego podczas operacji odczytu oraz zapisu. Pozwolenia mogą być nadane atrybutowi w celu ograniczenia klientowi dostępu do zapisu lub odczytu.
+\newline\newline
+\indent Urządzenie może jednocześnie implementować zarówno rolę serwera jak i klienta oraz obie role mogą funkcjonować współbieżnie oraz komunikować się między sobą. Na każdym urządzeniu Bluetooth może znajdować się maksymalnie jedna instancja serwera.
+\newline\newline
+\indent Wszystkie prośby protokołu Attribute są przesyłane poprzez \textit{nosiciela ATT}. Między urządzeniami może być wielu nosicieli, gdzie każdy z nich korzysta z osobnego kanału L2CAP oraz może mieć inną konfigurację. W przypadku BLE, wykorzystywany jest pojedynczy nosiciel ATT, który używa stałego kanału dostępnego od ustanowienia połączenia ACL. Można jednak skonfigurować dodatkowych nosicieli używając L2CAP. Więcej informacji na temat protokołu ATT można znaleźć w \cite{BT-Corev5.2}. 
+
 \subsection{GATT}
-Komunikacja aplikacji z opaską odbywa się przy wykorzystaniu GATT (Generic Attribute Profile). Jest to technologia zbudowana na protokole Attribute (ATT), która
-ustala przebieg powszechnych operacji oraz framework dla danych transportowanych przez ATT.
-GATT określa format danych przesyłanych przez protokół Attribute. Atrybuty są
-formatowane jako Usługi oraz Charakterystyki. Usługi są zbiorem danych oraz
-przypisanych im zachowań niezbędnych do zapewnienia określonej funkcji urządzenia.
-Z kolei Charakterystyki są wartościami użytymi w Usłudze wraz z ich właściwościami
-oraz informacjami o tym jak są wyświetlane bądź reprezentowane. Dzięki
-wykorzystaniu określonej struktury danych przez GATT możliwe jest przeglądanie
-dostępnych Usług oraz Charakterystyk, nawet gdy klient nie jest wyspecjalizowany
-pod dany serwer.
-\subsection{Komunikacja z MiBand 3}
+Profil Generic Attribute (GATT) definiuje framework wykorzystujący protokół Attribute, określający procedury i formaty danych znajdujących się wewnątrz profilu. Zdefiniowane procedury obejmują odkrywanie, odczyt, zapis, powiadamianie oraz sygnalizację. Profil ten został zaprojektowany do wykorzystania przez aplikacje bądź inny profil, aby umożliwić klientowi komunikację z serwerem poprzez opakowanie protokołu ATT w bardziej przystępną formę.
+\newline\newline
+\indent Profil GATT określa strukturę, w której odbywa się wymiana danych. Najwyższym poziomem jest profil zawierający liczne \textit{usługi} będące zbiorem danych oraz przypisanych im zachowań niezbędnych do zapewnienia określonej funkcji. Usługi składają się z \textit{charakterystyk}, z których każda zawiera określoną wartość oraz opcjonalne informacje na jej temat. Usługi oraz charakterystyki wraz ze swoimi komponentami zawierają dane profilu, które są przechowywane w Atrybutach na serwerze. Dzięki wykorzystaniu określonej struktury danych przez GATT możliwe jest przeglądanie dostępnych Usług oraz Charakterystyk, nawet gdy klient nie jest wyspecjalizowany pod dany serwer. Więcej informacji na temat GATT można znaleźć w \cite{BT-Corev5.2}.
+
+\subsection{Wykorzystane usługi i charakterystyki}
+
+\subsubsection{0000fee0-0000-1000-8000-00805f9b34fb}
+
+\begin{table}[H]
+    \bgroup
+    \def\arraystretch{1.5}%
+    \begin{tabular}{|ll|}
+    \hline
+    \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                                \\ \hline
+    \textbf{00000003-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka pozwalająca na konfigurację ustawień \\ opaski.\end{tabular}                      \\
+    \textbf{00000006-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka zawierająca informacje o stanie baterii \\ opaski.\end{tabular}                   \\
+    \textbf{00000007-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka przechowująca liczbę wykonanych kroków \\ danego dnia.\end{tabular}               \\
+    \textbf{00000008-0000-3512-2118-0009af100700} & Charakterystyka zawierająca dane użytkownika.                                                                                \\
+    \textbf{00000010-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka zawierająca informacje na temat zdarzeń \\ wykrywanych przez opaskę.\end{tabular} \\
+    \textbf{00002a2b-0000-1000-8000-00805f9b34fb} & Charakterystyka przechowująca aktualną datę i godzinę,                                                                       \\ \hline
+    \end{tabular}
+    \egroup
+\end{table}
+
+\subsection{Autentykacja połączenia}
+\subsection{Sekwencja startowa}
+\subsection{Inne operacje}
