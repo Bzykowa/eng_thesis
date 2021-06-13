@@ -241,7 +241,7 @@ Profil Generic Attribute (GATT) definiuje framework wykorzystujący protokół A
 \subsection{Wykorzystane usługi i charakterystyki}
 Do uzyskania potrzebnych danych z opaski zostały użyte poniżej opisane usługi. Dla każdej z nich przedstawiono listę wykorzystanych charakterystyk z krótkim opisem, za co odpowiadają. Poniższe wartości zostały zidentyfikowane na podstawie przechwytywania pakietów ATT komunikacji MiBanda 3 z aplikacją Gadgetbridge \cite{Gadgetbridge} przy użyciu open-sourcowego sniffera Wireshark \cite{Wireshark} oraz analizie kodu źródłowego Gadgetbridge.
 
-\subsubsection{0000fee0-0000-1000-8000-00805f9b34fb}
+\subsubsection{Usługa 0000fee0-0000-1000-8000-00805f9b34fb}
 Jest to usługa odpowiadająca w głównej mierze za podstawowe funkcjonalności opaski MiBand 3. Pozwala zmodyfikować ustawienia urządzenia, zapisać informacje o użytkowniku oraz odczytać dane o stanie baterii i aktywności użytkownika. Jest to najczęściej wykorzystywana usługa w aplikacji.
 
 \begin{table}[H]
@@ -261,7 +261,7 @@ Jest to usługa odpowiadająca w głównej mierze za podstawowe funkcjonalności
     \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000fee0-0000-1000-8000-00805f9b34fb.}} \label{miliservice}
 \end{table}
 
-\subsubsection{0000fee1-0000-1000-8000-00805f9b34fb}
+\subsubsection{Usługa 0000fee1-0000-1000-8000-00805f9b34fb}
 Jest to usługa zawierająca przede wszystkim charakterystykę wykorzystywaną w procesie autentykacji połączenia oraz parowania. W usłudze tej znajduje się też sporo niezidentyfikowanych charakterystyk, które nie są wymagane do działania aplikacji. Dlatego więc zostały pominięte.
 \begin{table}[H]
     \bgroup
@@ -275,7 +275,7 @@ Jest to usługa zawierająca przede wszystkim charakterystykę wykorzystywaną w
     \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000fee1-0000-1000-8000-00805f9b34fb.}} \label{miband2service}
 \end{table}
 
-\subsubsection{0000180d-0000-1000-8000-00805f9b34fb}
+\subsubsection{Usługa 0000180d-0000-1000-8000-00805f9b34fb}
 Jest to usługa zdefiniowana przez Bluetooth Special Interest Group odpowiadająca za komunikację między sensorem akcji serca a innym klientem GATT. Za jej pomocą można uzyskać informację o pulsie użytkownika oraz skonfigurować automatyczne pomiary. 
 
 \begin{table}[H]
@@ -291,7 +291,7 @@ Jest to usługa zdefiniowana przez Bluetooth Special Interest Group odpowiadają
     \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000180d-0000-1000-8000-00805f9b34fb.}} \label{heartrateservice}
 \end{table}
 
-\subsubsection{0000180a-0000-1000-8000-00805f9b34fb}
+\subsubsection{Usługa 0000180a-0000-1000-8000-00805f9b34fb}
 Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. Odpowiada za dostarczenie informacji o urządzeniu. W tym wypadku jest to informacja o numerze seryjnym opaski oraz wersjach sprzętu i oprogramowania.
 
 \begin{table}[H]
@@ -301,7 +301,7 @@ Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. O
     \hline
     \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                      \\ \hline
     \textbf{00002a25-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu numeru \\ seryjnego opaski.\end{tabular}      \\
-    \textbf{00002a27-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu wersji \\ sprzętu opaski.\end{tabular}        \\
+    \textbf{00002a27-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu wersji \\ sprzętowej opaski.\end{tabular}        \\
     \textbf{00002a28-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu wersji \\ oprogramowania opaski.\end{tabular} \\ \hline
     \end{tabular}
     \egroup
@@ -309,5 +309,11 @@ Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. O
 \end{table}
 
 \subsection{Autentykacja połączenia}
+Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie nie uzyskamy dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób.
+
+\begin{algorithm}
+    
+\end{algorithm}
+
 \subsection{Sekwencja startowa}
 \subsection{Inne operacje}
