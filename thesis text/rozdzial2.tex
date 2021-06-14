@@ -331,7 +331,7 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
         }
     }
 \end{algorithm}
-
+\quad\newline\newline
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
@@ -356,4 +356,35 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
 \end{algorithm}
 
 \subsection{Sekwencja konfigurująca}
-\subsection{Inne operacje}
+Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu.
+\newline\newline
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Konfiguracja MiBanda 3} 
+    \BlankLine
+    \Begin{
+        $settingsChar \gets 00000003-0000-3512-2118-0009af100700$\;
+        $batteryChar \gets 00000006-0000-3512-2118-0009af100700$\;
+        $eventsChar \gets 00000010-0000-3512-2118-0009af100700$\;
+        $userChar \gets 00000008-0000-3512-2118-0009af100700$\;
+        $hrControlChar \gets 00002a39-0000-1000-8000-00805f9b34fb$\;
+        $hrChar \gets 00002a37-0000-1000-8000-00805f9b34fb$\;
+        $stepsChar \gets 00000007-0000-3512-2118-0009af100700$\;
+        $serialNumChar \gets 00002a25-0000-1000-8000-00805f9b34fb$\;
+        $hardwareChar \gets 00002a27-0000-1000-8000-00805f9b34fb$\;
+        $softwareChar \gets 00002a28-0000-1000-8000-00805f9b34fb$\;
+        \;
+        Włącz powiadomienia na $settingsChar, batteryChar, eventsChar$\;
+        Odczytaj wartość z $serialNumChar, hardwareChar, softwareChar$ oraz $batteryChar$\;
+        Ustaw język angielski poprzez wysłanie $ByteArray(0x06, 0x17, 0x00, 0x65, 0x6e, 0x5f, 0x55, 0x53) do settingsChar$ \;
+        Wyłącz odblokowywanie ekranu w opasce poprzez wysłanie $ $\;
+        Wyłącz tryb nocny poprzez wysłanie $ $\;
+        Ustaw format daty na DD_MM_YYYY poprzez wysłanie $ $\;
+        Ustaw format daty na Date_Time poprzez wysłanie $ $\;
+        Ustaw 24-godzinny zegar poprzez wysłanie $ $\;
+        Ustaw przykładowe dane o użytkowniku poprzez wysłanie $ $\;
+        
+    }
+\end{algorithm}
+
