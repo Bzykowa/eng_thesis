@@ -309,11 +309,51 @@ Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. O
 \end{table}
 
 \subsection{Autentykacja połączenia}
-Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie nie uzyskamy dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób.
+Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej.
+\newline
 
-\begin{algorithm}
-    
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Parowanie z MiBandem 3} 
+    \BlankLine
+    \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$, Zmienna logiczna $pair$ mówiąca, czy urządzenie jest sparowane}
+    \BlankLine
+    \Begin{
+        $authorisationChar \gets 00000009-0000-3512-2118-0009af100700$\;
+        Włącz powiadomienia na $authorisationChar$\;
+        \While{$pair$}{
+            Wyślij do $authorisationChar \longrightarrow ByteArray(0x01, 0x00) + K $\;
+            \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x01, 0x01)$}{
+                \CommentSty{Przejdź do autentykacji} \;
+                $pair \gets$  false \;
+            }
+        }
+    }
 \end{algorithm}
 
-\subsection{Sekwencja startowa}
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Autentykacja z MiBandem 3} 
+    \BlankLine
+    \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$}
+    \BlankLine
+    \Begin{
+        $authorisationChar \gets 00000009-0000-3512-2118-0009af100700$\;
+        $timeChar \gets 00002a2b-0000-1000-8000-00805f9b34fb$\;
+        Włącz powiadomienia na $authorisationChar$\;
+        Wyślij do $authorisationChar \longrightarrow ByteArray(0x02, 0x00)$\;
+        \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x02, 0x01, \dots)$}{
+            $numToEncrypt \gets odpowiedz \left[ 3:19 \right]$ \;
+            Wyślij do $authorisationChar \longrightarrow ByteArray(0x03, 0x00) + AES(K, numToEncrypt)$ \;
+            Wyślij do $timeChar$ aktualną datę \CommentSty{(tablica bajtów, gdzie wartości to: rok and 0xff, (rok shr 8) and 0xff, miesiąc and 0xff, dzień miesiąca and 0xff, godzina and 0xff, minuty and 0xff, sekundy and 0xff, dzień tygodnia and 0xff, 0)} \;
+        }
+        \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x03, 0x01, \dots)$}{
+            \CommentSty{Przejdź do konfiguracji} \;
+        }
+    }
+\end{algorithm}
+
+\subsection{Sekwencja konfigurująca}
 \subsection{Inne operacje}
