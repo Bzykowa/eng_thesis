@@ -2,13 +2,210 @@
 \thispagestyle{chapterBeginStyle}
 \label{rozdzial3}
 
-\section{Opis technologii}
+\section{Wykorzystane technologie}
 
 Do implementacji systemu został użyty język Kotlin w wersji 1.3.61. (aktualizacja wersji i lepszy opis jezyka) Interfejs graficzny zaprojektowano w oparciu o komponenty pochodzące z biblioteki AndroidX oraz Material. Do nawigacji w głównej aktywności aplikacji wykorzystano NavigationUI. Do implementacji bazy danych użyto biblioteki Room(moze coś wiecej) zapewniającej poziom abstrakcji nad SQLite. Wykorzystano bibliotekę Hilt/Dagger w celu wstrzykiwania dependencji w obrębie aplikacji w celu zredukowania tak zwanego ``boilerplate code'' (może więcej).
 \newline\newline
 W systemie wykorzystano inteligentną opaskę Xiaomi MiBand 3. Komunikacja z nią została zaimplementowana na podstawie nieoficjalnego SDK(większośc trzeba było napisać na nowo lub wyrzucić) opartego o bibliotekę
 RxAndroid pozwalającą tworzyć asynchroniczne programy bazujące na wydarzeniach korzystając z obserwowalnych sekwencji.
 
+\section{Blokada dostępu do aplikacji}
 
-\section{Omówienie wybranych kodów źródłowych}
+\section{Komunikacja z MiBand 3}
+W projektowanym systemie główną rolę gra inteligentna opaska. Komunikuje się ona ze smartfonem przy użyciu Bluetooth Low Energy protokołem ATT korzystając z GATT. BLE w porównaniu do klasycznego połączenia Bluetooth wykorzystuje znacznie niższe zasoby energii zachowując podobny zasięg, dzięki czemu znalazło szerokie zastosowanie w urządzeniach peryferyjnych. W poniższych podrozdziałach opisano pokrótce pojęcia ATT i GATT oraz dokładnie przedstawiono zaimplementowany protokół komunikacji z opaską MiBand 3.
+\subsection{ATT}
+Protokół Attribute umożliwia urządzeniu, określonemu jako \textit{serwer}, odsłonić zbiór atrybutów i powiązanych z nimi wartości urządzeniu równorzędnemu, określonemu jako \textit{klient}. Atrybuty odsłonięte przez serwer mogą być odkryte, odczytane bądź nadpisane przez klienta, a także mogą być rozgłaszane przez serwer w ramach powiadomienia lub zasygnalizowania. Atrybut jest dyskretną wartością o trzech właściwościach powiązanych ze sobą:
+\begin{itemize}
+    \item typie,
+    \item uchwycie,
+    \item zestawie pozwoleń, które są zdefiniowane przez specyfikację wyższej warstwy wykorzystującą dany atrybut.
+\end{itemize}
+Typ atrybutu określa, co reprezentuje dany atrybut poprzez UUID (Universally Unique Identifier), ktore może zostać utworzone przez każdego, a następnie zostać opublikowane. Pozwala to rozpoznać atrybut niezależnie od nadanego mu przez serwer uchwytu. Uchwyt atrybutu jest unikalną, niezerową, 16-bitową wartością, która jednoznacznie identyfikuje dany atrybut w obrębie serwera, pozwalając klientowi odnieść się do niego podczas operacji odczytu oraz zapisu. Pozwolenia mogą być nadane atrybutowi w celu ograniczenia klientowi dostępu do zapisu lub odczytu.
+\newline\newline
+\indent Urządzenie może jednocześnie implementować zarówno rolę serwera jak i klienta oraz obie role mogą funkcjonować współbieżnie oraz komunikować się między sobą. Na każdym urządzeniu Bluetooth może znajdować się maksymalnie jedna instancja serwera.
+\newline\newline
+\indent Wszystkie prośby protokołu Attribute są przesyłane poprzez \textit{nosiciela ATT}. Między urządzeniami może być wielu nosicieli, gdzie każdy z nich korzysta z osobnego kanału L2CAP oraz może mieć inną konfigurację. W przypadku BLE, wykorzystywany jest pojedynczy nosiciel ATT, który używa stałego kanału dostępnego od ustanowienia połączenia ACL. Można jednak skonfigurować dodatkowych nosicieli używając L2CAP. Więcej informacji na temat protokołu ATT można znaleźć w \cite{BT-Corev5.2}. 
+
+\subsection{GATT}
+Profil Generic Attribute (GATT) definiuje framework wykorzystujący protokół Attribute, określający procedury i formaty danych znajdujących się wewnątrz profilu. Zdefiniowane procedury obejmują odkrywanie, odczyt, zapis, powiadamianie oraz sygnalizację. Profil ten został zaprojektowany do wykorzystania przez aplikacje bądź inny profil, aby umożliwić klientowi komunikację z serwerem poprzez opakowanie protokołu ATT w bardziej przystępną formę.
+\newline\newline
+\indent Profil GATT określa strukturę, w której odbywa się wymiana danych. Najwyższym poziomem jest profil zawierający liczne \textit{usługi} będące zbiorem danych oraz przypisanych im zachowań niezbędnych do zapewnienia określonej funkcji. Usługi składają się z \textit{charakterystyk}, z których każda zawiera określoną wartość oraz opcjonalne informacje na jej temat. Usługi oraz charakterystyki wraz ze swoimi komponentami zawierają dane profilu, które są przechowywane w Atrybutach na serwerze. Dzięki wykorzystaniu określonej struktury danych przez GATT możliwe jest przeglądanie dostępnych Usług oraz Charakterystyk, nawet gdy klient nie jest wyspecjalizowany pod dany serwer. Więcej informacji na temat GATT można znaleźć w \cite{BT-Corev5.2}.
+
+\subsection{Wykorzystane usługi i charakterystyki}
+Do uzyskania potrzebnych danych z opaski zostały użyte poniżej opisane usługi. Dla każdej z nich przedstawiono listę wykorzystanych charakterystyk z krótkim opisem, za co odpowiadają. Poniższe wartości zostały zidentyfikowane na podstawie przechwytywania pakietów ATT komunikacji MiBanda 3 z aplikacją Gadgetbridge \cite{Gadgetbridge} przy użyciu open-sourcowego sniffera Wireshark \cite{Wireshark} oraz analizie kodu źródłowego Gadgetbridge.
+
+\subsubsection{Usługa 0000fee0-0000-1000-8000-00805f9b34fb}
+Jest to usługa odpowiadająca w głównej mierze za podstawowe funkcjonalności opaski MiBand 3. Pozwala zmodyfikować ustawienia urządzenia, zapisać informacje o użytkowniku oraz odczytać dane o stanie baterii i aktywności użytkownika. Jest to najczęściej wykorzystywana usługa w aplikacji.
+
+\begin{table}[H]
+    \bgroup
+    \def\arraystretch{1.5}%
+    \begin{tabular}{|ll|}
+    \hline
+    \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                                \\ \hline
+    \textbf{00000003-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka pozwalająca na konfigurację ustawień \\ opaski.\end{tabular}                      \\
+    \textbf{00000006-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka zawierająca informacje o stanie baterii \\ opaski.\end{tabular}                   \\
+    \textbf{00000007-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka przechowująca liczbę wykonanych kroków \\ danego dnia.\end{tabular}               \\
+    \textbf{00000008-0000-3512-2118-0009af100700} & Charakterystyka zawierająca dane użytkownika.                                                                                \\
+    \textbf{00000010-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka zawierająca informacje na temat zdarzeń \\ wykrywanych przez opaskę.\end{tabular} \\
+    \textbf{00002a2b-0000-1000-8000-00805f9b34fb} & Charakterystyka przechowująca aktualną datę i godzinę,                                                                       \\ \hline
+    \end{tabular}
+    \egroup
+    \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000fee0-0000-1000-8000-00805f9b34fb.}} \label{miliservice}
+\end{table}
+
+\subsubsection{Usługa 0000fee1-0000-1000-8000-00805f9b34fb}
+Jest to usługa zawierająca przede wszystkim charakterystykę wykorzystywaną w procesie autentykacji połączenia oraz parowania. W usłudze tej znajduje się też sporo niezidentyfikowanych charakterystyk, które nie są wymagane do działania aplikacji. Dlatego więc zostały pominięte.
+\begin{table}[H]
+    \bgroup
+    \def\arraystretch{1.5}%
+    \begin{tabular}{|ll|}
+    \hline
+    \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                                \\ \hline
+    \textbf{00000009-0000-3512-2118-0009af100700} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do autentykacji  \\ połączenia między opaską a klientem\end{tabular} \\ \hline
+    \end{tabular}
+    \egroup
+    \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000fee1-0000-1000-8000-00805f9b34fb.}} \label{miband2service}
+\end{table}
+
+\subsubsection{Usługa 0000180d-0000-1000-8000-00805f9b34fb}
+Jest to usługa zdefiniowana przez Bluetooth Special Interest Group odpowiadająca za komunikację między sensorem akcji serca a innym klientem GATT. Za jej pomocą można uzyskać informację o pulsie użytkownika oraz skonfigurować automatyczne pomiary. 
+
+\begin{table}[H]
+    \bgroup
+    \def\arraystretch{1.5}%
+    \begin{tabular}{|ll|}
+    \hline
+    \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                              \\ \hline
+    \textbf{00002a37-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu aktualnej \\ wartości pulsu użytkownika.\end{tabular} \\
+    \textbf{00002a39-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka odpowiedzialna za konfigurację sensora \\ akcji serca w opasce.\end{tabular}    \\ \hline
+    \end{tabular}
+    \egroup
+    \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000180d-0000-1000-8000-00805f9b34fb.}} \label{heartrateservice}
+\end{table}
+
+\subsubsection{Usługa 0000180a-0000-1000-8000-00805f9b34fb}
+Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. Odpowiada za dostarczenie informacji o urządzeniu. W tym wypadku jest to informacja o numerze seryjnym opaski oraz wersjach sprzętu i oprogramowania.
+
+\begin{table}[H]
+    \bgroup
+    \def\arraystretch{1.5}%
+    \begin{tabular}{|ll|}
+    \hline
+    \textbf{Charakterystyka}                      & \textbf{Opis}                                                                                                      \\ \hline
+    \textbf{00002a25-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu numeru \\ seryjnego opaski.\end{tabular}      \\
+    \textbf{00002a27-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu wersji \\ sprzętowej opaski.\end{tabular}        \\
+    \textbf{00002a28-0000-1000-8000-00805f9b34fb} & \begin{tabular}[c]{@{}l@{}}Charakterystyka wykorzystywana do odczytu wersji \\ oprogramowania opaski.\end{tabular} \\ \hline
+    \end{tabular}
+    \egroup
+    \caption{{\color{dgray}Wykorzystane charakterystyki z usługi 0000180a-0000-1000-8000-00805f9b34fb.}} \label{deviceservice}
+\end{table}
+
+\subsection{Autentykacja połączenia}
+Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej. Aktualna data przesyłana jest jako tablica bajtów, gdzie wartości to: rok $\land$ 0xff, (rok $\gg$ 8) $\land$ 0xff, miesiąc $\land$ 0xff, dzień miesiąca $\land$ 0xff, godzina $\land$ 0xff, minuty $\land$ 0xff, sekundy $\land$ 0xff, dzień tygodnia $\land$ 0xff oraz 0.
+\newline
+
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Parowanie z MiBandem 3} 
+    \BlankLine
+    \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$, Zmienna logiczna $pair$ mówiąca, czy urządzenie jest sparowane}
+    \BlankLine
+    \Begin{
+        $authorisationChar \gets 00000009-0000-3512-2118-0009af100700$\;
+        Włącz powiadomienia na $authorisationChar$\;
+        \If{$pair$}{
+            Wyślij do $authorisationChar \longrightarrow ByteArray(0x01, 0x00) + K $\;
+            \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x01, 0x01)$}{
+                Przejdź do autentykacji \;
+            }
+        }
+    }
+\end{algorithm}
+\quad\newline\newline
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Autentykacja z MiBandem 3} 
+    \BlankLine
+    \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$}
+    \BlankLine
+    \Begin{
+        $authorisationChar \gets 00000009-0000-3512-2118-0009af100700$\;
+        $timeChar \gets 00002a2b-0000-1000-8000-00805f9b34fb$\;
+        Włącz powiadomienia na $authorisationChar$\;
+        Wyślij do $authorisationChar \longrightarrow ByteArray(0x02, 0x00)$\;
+        \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x02, 0x01, \dots)$}{
+            $numToEncrypt \gets odpowiedz \left[ 3:19 \right]$ \;
+            Wyślij do $authorisationChar \longrightarrow ByteArray(0x03, 0x00) + AES(K, numToEncrypt)$ \;
+            Wyślij do $timeChar$ aktualną datę\;
+        }
+        \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x03, 0x01, \dots)$}{
+            Przejdź do konfiguracji\;
+        }
+    }
+\end{algorithm}
+
+\subsection{Sekwencja konfigurująca}
+Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu. Czynności konfiguracyjne zostały zidentyfikowane na podstawie porównania przechwyconych pakietów ATT z kodem źródłowym Gadgetbridge. Poniżej opisano szerzej niektóre z wysyłanych danych, które były zbyt obszerne, aby przedstawić je w pseudokodzie. 
+\newline\newline
+\indent Format daty jest przestawiony jako tablica bajtów, zawierająca każdy znak z ``dd/MM/yyyy'' skonwertowany na bajt. Wartość celu fitness obliczana jest jako dwuelementowa tablica bajtów, gdzie wartości to wartość celu $\land$ 0xff oraz (wartość celu $\gg$ 8) $\land$ 0xff. Dane użytkownika są formatowane do wysłania jako tablica bajtów zawierająca: 0x4f, 0x00, 0x00, rokUrodzenia $\land$ 0xff, (rokUrodzenia $\gg$ 8)$\land$ 0xff, miesiąc, dzien, płeć (0x00 lub 0x01), wzrost $\land$ 0xff, (wzrost $\gg$ 8) $\land$ 0xff, waga $\times$ 200 $\land$ 0xff, (waga $\times$ 200 $\gg$ 8) $\land$ 0xff, id $\land$ 0xff, (id $\gg$ 8) $\land$ 0xff, (id $\gg$ 16) $\land$ 0xff oraz (id $\gg$ 24) $\land$ 0xff.
+\newline\newline
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Konfiguracja MiBanda 3 - Część 1} 
+    \BlankLine
+    \Begin{
+        $settingsChar \gets 00000003-0000-3512-2118-0009af100700$\;
+        $batteryChar \gets 00000006-0000-3512-2118-0009af100700$\;
+        $eventsChar \gets 00000010-0000-3512-2118-0009af100700$\;
+        $userChar \gets 00000008-0000-3512-2118-0009af100700$\;
+        $hrControlChar \gets 00002a39-0000-1000-8000-00805f9b34fb$\;
+        $hrChar \gets 00002a37-0000-1000-8000-00805f9b34fb$\;
+        $stepsChar \gets 00000007-0000-3512-2118-0009af100700$\;
+        $serialNumChar \gets 00002a25-0000-1000-8000-00805f9b34fb$\;
+        $hardwareChar \gets 00002a27-0000-1000-8000-00805f9b34fb$\;
+        $softwareChar \gets 00002a28-0000-1000-8000-00805f9b34fb$\;
+        \;
+        Włącz powiadomienia na $settingsChar, batteryChar$ oraz $eventsChar$\;
+        Odczytaj wartość z $serialNumChar, hardwareChar, softwareChar$ oraz $batteryChar$\;
+        Ustaw język angielski wysyłając $ByteArray(0x06, 0x17, 0x00, 0x65, 0x6e, 0x5f, 0x55, 0x53)$ do $settingsChar$ \;
+        Wyłącz odblokowywanie ekranu w opasce wysyłając $ByteArray(0x06, 0x16, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz tryb nocny wysyłając $ByteArray(0x1a, 0x00)$ do $settingsChar$\;
+        Ustaw format daty wysyłając $ByteArray(0x06, 0x1e, 0x00)+ format$ do $settingsChar$, gdzie $format$ to opisany powyżej przetworzony łańcuch znaków\;
+        Ustaw format wyświetlanej daty wysyłając $ByteArray(0x06, 0x0a, 0x00, 0x03)$ do $settingsChar$\;
+        Ustaw 24-godzinny zegar wysyłając $ByteArray(0x06, 0x02, 0x00, 0x01)$ do $settingsChar$\;
+        Ustaw przykładowe dane o użytkowniku wysyłając $userInfo$ do $settingsChar$, gdzie $userInfo$ to przetworzone dane o użytkowniku opisane powyżej\;
+        Ustaw jednostki metryczne wysyłając $ByteArray(0x06, 0x03, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz powiadomienia na $userChar$\;
+        Ustaw lokalizację noszenia opaski na lewą rękę wysyłając $ByteArray(0x20, 0x00, 0x00, 0x02)$ do $userChar$\;
+        Ustaw cel fitness wysyłając $ByteArray(0x10, 0x00, 0x00, x[0], x[1], 0x00, 0x00)$ do $userChar$, gdzie $x$ to przetworzona wartość celu\;
+        Ustaw elementy menu opaski wysyłając $ByteArray(0x0a, 0x7f, 0x30, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)$ do $settingsChar$\;
+        Wyłącz w opasce tryb ``Nie przeszkadzać'' wysyłając $ByteArray(0x09, 0x82)$ do $settingsChar$\;
+        Wyłącz gest obrotu nadgarstka do zmiany pozycji w menu wysyłając $ByteArray(0x06, 0x0d, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz gest podniesienia nadgarstka do włączenia ekranu opaski wysyłając $ByteArray(0x06, 0x05, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wyświetlanie ID dzwoniącego w opasce wysyłając $ByteArray(0x06, 0x10, 0x00, 0x00, 0x01)$ do $settingsChar$\;
+        Wyłącz powiadomienia o celu fitness wysyłając $ByteArray(0x06, 0x06, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz powiadomienia o nieaktywności wysyłając $ByteArray(0x08, 0x00, 0x3c, 0x00, 0x04, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wspomaganie detekcji snu przez pomiar pulsu wysyłając $ByteArray(0x15, 0x00, 0x01)$ do $hrControlChar$\;
+    }
+\end{algorithm}
+\quad\newline\newline
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Konfiguracja MiBanda 3 - Część 2} 
+    \BlankLine
+    \Begin{
+        Włącz powiadomienie o utracie połączenia wysyłając $ByteArray(0x06, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz powiadomienie o nawiązaniu połączenia wysyłając $ByteArray(0x06, 0x01, 0x00, 0x01)$ do $settingsChar$\;
+        Ustaw interwał automatycznego pomiaru pulsu na minimalny wysyłając $ByteArray(0x14, 0x01)$  do $hrControlChar$\;
+        Poproś o alarmy wysyłając $0x0d$ do $settingsChar$\;
+        Włącz powiadomienia na $hrChar$ oraz $stepsChar$\;
+    }
+\end{algorithm}
+
+\section{Analiza rejestrowanych danych o aktywności}
 
