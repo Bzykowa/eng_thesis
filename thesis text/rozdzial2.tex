@@ -309,7 +309,7 @@ Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. O
 \end{table}
 
 \subsection{Autentykacja połączenia}
-Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej.
+Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej. Aktualna data przesyłana jest jako tablica bajtów, gdzie wartości to: rok $\land$ 0xff, (rok $\gg$ 8) $\land$ 0xff, miesiąc $\land$ 0xff, dzień miesiąca $\land$ 0xff, godzina $\land$ 0xff, minuty $\land$ 0xff, sekundy $\land$ 0xff, dzień tygodnia $\land$ 0xff oraz 0.
 \newline
 
 \begin{algorithm}[H]
@@ -322,11 +322,10 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
     \Begin{
         $authorisationChar \gets 00000009-0000-3512-2118-0009af100700$\;
         Włącz powiadomienia na $authorisationChar$\;
-        \While{$pair$}{
+        \If{$pair$}{
             Wyślij do $authorisationChar \longrightarrow ByteArray(0x01, 0x00) + K $\;
             \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x01, 0x01)$}{
-                \CommentSty{Przejdź do autentykacji} \;
-                $pair \gets$  false \;
+                Przejdź do autentykacji \;
             }
         }
     }
@@ -347,21 +346,23 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
         \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x02, 0x01, \dots)$}{
             $numToEncrypt \gets odpowiedz \left[ 3:19 \right]$ \;
             Wyślij do $authorisationChar \longrightarrow ByteArray(0x03, 0x00) + AES(K, numToEncrypt)$ \;
-            Wyślij do $timeChar$ aktualną datę \CommentSty{(tablica bajtów, gdzie wartości to: rok and 0xff, (rok shr 8) and 0xff, miesiąc and 0xff, dzień miesiąca and 0xff, godzina and 0xff, minuty and 0xff, sekundy and 0xff, dzień tygodnia and 0xff, 0)} \;
+            Wyślij do $timeChar$ aktualną datę\;
         }
         \If{Otrzymano $odpowiedz \gets ByteArray(0x10, 0x03, 0x01, \dots)$}{
-            \CommentSty{Przejdź do konfiguracji} \;
+            Przejdź do konfiguracji\;
         }
     }
 \end{algorithm}
 
 \subsection{Sekwencja konfigurująca}
-Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu.
+Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu. Czynności konfiguracyjne zostały zidentyfikowane na podstawie porównania przechwyconych pakietów ATT z kodem źródłowym Gadgetbridge. Poniżej opisano szerzej niektóre z wysyłanych danych, które były zbyt obszerne, aby przedstawić je w pseudokodzie. 
+\newline\newline
+\indent Format daty jest przestawiony jako tablica bajtów, zawierająca każdy znak z ``dd/MM/yyyy'' skonwertowany na bajt. Wartość celu fitness obliczana jest jako dwuelementowa tablica bajtów, gdzie wartości to wartość celu $\land$ 0xff oraz (wartość celu $\gg$ 8) $\land$ 0xff. Dane użytkownika są formatowane do wysłania jako tablica bajtów zawierająca: 0x4f, 0x00, 0x00, rokUrodzenia $\land$ 0xff, (rokUrodzenia $\gg$ 8)$\land$ 0xff, miesiąc, dzien, płeć (0x00 lub 0x01), wzrost $\land$ 0xff, (wzrost $\gg$ 8) $\land$ 0xff, waga $\times$ 200 $\land$ 0xff, (waga $\times$ 200 $\gg$ 8) $\land$ 0xff, id $\land$ 0xff, (id $\gg$ 8) $\land$ 0xff, (id $\gg$ 16) $\land$ 0xff oraz (id $\gg$ 24) $\land$ 0xff.
 \newline\newline
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
-    \caption{Konfiguracja MiBanda 3} 
+    \caption{Konfiguracja MiBanda 3 - Część 1} 
     \BlankLine
     \Begin{
         $settingsChar \gets 00000003-0000-3512-2118-0009af100700$\;
@@ -375,16 +376,44 @@ Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odb
         $hardwareChar \gets 00002a27-0000-1000-8000-00805f9b34fb$\;
         $softwareChar \gets 00002a28-0000-1000-8000-00805f9b34fb$\;
         \;
-        Włącz powiadomienia na $settingsChar, batteryChar, eventsChar$\;
+        Włącz powiadomienia na $settingsChar, batteryChar$ oraz $eventsChar$\;
         Odczytaj wartość z $serialNumChar, hardwareChar, softwareChar$ oraz $batteryChar$\;
-        Ustaw język angielski poprzez wysłanie $ByteArray(0x06, 0x17, 0x00, 0x65, 0x6e, 0x5f, 0x55, 0x53) do settingsChar$ \;
-        Wyłącz odblokowywanie ekranu w opasce poprzez wysłanie $ $\;
-        Wyłącz tryb nocny poprzez wysłanie $ $\;
-        Ustaw format daty na DD_MM_YYYY poprzez wysłanie $ $\;
-        Ustaw format daty na Date_Time poprzez wysłanie $ $\;
-        Ustaw 24-godzinny zegar poprzez wysłanie $ $\;
-        Ustaw przykładowe dane o użytkowniku poprzez wysłanie $ $\;
-        
+        Ustaw język angielski wysyłając $ByteArray(0x06, 0x17, 0x00, 0x65, 0x6e, 0x5f, 0x55, 0x53)$ do $settingsChar$ \;
+        Wyłącz odblokowywanie ekranu w opasce wysyłając $ByteArray(0x06, 0x16, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz tryb nocny wysyłając $ByteArray(0x1a, 0x00)$ do $settingsChar$\;
+        Ustaw format daty wysyłając $ByteArray(0x06, 0x1e, 0x00)+ format$ do $settingsChar$, gdzie $format$ to opisany powyżej przetworzony łańcuch znaków\;
+        Ustaw format wyświetlanej daty wysyłając $ByteArray(0x06, 0x0a, 0x00, 0x03)$ do $settingsChar$\;
+        Ustaw 24-godzinny zegar wysyłając $ByteArray(0x06, 0x02, 0x00, 0x01)$ do $settingsChar$\;
+        Ustaw przykładowe dane o użytkowniku wysyłając $userInfo$ do $settingsChar$, gdzie $userInfo$ to przetworzone dane o użytkowniku opisane powyżej\;
+        Ustaw jednostki metryczne wysyłając $ByteArray(0x06, 0x03, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz powiadomienia na $userChar$\;
+        Ustaw lokalizację noszenia opaski na lewą rękę wysyłając $ByteArray(0x20, 0x00, 0x00, 0x02)$ do $userChar$\;
+        Ustaw cel fitness wysyłając $ByteArray(0x10, 0x00, 0x00, x[0], x[1], 0x00, 0x00)$ do $userChar$, gdzie $x$ to przetworzona wartość celu\;
+        Ustaw elementy menu opaski wysyłając $ByteArray(0x0a, 0x7f, 0x30, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)$ do $settingsChar$\;
+        Wyłącz w opasce tryb ``Nie przeszkadzać'' wysyłając $ByteArray(0x09, 0x82)$ do $settingsChar$\;
+        Wyłącz gest obrotu nadgarstka do zmiany pozycji w menu wysyłając $ByteArray(0x06, 0x0d, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz gest podniesienia nadgarstka do włączenia ekranu opaski wysyłając $ByteArray(0x06, 0x05, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wyświetlanie ID dzwoniącego w opasce wysyłając $ByteArray(0x06, 0x10, 0x00, 0x00, 0x01)$ do $settingsChar$\;
+        Wyłącz powiadomienia o celu fitness wysyłając $ByteArray(0x06, 0x06, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz powiadomienia o nieaktywności wysyłając $ByteArray(0x08, 0x00, 0x3c, 0x00, 0x04, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wspomaganie detekcji snu przez pomiar pulsu wysyłając $ByteArray(0x15, 0x00, 0x01)$ do $hrControlChar$\;
     }
 \end{algorithm}
+\quad\newline\newline
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Konfiguracja MiBanda 3 - Część 2} 
+    \BlankLine
+    \Begin{
+        Włącz powiadomienie o utracie połączenia wysyłając $ByteArray(0x06, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz powiadomienie o nawiązaniu połączenia wysyłając $ByteArray(0x06, 0x01, 0x00, 0x01)$ do $settingsChar$\;
+        Ustaw interwał automatycznego pomiaru pulsu na minimalny wysyłając $ByteArray(0x14, 0x01)$  do $hrControlChar$\;
+        Poproś o alarmy wysyłając $0x0d$ do $settingsChar$\;
+        Włącz powiadomienia na $hrChar$ oraz $stepsChar$\;
+    }
+
+\end{algorithm}
+
+
 
