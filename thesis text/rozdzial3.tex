@@ -1,6 +1,7 @@
 \chapter{Implementacja aplikacji}
 \thispagestyle{chapterBeginStyle}
 \label{rozdzial3}
+W tym rozdziale określono szczegóły implementacyjne aplikacji. Scharakteryzowano wykorzystany język programowania oraz użyte biblioteki. Następnie opisano sposób uniemożliwienia dostępu do blokowanych aplikacji. W kolejnej sekcji opisano dokładnie protokół wykorzystywany do komunikacji z MiBandem 3 wraz z sekwencją autentykującą oraz konfiguracyjną. W ostatniej sekcji określono w jaki sposób aplikacja analizuje dane o aktywności użytkownika.
 
 \section{Wykorzystane technologie}
 Aplikacja została napisana przy użyciu języka \textbf{Kotlin} w wersji 1.4.31. Język ten, jest tworzony od 2011 roku przez Jetbrains z myślą, by zapewnić przemysłowo silny język obiektowy, który będzie lepszy od Javy ale wciąż będzie z nią w pełni interoperacyjny, aby umożliwić stopniową migrację istniejących już systemów. Głównymi zaletami korzystania z Kotlina w programowaniu na system Android jest zmniejszenie objętości kodu oraz możliwość wykorzystania funkcjonalności języka takich, jak korutyny, funkcje rozrzerzeń czy lambdy w istniejących bibliotekach Androida. Kod Kotlina jest także bardziej czytelny niż Javy, co prowadzi do zmniejszonej liczby błędów. 
