@@ -206,13 +206,15 @@ W tym przypadku sensor licznika kroków w smartfonie rejestruje wykonane kroki, 
     \item System zapisuje odczytaną wartość.
 \end{enumerate}
 
-\section{Diagram komponentów}
+\section{Diagram pakietów}
 
 W tej sekcji należy przedstawić diagramy komponentów dla odpowiednich elementów systemu zidentyfikowane na podstawie wcześniejszych rozważań
 
-\section{Diagramy stanów}
+\section{Diagram stanów}
 
-W tej sekcji należy przedstawić diagramy stanów w których może znaleźć się system. Diagramy te są szczególnie istotne przy projektowaniu systemów czasu rzeczywistego.
+Na grafice \ref{main_state_diagram} przedstawiono diagram stanów dla systemu monotorująco-blokującego, stanowiącego podstawę działania aplikacji. Diagram ten przedstawia ogólny schemat działania aplikacji w zakresie zabezpieczenia smartfona. Stanami początkowymi są \textit{Zakończono początkową konfigurację} oraz \textit{Uruchomiono ponownie system}. Przedstawiają one dwie sytuacje, w których może nastąpić uruchomienie systemu. W pierwszym przypadku jest to pierwsze uruchomienie aplikacji, gdzie określono hasło i nawiązano połączenie z opaską. Wtedy następuje przejście do stanu \textit{Monitorowanie aktywności}. W przypadku restartu urządzenia wybór stanu, do którego przejdzie aplikacja zależy od ostatniego aktywnego stanu przed wyłączeniem urządzenia. Jeśli była aktywna blokada, aplikacja przejdzie do stanu \textit{Monitorowanie otwieranych aplikacji}. W przeciwnym razie przejdzie do stanu \textit{Łączenie z opaską}.
+\newline\newline
+\indent Następnym analizowanym stanem jest \textit{Monitorowanie aktywności}. W tym stanie aplikacja pobiera dane z opaski i analizuje je pod kątem zdarzeń sugerujących, że użytkownik nie nadzoruje swojego smartfona. Jeśli zostanie wykryte takie zdarzenie następuje przejście do kolejnego analizowanego stanu - \textit{Monitorowanie otwieranych aplikacji}. W tym stanie system skanuje statystyki użycia innych aplikacji w krótkich odstępach czasu. Jeśli zostanie wykryte przejście do aplikacji na liście zablokowanych następuje przejście do stanu \textit{Oczekiwanie na wprowadzenie hasła}. W tym stanie aplikacja wyświetla okno wprowadzania hasła i czeka na akcje użytkownika. Możliwe są trzy przejścia: gdy użytkownik zamknie okno aplikacja powraca do stanu \textit{Monitorowanie otwieranych aplikacji}, gdy wprowadzone hasło jest błędne system pozostaje w tym samym stanie, a gdy wprowadzone zostanie poprawne hasło system przechodzi do stanu \textit{Łączenie z opaską}. W tym stanie aplikacja próbuje nawiązać połączenie z opaską. Gdy zakończy się to sukcesem zachodzi przejście do stanu \textit{Monitorowanie aktywności}. W przeciwnym razie aplikacja powraca do stanu \textit{Monitorowanie otwieranych aplikacji}.
 
 \begin{figure}[H]
     \begin{center}

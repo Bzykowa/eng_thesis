@@ -3,13 +3,40 @@
 \label{rozdzial3}
 
 \section{Wykorzystane technologie}
-
-Do implementacji systemu został użyty język Kotlin w wersji 1.3.61. (aktualizacja wersji i lepszy opis jezyka) Interfejs graficzny zaprojektowano w oparciu o komponenty pochodzące z biblioteki AndroidX oraz Material. Do nawigacji w głównej aktywności aplikacji wykorzystano NavigationUI. Do implementacji bazy danych użyto biblioteki Room(moze coś wiecej) zapewniającej poziom abstrakcji nad SQLite. Wykorzystano bibliotekę Hilt/Dagger w celu wstrzykiwania dependencji w obrębie aplikacji w celu zredukowania tak zwanego ``boilerplate code'' (może więcej).
+Aplikacja została napisana przy użyciu języka \textbf{Kotlin} w wersji 1.4.31. Język ten, jest tworzony od 2011 roku przez Jetbrains z myślą, by zapewnić przemysłowo silny język obiektowy, który będzie lepszy od Javy ale wciąż będzie z nią w pełni interoperacyjny, aby umożliwić stopniową migrację istniejących już systemów. Głównymi zaletami korzystania z Kotlina w programowaniu na system Android jest zmniejszenie objętości kodu oraz możliwość wykorzystania funkcjonalności języka takich, jak korutyny, funkcje rozrzerzeń czy lambdy w istniejących bibliotekach Androida. Kod Kotlina jest także bardziej czytelny niż Javy, co prowadzi do zmniejszonej liczby błędów. 
 \newline\newline
-W systemie wykorzystano inteligentną opaskę Xiaomi MiBand 3. Komunikacja z nią została zaimplementowana na podstawie nieoficjalnego SDK(większośc trzeba było napisać na nowo lub wyrzucić) opartego o bibliotekę
-RxAndroid pozwalającą tworzyć asynchroniczne programy bazujące na wydarzeniach korzystając z obserwowalnych sekwencji.
+\indent Do implementacji bazy danych wykorzystano bibliotekę \textbf{Room}, tworzącą warstwę abstrakcji nad SQLite, by zapewnić płynny dostęp do bazy, zachowując pełną moc SQLite. Biblioteka ta pozwala między innymi zmniejszyć ilość powtarzalnego, skłonnego do generowania błędów kodu poprzez stosowanie anotacji oraz weryfikować zapytania SQL w czasie kompilacji. Aby zapewnić bezpieczeństwo bazy danych została ona zaszyfrowana przy użyciu biblioteki \textbf{SQLCipher}.
+\newline\newline
+\indent Do jeszcze większej optymalizacji kodu wykorzystano bibliotekę \textbf{Hilt}, która odpowiada za wstrzykiwanie zależności do klas. W przeciwieństwie do manualnego konstruowania klas wraz z ich zależnościami oraz wykorzystywaniu dodatkowych obiektów do zarządzania nimi, Hilt generuje je sam na podstawie określonych anotacji, a także zapewnia poprawne zarządzanie ich cyklem życia. Dzięki temu przy mniejszej ilości kodu można uzyskać lepszą wydajność w czasie działania aplikacji oraz zmiejszenie liczby błędów podczas kompilacji.
+\newline\newline
+\indent Do implementacji komunikacji z MiBandem została wykorzystana biblioteka \textbf{RxJava}, pozwalająca wykorzystać możliwości programowania reaktywnego, czyli paradygmatu programowania polegającego na przetwarzaniu strumieni danych i propagowaniu ich zmian, w aplikacjach na system Android. Przepływ danych pomiędzy aplikacją a opaską został opakowany w obiekty typu \textit{Observable}, co pozwoliło dokładnie monitorować stan wysyłanych danych oraz asynchronicznie oczekiwać odpowiedzi na poszczególne operacje.
+\newline\newline
+\indent Aby usprawnienić wydajność aplikacji wszystkie operacje zapisu do bazy danych oraz komunikacja z opaską są wykonywane w korutynach zoptymalizowanych pod operacje wejścia/wyjścia, dzięki czemu główny wątek aplikacji zostaje odciążony. Wykorzystano również \textbf{Data Binding}, aby uprościć odniesienia do elementów UI w kodzie aplikacji, co pozwala zwiększyć odporność na wycieki pamięci oraz wydajność. 
 
 \section{Blokada dostępu do aplikacji}
+Skuteczny sposób uniemożliwienia dostępu do aplikacji jest jedną z kluczowych części projektowanego systemu. Schemat blokady zaprezentowany w pracy opiera się na monitorowaniu aplikacji na pierwszym planie systemu Android. Aby dostać się do tych informacji wykorzystano usługę \textit{Usage Stats}, która zawiera statystyki korzystania z zainstalowanych aplikacji oraz zdarzenia takie, jak zablokowanie ekranu czy wyświetlenie aktywności danej aplikacji na ekranie. Proponowany system blokady pobiera zdarzenia z ostatnich 5 sekund, a następnie poszukuje w nich typu ``MOVE\_TO\_FOREGROUND''. Jeśli takie zdarzenie zostanie odnalezione, a aplikacja, która zainicjowała je, jest na liście aplikacji do zablokowania, następuje przejście do aktywności zawierającej pole do wpisania hasła. W przeciwnym razie system nie reaguje. Jeśli wprowadzone hasło było poprawne usługa blokująca zostaje zatrzymana i aplikacja nawiązuje próbę połączenia się z opaską. Poniżej przedstawiono zarys algorytmu blokującego w pseudokodzie.
+\newline
+
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \caption{Blokowanie dostępu do wybranych aplikacji} 
+    \BlankLine
+    \KwData{Lista zablokowanych aplikacji $BA$}
+    \BlankLine
+    \Begin{
+        \While{blokada jest aktywna}{
+            $events \gets $ zdarzenia z \textit{Usage Stats} z ostatnich 5 sekund \;
+            \While{$events$.hasNext()}{
+                $event \gets events$.next() \;
+                \If{$event ==$ ``MOVE\_TO\_FOREGROUND'' $\land$ $event$.isIn($BA$)}{
+                    Uruchom aktywność odpowiedzialną za wpisywanie hasła \;
+                }
+            }
+            Poczekaj 5 sekund \;
+        }
+    }
+\end{algorithm}
 
 \section{Komunikacja z MiBand 3}
 W projektowanym systemie główną rolę gra inteligentna opaska. Komunikuje się ona ze smartfonem przy użyciu Bluetooth Low Energy protokołem ATT korzystając z GATT. BLE w porównaniu do klasycznego połączenia Bluetooth wykorzystuje znacznie niższe zasoby energii zachowując podobny zasięg, dzięki czemu znalazło szerokie zastosowanie w urządzeniach peryferyjnych. W poniższych podrozdziałach opisano pokrótce pojęcia ATT i GATT oraz dokładnie przedstawiono zaimplementowany protokół komunikacji z opaską MiBand 3.
