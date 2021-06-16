@@ -235,4 +235,17 @@ Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odb
 \end{algorithm}
 
 \section{Analiza rejestrowanych danych o aktywności}
-
+Aby proponowany system działał poprawnie niezbędna jest analiza gromadzonych przez opaskę oraz sensor kroków danych. Aplikacja rozróżnia 4 typy aktywności:
+\begin{itemize}
+    \item puls,
+    \item kroki rejestrowane w opasce,
+    \item kroki rejestrowane w telefonie,
+    \item oraz inne zdarzenia.
+\end{itemize}
+Próbki pulsu oraz kroków są przechowywane w bazie danych w celu analizy. Natomiast wykrycie zdarzeń innego typu samo w sobie jest przesłanką do zablokowania systemu, więc nie ma potrzeby ich przechowywania. W poniższych akapitach opisano sposoby monitorowania zarejestrowanych próbek i zdarzeń oraz sytuacje, w których jest uruchamiana blokada.
+\newline\newline
+\indent Dane o akcji serca są analizowane w następujący sposób. Każda nadchodząca próbka z pomiarem równym 0 oraz brak zarejestrowania żadnej próbki w ciągu 90 sekund, świadczy o tym, że opaska została zdjęta i jest to przesłanka do blokady systemu. Z testów przeprowadzonych podczas rozwoju aplikacji wynikło, że monitorowanie tych czynników z wykorzystaniem podanych wartości jest ważne dla poprawnego określenia, czy opaska znajduje się na ręce, gdyż MiBand 3 rejestruje zdarzenia z opóźnieniem, więc odpowiednie zdarzenie o zdjęciu opaski nadchodziło po kilku minutach, co nie zapewnia wystarczającego bezpieczeństwa. Z kolei łączenie z opaską również jest obarczone sporym opóźnieniem, dlatego czasem w ciągu 60 sekund (najkrótszy możliwy okres pomiędzy automatycznymi pomiarami pulsu) od włączenia systemu monitorującego nie rejestrowano żadnej próbki pulsu. Z tego powodu okres pomiędzy pobieraniem próbek z bazy musiał zostać zwiększony do 90 sekund.
+\newline\newline
+\indent Dane o krokach są analizowane na podstawie różnic w tempie wzrostu między próbkami z opaski oraz smartfona. Co 90 sekund system pobiera próbki z ostatnich 90 sekund. Jeśli dla jednego ze źródeł nie zarejestrowano nowych próbek, system pobiera datę ostatniego pomiaru z tego źródła, a następnie dopisuje do listy próbek z drugiego źródła próbki starsze niż 90 sekund i młodsze od ostatniej próbki z pierwszego źródła. Krok ten został podjęty w celu wykrycia sytuacji, gdzie tylko jedno urządzenie porusza się, jednak na tyle wolno, że system myślałby, że tempa wzrostu pomiędzy tymi źródłami są akceptowalne. Tempo wzrostu jest określone jako amplituda wartości kroków z pobranych wcześniej próbek, biorąc poprawkę na możliwość pobrania próbek z okresu, gdy zmienia się data, co powoduje rozpoczęcie liczenia kroków od 0. Akceptowalna wartość amplitudy wynosi $\leq 30$. Jest to uwarunkowane tym, że przy niższych wartościach system mógłby aktywować się przy poruszaniu się wraz z telefonem, a przy wyższych system nie zareagowałby w wystarczającym stopniu na podejrzane sytuacje.
+\newline\newline
+\indent Oprócz analizy próbek aktywności system reaguje też na wykrywane zdarzenia. System rejestruje zdjęcie opaski, zaśnięcie oraz utratę połączenia. W przypadku dwóch pierwszych sytuacji, blokada jest uruchamiana natychmiastowo. Natomiast w przypadku utraty połączenia podejmowane są dwie próby ponownego połączenia. Jeśli nie uda się nawiązać ponownie połączenia uruchamiana jest blokada.
