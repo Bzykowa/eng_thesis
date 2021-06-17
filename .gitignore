@@ -12,9 +12,7 @@
 /captures
 .externalNativeBuild
 .cxx
-/thesis text/*.png
 /thesis text/*.toc
-/thesis text/Makefile
 /thesis text/*.aux
 /thesis text/*.bbl
 /thesis text/aktyw.pdf
