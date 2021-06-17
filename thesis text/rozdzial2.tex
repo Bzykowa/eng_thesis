@@ -2,7 +2,7 @@
 \thispagestyle{chapterBeginStyle}
 \label{rozdzial2}
 W tym rozdziale przedstawiono szczegółowy projekt systemu korzystając z notacji UML oraz uwzględniając założenia funkcjonalne z rozdziału \ref{wstep}.
-Scharakteryzowano przypadki użycia oraz towarzyszące im scenariusze. Następnie przedstawiono ogólną strukturę aplikacji w diagramie pakietów. W kolejnej sekcji określono tryby działania aplikacji poprzez diagram stanów. W ostatniej sekcji przedstawiono projekt bazy danych. 
+Scharakteryzowano przypadki użycia oraz towarzyszące im scenariusze. Następnie przedstawiono ogólną strukturę aplikacji w diagramie komponentów. W kolejnej sekcji określono tryby działania aplikacji poprzez diagram stanów. W ostatniej sekcji przedstawiono projekt bazy danych. 
 
 \section{Przypadki użycia}
 Poniżej przedstawiono ogólny diagram przypadków użycia \ref{use_case}. Szczegółowe scenariusze zostały zdefiniowane w odpowiednich podsekcjach tego podrozdziału.
@@ -206,9 +206,18 @@ W tym przypadku sensor licznika kroków w smartfonie rejestruje wykonane kroki, 
     \item System zapisuje odczytaną wartość.
 \end{enumerate}
 
-\section{Diagram pakietów}
+\section{Diagram komponentów}
 
-W tej sekcji należy przedstawić diagramy komponentów dla odpowiednich elementów systemu zidentyfikowane na podstawie wcześniejszych rozważań
+Na grafice \ref{component_diagram} przedstawiono ogólny projekt systemu w postaci diagramu komponentów. Jest to uproszczona postać, gdyż implementacja zawiera wiele elementów i bardziej szczegółowe diagramy byłyby zbyt rozległe. Głównym węzłem systemu jest \textit{Aplikacja} zawierająca komponenty: \textit{Baza danych, UI, Moduł blokady, Moduł analizy aktywności} oraz \textit{Komunikacja z Mi Band}. Każdy z nich reprezentuje odpowiednią funkcjonalność systemu. 
+\newline\newline
+\indent Komponent \textit{Baza danych} odpowiada za instancję bazy danych oraz wszystkie klasy zapewniające kominikację pomiędzy nią a innymi komponentami. Komponent \textit{UI} jest zbiorem wszystkich klas odpowiedzialnych za wyświetlanie elementów interfejsu oraz aktualizację wyświetlanych danych. Komponent \textit{Moduł blokady} reprezentuje usługi monitorujące aplikacje pierwszoplanowe oraz wykonujące określony zestaw akcji dla każdej z nich. Komponent \textit{Moduł analizy aktywności} zawiera usługę odpowiadającą za analizę zarejestrowanych próbek aktywności użytkownika. Jego działanie jest ściśle powiązane z komponentem \textit{Komunikacja z Mi Band}, który zawiera klasy oraz interfejsy implementujące komunikację Bluetooth z węzłem \textit{Mi Band}. Pozwala to dostarczyć niezbędnych do analizy danych o aktywności użytkownika. Komponent \textit{Moduł analizy aktywności} jest także związany z węzłem \textit{Sensor kroków} zapewniającym dane o wykonanych krokach zarejestrowanych przez smartfon.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{ComponentDiagram.png}
+    \end{center}
+    \caption{{\color{dgray}Diagram komponentów systemu.}} \label{component_diagram}
+\end{figure}
 
 \section{Diagram stanów}
 
