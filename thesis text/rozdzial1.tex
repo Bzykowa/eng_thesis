@@ -30,15 +30,14 @@ Natomiast do autoryzacji dostępu do smartfona nie wykorzystywane są żadne dod
 
 \indent Nieporęczność fizycznych kluczy bezpieczeństwa objawia się szczególnie w ich formie - są to niewielkie urządzenia przypominające pamięć USB
 lub kartę płatniczą. Dzięki temu łatwo je zgubić lub o nich zapomnieć, co uniemożliwia użytkownikowi dostęp do systemu. Często też w smartfonie
-brakuje niezbędnej do odczytania klucza infrastruktury, na przykład czytnika smart cardów czy modułu NFC \cite{Usability-Two-Factor}.
+brakuje niezbędnej do odczytania klucza infrastruktury, na przykład czytnika inteligentnych kart czy modułu NFC \cite{Usability-Two-Factor}.
 Do niepraktyczności tego rozwiązania przyczynia się także wyżej wynieniona monofunkcyjność kluczy. Oferują one jedynie autoryzację użytkownika przy
 użyciu kluczy kryptograficznych bądź jednorazowych kodów i służą do logowania na stronach internetowych oraz przy autoryzacji w niektórych aplikacjach,
-co znacznie ogranicza pole ich zastosowania. Dlatego potrzebne jest świeże spojrzenie na tą technologię, które pozwoli stworzyć
+co znacznie ogranicza pole ich zastosowania. Dlatego potrzebne jest świeże spojrzenie na technologię kluczy fizycznych, które pozwoli stworzyć
 przystępne systemy stałej autoryzacji bazujące na wielu czynnikach środowiskowych oraz wykorzystujące powszechnie używane urządzenia
 by skutecznie zabezpieczyć dane szerokiej bazy użytkowników smartfonów.
 \newline\newline
-\indent Platformy mobilne jako dynamicznie rozwijające się technologie wspierają wachlarz urządzeń peryferyjnych, które mogły by zostać użyte jako klucz
-bezpieczeństwa. Jednym z nich jest \textbf{inteligentna opaska}, potocznie zwana ``smartband'' bądź ``fitness tracker''. Jest to urządzenie o
+\indent Platformy mobilne jako dynamicznie rozwijające się technologie wspierają wachlarz urządzeń peryferyjnych, które są odpowiednie by zostać wykorzystane jako klucz bezpieczeństwa. Jednym z nich jest \textbf{inteligentna opaska}, potocznie zwana ``smartband'' bądź ``fitness tracker''. Jest to urządzenie o
 kształcie zegarka na rękę monitorujące aktywność użytkownika taką, jak: ilość wykonanych kroków, puls czy sen. Dane gromadzone przez opaski są
 przesyłane protokołem Bluetooth do aplikacji towarzyszącej udostępnionej przez producenta, skąd zostają przesłane na zewnętrzne serwery. Nie
 jest to bezpieczne rozwiązanie, zważywszy na: wrażliwość powyższych informacji, powiązanie ich z danymi osobowymi użytkownika oraz fakt,
@@ -102,7 +101,7 @@ w przypadku, gdy telefon przechodzi w \textit{Doze Mode}\cite{DozeMode}. Wdrożo
 odpowiedzialny za monitorowanie restartów urządzenia. Po wykryciu ukończonego uruchomienia smartfona, usługa blokująca oraz gromadząca dane
 są restartowane według stanu sprzed wyłączenia urządzenia.
 \newline\newline
-\indent System jest także odporny na najpopularniejsze podatności w aplikacjach mobilnych związanych z danymi medycznymi\cite{Security-Mobile-Health-Apps}. Dzięki lokalnemu przechowywaniu informacji zapewniona jest odporność na ataki za pośrednictwem sieci. Aplikację zabezpieczono przed \textit{Intent spoofing}, dzięki wykorzystaniu jedynie dokładnie sprecyzowanych Intentów oraz zabezpieczeniu komponentów przed exportem do innych aplikacji. By zapewnić bezpieczeństwo gromadzonych danych baza danych oraz plik przechowujący hasło zostały zaszyfrowane przy użyciu algorytmu szyfrowania AES. Natomiast mniej ważne informacje są przechowywane w \textit{SharedPreferences}, do których dostęp ma tylko projektowany system.
+\indent System jest także odporny na najpopularniejsze podatności w aplikacjach mobilnych związanych z danymi medycznymi\cite{Security-Mobile-Health-Apps}. Dzięki lokalnemu przechowywaniu informacji zapewniona jest odporność na ataki za pośrednictwem sieci. Aplikację zabezpieczono przed \textit{Intent spoofing}, dzięki wykorzystaniu jedynie dokładnie sprecyzowanych obiektów Intent oraz zabezpieczeniu komponentów przed otrzymywaniem obiektów Intent z innych aplikacji. By zapewnić bezpieczeństwo gromadzonych danych baza danych oraz plik przechowujący hasło zostały zaszyfrowane przy użyciu algorytmu szyfrowania AES. Natomiast mniej ważne informacje są przechowywane w \textit{SharedPreferences}, do których dostęp ma tylko projektowany system.
 \section{Analiza porównawcza istniejących systemów}
 Na rynku znajduje się wąskie grono rozwiązań o podobnych funkcjonalnościach. Poniżej zaprezentowano najciekawsze z nich. Określono ich zalety oraz
 wady, a także porównano je z systemem zaprezentowanym w pracy.
@@ -133,8 +132,7 @@ przeciwieństwie do Yubikey, które jest jedynie nośnikiem przechowującym kluc
 jako dodatkowa autoryzacja przy wrażliwych czynnościach.
 \subsection{Haven}
 Haven \cite{Haven} jest darmową aplikacją open-source dla urządzeń działających pod systemem Android zaprojektowaną w celu monitorowania aktywności wokół urządzenia,
-korzystając z jego wbudowanych sensorów. Przy wykryciu zmian w środowisku aplikacja gromadzi zdjęcia oraz nagrania dźwięku, po czym wysyła je poprzez
-Signala bądź Tora do użytkownika. Aplikacja została stworzona z myślą o dziennikarzach śledczych, którzy są narażeni na ataki ze strony policji bądź innych
+korzystając z jego wbudowanych sensorów. Przy wykryciu zmian w środowisku aplikacja gromadzi zdjęcia oraz nagrania dźwięku, po czym wysyła je poprzez komunikator Signal do użytkownika. Użytkownik może także zdalnie sprawdzić zarejestrowane dane korzystając z ``Tor Onion Service''. Aplikacja została stworzona z myślą o dziennikarzach śledczych, którzy są narażeni na ataki ze strony policji bądź innych
 intruzów.
 \newline\newline
 \indent Główną zaletą Haven jest to, iż potrafi zastąpić drogie fizyczne systemy bezpieczeństwa. Do korzystania z tego rozwiązania wystarczy stary telefon z Androidem oraz opcjonalnie karta SIM, by zapewnić dostęp do mobilnego Internetu. Zapewnia to użytkownikowi tani, a także łatwy w przenoszeniu system pozwalający monitorować na przykład pokój w hotelu. Pozwala to zdobyć dowody w przypadku ataku typu ``evil maid" \cite{Evil-Maid}, czyli gdy osoba trzecia uzyskuje fizyczny dostęp do urządzenia, wykorzystując nieobecność właściciela, w celu wykradnięcia danych bądź zainstalowaniu szpiegującego oprogramowania.

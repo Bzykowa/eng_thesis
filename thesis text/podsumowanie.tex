@@ -1,13 +1,13 @@
 \chapter{Podsumowanie}
 \thispagestyle{chapterBeginStyle}
 W pracy dokonano analizy problemu wykorzystania fizycznych kluczy bezpieczeństwa w celu zabezpieczenia smartfonów oraz zapewnienia stałej autoryzacji dla systemu Android. Przedstawiono któtki opis proponowanego rozwiązania tego problemu. Następnie przedstawiono istniejące klucze działające z urządzeniami mobilnymi oraz rozwiązania pozwalające zabezpieczyć te urządzenia. Omówiono różnice między nimi a projektowanym systemem. W kolejnym rozdziale przedstawiono projekt aplikacji przy użyciu diagramów UML. W następnym rozdziale opisano wykorzystane do implementacji technologie. Zaprezentowano także szczegóły systemu blokującego dostęp do aplikacji. Opisano również wyczerpująco protokół komunikacji z opaską MiBand 3. Określono też sposoby analizy rejestrowanych danych o aktywności użytkownika. Na końcu przedstawiono instrukcję korzystania z aplikacji dla użytkownika wraz z wymaganiami sprzętowymi oraz procedurą instalacji. 
-\subsection{Uzyskane wyniki}
+\section{Uzyskane wyniki}
 W implementacji aplikacji udało się zrealizować wszystkie wymagania funkcjonalne postawione we wstępie pracy. Jest jednak wiele rzeczy, które wymagają usprawnienia zanim system będzie mógł zostać wykorzystany do prawdziwej ochrony smartfona. Główną luką bezpieczeństwa są ograniczenia sprzętowe. 
 \newline\newline
 \indent Opaska MiBand 3 posiada dość mało bezpieczny protokół parujący, gdyż wysyła klucz wykorzystywany później do autentykacji pakietem ATT. Kolejnym mankamentem jest prędkość rejestrowania zdarzeń przez opaskę. Zanim zostanie zarejestrowane zdarzenie zdjęcia opaski mija często kilka minut co sprawia, że jest to praktycznie bezużyteczna informacja. Pomiar akcji serca odbywa się w minimalnych  odstępach minutowych, co jest zbyt długim okresem, by szybko reagować na zmiany. 
 \newline\newline
 \indent Z kolei system Android wymaga do inwazyjnych czynności takich, jak zamykanie innych aplikacji, aplikacji podpisanej przez system. Utrudnia to bardzo projektowanie aplikacji, które mogłyby być dystrybuowane użytkownikom poprzez Sklep Play. Dlatego w stworzonej aplikacji nie ma stuprocentowej możliwości zablokowania dostępu do innych aplikacji. Obecnie możliwe jest otworzenie stworzonej w pracy aplikacji, gdy zarejestrujemy obecność innej na pierwszym planie. Niestety aplikacje, które zostały wyrzucone z pierwszego planu wciąż są otwarte w tle. Nie można także prawdziwie zablokować wyłączenia formularza wprowadzania hasła, zważywszy na konieczność wykorzystania ekrenu dotykowego do wpisania hasła oraz to, że nawet wyłączenie dotyku nie pomogłoby w urządzeniach posiadających fizyczne przyciski nawigacyjne. Martwiąca jest także możliwość automatycznego zamknięcia działających w tle usług przez system Android. Zostały podjęte wszystkie kroki by temu zapobiec, wykorzystując usługi pierwszoplanowe oraz WakeLock ale minimalne ryzyko wciąż pozostaje. Ponowne uruchomienie aplikacji po restarcie urządzenia działa, lecz nie jest wystarczająco szybkie. W przeprowadzonych testach aplikacja uruchamiała się po kilku minutach od włączenia, co pozostawia wiele możliwości sabotażu systemu.
-\subsection{Propozycje rozwoju}
+\section{Propozycje rozwoju}
 W przyszłości aplikację można rozwinąć na następujące sposoby:
 \begin{itemize}
     \item Wyłączyć łączność WiFi i dane komórkowe podczas aktywnej blokady. 
@@ -16,7 +16,7 @@ W przyszłości aplikację można rozwinąć na następujące sposoby:
     \item Stworzyć dokładniejsze statystyki aktywności.
     \item Upodobnić aplikację do typowej aplikacji fitness, aby zamaskować ją w systemie.
     \item Dodać automatyczne usuwanie starych danych o aktywności.
-    \item Zaktualizować algorytmu blokowania na parametry obowiązujące od Androida 10.
+    \item Uzupełnić algorytm blokowania o wykrywanie zdarzeń dodanych w systemie Android 10.
     \item Usprawnić szybkość wymiany danych ze smartbandem.
     \item Przeorganizować bazę danych na prawdziwie relacyjny model.
 \end{itemize}

@@ -15,11 +15,14 @@ Aplikacja została napisana przy użyciu języka \textbf{Kotlin} w wersji 1.4.31
 \indent Aby usprawnienić wydajność aplikacji wszystkie operacje zapisu do bazy danych oraz komunikacja z opaską są wykonywane w korutynach zoptymalizowanych pod operacje wejścia/wyjścia, dzięki czemu główny wątek aplikacji zostaje odciążony. Wykorzystano również \textbf{Data Binding}, aby uprościć odniesienia do elementów UI w kodzie aplikacji, co pozwala zwiększyć odporność na wycieki pamięci oraz wydajność. 
 
 \section{Blokada dostępu do aplikacji}
-Skuteczny sposób uniemożliwienia dostępu do aplikacji jest jedną z kluczowych części projektowanego systemu. Schemat blokady zaprezentowany w pracy opiera się na monitorowaniu aplikacji na pierwszym planie systemu Android. Aby dostać się do tych informacji wykorzystano usługę \textit{Usage Stats}, która zawiera statystyki korzystania z zainstalowanych aplikacji oraz zdarzenia takie, jak zablokowanie ekranu czy wyświetlenie aktywności danej aplikacji na ekranie. Proponowany system blokady pobiera zdarzenia z ostatnich 5 sekund, a następnie poszukuje w nich typu ``MOVE\_TO\_FOREGROUND''. Jeśli takie zdarzenie zostanie odnalezione, a aplikacja, która zainicjowała je, jest na liście aplikacji do zablokowania, następuje przejście do aktywności zawierającej pole do wpisania hasła. W przeciwnym razie system nie reaguje. Jeśli wprowadzone hasło było poprawne usługa blokująca zostaje zatrzymana i aplikacja nawiązuje próbę połączenia się z opaską. Poniżej przedstawiono zarys algorytmu blokującego w pseudokodzie.
+Skuteczny sposób uniemożliwienia dostępu do aplikacji jest jedną z kluczowych części projektowanego systemu. Schemat blokady zaprezentowany w pracy opiera się na monitorowaniu aplikacji na pierwszym planie systemu Android. Aby dostać się do tych informacji wykorzystano usługę \textit{Usage Stats}, która zawiera statystyki korzystania z zainstalowanych aplikacji oraz zdarzenia takie, jak zablokowanie ekranu czy wyświetlenie aktywności danej aplikacji na ekranie. Proponowany system blokady pobiera zdarzenia z ostatnich 5 sekund, a następnie poszukuje w nich typu ``MOVE\_TO\_FOREGROUND''. Jeśli takie zdarzenie zostanie odnalezione, a aplikacja, która zainicjowała je, jest na liście aplikacji do zablokowania, następuje przejście do aktywności zawierającej pole do wpisania hasła. W przeciwnym razie system nie reaguje. Jeśli wprowadzone hasło było poprawne, usługa blokująca zostaje zatrzymana i aplikacja nawiązuje próbę połączenia się z opaską. Poniżej przedstawiono zarys algorytmu blokującego w pseudokodzie.
 \newline
 
 \begin{algorithm}[H]
     \DontPrintSemicolon
+    \SetAlgorithmName{Algorytm}{algorytm}{Lista algorytmów}
+    \SetKwInput{KwData}{Dane}%
+    \SetKwInput{KwResult}{Wynik}%
     \SetAlgoLined
     \caption{Blokowanie dostępu do wybranych aplikacji} 
     \BlankLine
@@ -59,8 +62,22 @@ Profil Generic Attribute (GATT) definiuje framework wykorzystujący protokół A
 \newline\newline
 \indent Profil GATT określa strukturę, w której odbywa się wymiana danych. Najwyższym poziomem jest profil zawierający liczne \textit{usługi} będące zbiorem danych oraz przypisanych im zachowań niezbędnych do zapewnienia określonej funkcji. Usługi składają się z \textit{charakterystyk}, z których każda zawiera określoną wartość oraz opcjonalne informacje na jej temat. Usługi oraz charakterystyki wraz ze swoimi komponentami zawierają dane profilu, które są przechowywane w Atrybutach na serwerze. Dzięki wykorzystaniu określonej struktury danych przez GATT możliwe jest przeglądanie dostępnych Usług oraz Charakterystyk, nawet gdy klient nie jest wyspecjalizowany pod dany serwer. Więcej informacji na temat GATT można znaleźć w \cite{BT-Corev5.2}.
 
+\subsection{Inżynieria wsteczna protokołu komunikacji opaski}
+Zważywszy na to, iż protokół komunikacji opaski MiBand 3 nie jest jawny, konieczne było zastosowanie inżynierii wstecznej w celu identyfikacji usług oraz charakterystyk wraz z ich funkcjonalnością. Dane do analizy uzyskano przechwytując pakiety ATT między opaską a aplikacją Gadgetbridge \cite{Gadgetbridge} przy użyciu sniffera Wireshark \cite{Wireshark}. Korzystając z faktu, że Gadgetbridge jest open-source możliwe było użycie kodu źródłowego aplikacji do interpretacji zaobserwowanych przesyłanych wartości. Na poniższych grafikach przedstawiono dwa przykładowe pakiety przechwycone w czasie analizy protokołu. 
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.36\textwidth]{HRPacket.png}
+    \end{center}
+    \caption{{\color{dgray}Przechwycony pakiet zawierający wartość akcji serca.}} \label{hrPacket}
+\end{figure}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.60\textwidth]{SetLanguageATTPacket.png}
+    \end{center}
+    \caption{{\color{dgray}Przechwycony pakiet zawierający konfigurację języka w opasce na angielski.}} \label{langPacket}
+\end{figure}
 \subsection{Wykorzystane usługi i charakterystyki}
-Do uzyskania potrzebnych danych z opaski zostały użyte poniżej opisane usługi. Dla każdej z nich przedstawiono listę wykorzystanych charakterystyk z krótkim opisem, za co odpowiadają. Poniższe wartości zostały zidentyfikowane na podstawie przechwytywania pakietów ATT komunikacji MiBanda 3 z aplikacją Gadgetbridge \cite{Gadgetbridge} przy użyciu open-sourcowego sniffera Wireshark \cite{Wireshark} oraz analizie kodu źródłowego Gadgetbridge.
+Na podstawie przeprowadzonych analiz komunikacji, wyszczególniono poniższe usługi i charakterystyki, które posłużyły do realizacji funkcjonalności tworzonej aplikacji.
 
 \subsubsection{Usługa 0000fee0-0000-1000-8000-00805f9b34fb}
 Jest to usługa odpowiadająca w głównej mierze za podstawowe funkcjonalności opaski MiBand 3. Pozwala zmodyfikować ustawienia urządzenia, zapisać informacje o użytkowniku oraz odczytać dane o stanie baterii i aktywności użytkownika. Jest to najczęściej wykorzystywana usługa w aplikacji.
@@ -130,12 +147,20 @@ Jest to usługa również zdefiniowana przez Bluetooth Special Interest Group. O
 \end{table}
 
 \subsection{Autentykacja połączenia}
-Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej. Aktualna data przesyłana jest jako tablica bajtów, gdzie wartości to: rok $\land$ 0xff, (rok $\gg$ 8) $\land$ 0xff, miesiąc $\land$ 0xff, dzień miesiąca $\land$ 0xff, godzina $\land$ 0xff, minuty $\land$ 0xff, sekundy $\land$ 0xff, dzień tygodnia $\land$ 0xff oraz 0.
-\newline
+Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana jest prosta autoryzacja. W przeciwnym razie ma dostępu do większości charakterystyk urządzenia, a połączenie zostanie zerwane po 30 sekundach. Sekwencja autentykacyjna wygląda w następujący sposób. Najpierw do opaski należy wysłać klucz, który zostanie wykorzystany do autentykacji połączenia. Wykonuje się to przy pierwszym połączeniu z urządzeniem. Następnie wysyłana jest prośba do MiBanda o podanie losowej liczby. Po jej otrzymaniu należy zaszyfrować ją algorytmem AES korzystając z klucza podanego przy parowaniu opaski, odesłać i przesłać aktualną datę do odpowiedniej charakterystyki. Po otrzymaniu potwierdzenia połączenie jest zatwierdzone i można przejść do sekwencji konfigurującej. Aktualna data przesyłana jest jako tablica bajtów. Dostęp do odpwiednich wartości można uzyskać przez przesunięcie bitowe i maskowanie odpowiednich bitów, co przedstawiono dokładnie na grafice poniżej:
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.90\textwidth]{DateByteArray.png}
+    \end{center}
+    \caption{{\color{dgray}Struktura tablicy bajtów zawierającej aktualną datę.}} \label{dateByteArray}
+\end{figure}
 
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
+    \SetAlgorithmName{Algorytm}{algorytm}{Lista algorytmów}
+    \SetKwInput{KwData}{Dane}%
+    \SetKwInput{KwResult}{Wynik}%
     \caption{Parowanie z MiBandem 3} 
     \BlankLine
     \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$, Zmienna logiczna $pair$ mówiąca, czy urządzenie jest sparowane}
@@ -155,6 +180,9 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
+    \SetAlgorithmName{Algorytm}{algorytm}{Lista algorytmów}
+    \SetKwInput{KwData}{Dane}%
+    \SetKwInput{KwResult}{Wynik}%
     \caption{Autentykacja z MiBandem 3} 
     \BlankLine
     \KwData{Tablica bajtów zawierająca klucz wykorzystywany do szyfrowania $K$}
@@ -176,13 +204,32 @@ Aby konfigurować oraz odczytywać informacje o aktywności z MiBanda wymagana j
 \end{algorithm}
 
 \subsection{Sekwencja konfigurująca}
-Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu. Czynności konfiguracyjne zostały zidentyfikowane na podstawie porównania przechwyconych pakietów ATT z kodem źródłowym Gadgetbridge. Poniżej opisano szerzej niektóre z wysyłanych danych, które były zbyt obszerne, aby przedstawić je w pseudokodzie. 
-\newline\newline
-\indent Format daty jest przestawiony jako tablica bajtów, zawierająca każdy znak z ``dd/MM/yyyy'' skonwertowany na bajt. Wartość celu fitness obliczana jest jako dwuelementowa tablica bajtów, gdzie wartości to wartość celu $\land$ 0xff oraz (wartość celu $\gg$ 8) $\land$ 0xff. Dane użytkownika są formatowane do wysłania jako tablica bajtów zawierająca: 0x4f, 0x00, 0x00, rokUrodzenia $\land$ 0xff, (rokUrodzenia $\gg$ 8)$\land$ 0xff, miesiąc, dzien, płeć (0x00 lub 0x01), wzrost $\land$ 0xff, (wzrost $\gg$ 8) $\land$ 0xff, waga $\times$ 200 $\land$ 0xff, (waga $\times$ 200 $\gg$ 8) $\land$ 0xff, id $\land$ 0xff, (id $\gg$ 8) $\land$ 0xff, (id $\gg$ 16) $\land$ 0xff oraz (id $\gg$ 24) $\land$ 0xff.
-\newline\newline
+Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odbywa się to za pomocą sekwencji operacji zapisu, głównie do charakterystyki o UUID równym ``00000003-0000-3512-2118-0009af100700'' oraz włączeniu powiadamiania na odpowiednich charakterystykach. Po skonfigurowaniu urządzenie będzie automatycznie przesyłać odpowiednie dane o aktywności w najmniejszych możliwych odstępach czasu. Na poniższych grafikach przedstawiono struktury tablic bajtów wysyłanych danych, które były zbyt obszerne, aby przedstawić je w pseudokodzie. 
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.90\textwidth]{DateFormatBA.png}
+    \end{center}
+    \caption{{\color{dgray}Tablica bajtów zawierająca format wyświetlanej w opasce daty - dd/MM/yyyy.}} \label{dateFormat}
+\end{figure}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.20\textwidth]{FitnessGoalBA.png}
+    \end{center}
+    \caption{{\color{dgray}Tablica bajtów zawierająca cel aktywności - liczbę kroków do wykonania dziennie.}} \label{fitnessGoal}
+\end{figure}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.90\textwidth]{UserInfoBA.png}
+    \end{center}
+    \caption{{\color{dgray}Tablica bajtów zawierająca informacje o użytkowniku.}} \label{userInfo}
+\end{figure}
+
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
+    \SetAlgorithmName{Algorytm}{algorytm}{Lista algorytmów}
+    \SetKwInput{KwData}{Dane}%
+    \SetKwInput{KwResult}{Wynik}%
     \caption{Konfiguracja MiBanda 3 - Część 1} 
     \BlankLine
     \Begin{
@@ -212,21 +259,24 @@ Po udanej autoryzacji połączenia należy skonfigurować działanie opaski. Odb
         Ustaw cel fitness wysyłając $ByteArray(0x10, 0x00, 0x00, x[0], x[1], 0x00, 0x00)$ do $userChar$, gdzie $x$ to przetworzona wartość celu\;
         Ustaw elementy menu opaski wysyłając $ByteArray(0x0a, 0x7f, 0x30, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)$ do $settingsChar$\;
         Wyłącz w opasce tryb ``Nie przeszkadzać'' wysyłając $ByteArray(0x09, 0x82)$ do $settingsChar$\;
-        Wyłącz gest obrotu nadgarstka do zmiany pozycji w menu wysyłając $ByteArray(0x06, 0x0d, 0x00, 0x00)$ do $settingsChar$\;
-        Wyłącz gest podniesienia nadgarstka do włączenia ekranu opaski wysyłając $ByteArray(0x06, 0x05, 0x00, 0x00)$ do $settingsChar$\;
-        Włącz wyświetlanie ID dzwoniącego w opasce wysyłając $ByteArray(0x06, 0x10, 0x00, 0x00, 0x01)$ do $settingsChar$\;
-        Wyłącz powiadomienia o celu fitness wysyłając $ByteArray(0x06, 0x06, 0x00, 0x00)$ do $settingsChar$\;
-        Wyłącz powiadomienia o nieaktywności wysyłając $ByteArray(0x08, 0x00, 0x3c, 0x00, 0x04, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
-        Włącz wspomaganie detekcji snu przez pomiar pulsu wysyłając $ByteArray(0x15, 0x00, 0x01)$ do $hrControlChar$\;
     }
 \end{algorithm}
 \quad\newline\newline
 \begin{algorithm}[H]
     \DontPrintSemicolon
     \SetAlgoLined
+    \SetAlgorithmName{Algorytm}{algorytm}{Lista algorytmów}
+    \SetKwInput{KwData}{Dane}%
+    \SetKwInput{KwResult}{Wynik}%
     \caption{Konfiguracja MiBanda 3 - Część 2} 
     \BlankLine
     \Begin{
+        Wyłącz gest obrotu nadgarstka do zmiany pozycji w menu wysyłając $ByteArray(0x06, 0x0d, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz gest podniesienia nadgarstka do włączenia ekranu opaski wysyłając $ByteArray(0x06, 0x05, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wyświetlanie ID dzwoniącego w opasce wysyłając $ByteArray(0x06, 0x10, 0x00, 0x00, 0x01)$ do $settingsChar$\;
+        Wyłącz powiadomienia o celu fitness wysyłając $ByteArray(0x06, 0x06, 0x00, 0x00)$ do $settingsChar$\;
+        Wyłącz powiadomienia o nieaktywności wysyłając $ByteArray(0x08, 0x00, 0x3c, 0x00, 0x04, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
+        Włącz wspomaganie detekcji snu przez pomiar pulsu wysyłając $ByteArray(0x15, 0x00, 0x01)$ do $hrControlChar$\;
         Włącz powiadomienie o utracie połączenia wysyłając $ByteArray(0x06, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00)$ do $settingsChar$\;
         Włącz powiadomienie o nawiązaniu połączenia wysyłając $ByteArray(0x06, 0x01, 0x00, 0x01)$ do $settingsChar$\;
         Ustaw interwał automatycznego pomiaru pulsu na minimalny wysyłając $ByteArray(0x14, 0x01)$  do $hrControlChar$\;
